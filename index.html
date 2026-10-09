@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Acompanhamento de Processos SEI — Média Complexidade</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Sistema interno de acompanhamento de processos SEI da Média Complexidade.">
+<meta name="author" content="Jurandy1">
+<meta name="theme-color" content="#12355B">
+<link rel="icon" href="data:,">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:'IBM Plex Sans',system-ui,sans-serif;color:#1F2328;background:#F4F5F6;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+  a{color:#1F5F9E;text-decoration:underline;text-underline-offset:2px}
+  a:hover{color:#12355B}
+  input,textarea,button,select{font-family:inherit}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:#12355B !important;box-shadow:0 0 0 2px rgba(18,53,91,.15)}
+  ::placeholder{color:#9AA1A8}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#C9CED3;border:2px solid #F4F5F6}
+</style>
+</helmet>
+
+<div style="min-height:100vh;width:100%">
+
+<sc-if value="{{ loginVisible }}" hint-placeholder-val="{{ true }}">
+<div style="min-height:100vh;display:flex;flex-direction:column;background:#F4F5F6">
+  <div style="background:#12355B;color:#fff;min-height:44px;display:flex;align-items:center;flex-wrap:wrap;padding:8px 24px;font-size:13px;gap:4px 12px">
+    <span style="font-weight:600">Média Complexidade</span>
+    <span style="color:#C9D6E3">Acompanhamento interno de processos</span>
+  </div>
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:40px 16px">
+    <div style="width:100%;max-width:400px">
+      <div style="margin-bottom:20px">
+        <div style="font-size:13px;color:#5B636B;margin-bottom:4px">Proteção Especial de Média Complexidade</div>
+        <h1 style="font-size:24px;font-weight:600;margin:0;color:#1F2328">Acompanhamento de Processos SEI</h1>
+      </div>
+      <div style="background:#fff;border:1px solid #DADDE1;border-radius:2px;padding:24px">
+        <label style="display:block;font-size:13px;font-weight:500;color:#3D454D;margin-bottom:6px">E-mail funcional</label>
+        <input value="{{ loginEmail }}" onInput="{{ setLoginEmail }}" placeholder="nome@semcas.saoluis.ma.gov.br" style="width:100%;height:38px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:14px;background:#fff;color:#1F2328;margin-bottom:16px">
+        <label style="display:block;font-size:13px;font-weight:500;color:#3D454D;margin-bottom:6px">Senha</label>
+        <input type="password" value="{{ loginSenha }}" onInput="{{ setLoginSenha }}" placeholder="Digite sua senha" style="width:100%;height:38px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:14px;background:#fff;color:#1F2328;margin-bottom:16px">
+        <sc-if value="{{ loginErroOn }}" hint-placeholder-val="{{ false }}"><div role="alert" style="margin:-4px 0 14px;padding:10px 12px;background:#FCEDEB;border:1px solid #E8C2BE;color:#8E1D16;font-size:13px;line-height:1.45">{{ loginErro }}</div></sc-if>
+        <button onClick="{{ doLogin }}" disabled="{{ loginCarregando }}" style="height:36px;padding:0 16px;background:#12355B;color:#fff;border:1px solid #12355B;border-radius:2px;font-weight:600;font-size:13.5px;cursor:pointer;width:100%;height:42px;font-size:14px" style-hover="background:#0C2744">{{ loginBtnTexto }}</button>
+        <div style="margin-top:14px;font-size:13px"><a href="#">Esqueci minha senha</a></div>
+      </div>
+      <div style="font-size:12.5px;color:#7A828A;margin-top:14px;line-height:1.5">Acesso interno autenticado. O perfil é definido pelo cadastro da Superintendência e os dados são sincronizados com o Supabase.</div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ appVisible }}" hint-placeholder-val="{{ false }}">
+<div style="height:100vh;display:flex;flex-direction:column">
+  <div style="background:#12355B;color:#fff;height:44px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 16px 0 18px">
+    <div style="display:flex;align-items:center;gap:12px;min-width:0">
+      <sc-if value="{{ narrow }}" hint-placeholder-val="{{ false }}"><button onClick="{{ toggleMenu }}" style="height:30px;padding:0 10px;border:1px solid #3B5A7C;background:transparent;color:#fff;border-radius:2px;cursor:pointer;font-size:13px">Menu</button></sc-if>
+      <span style="font-weight:600;font-size:14px;white-space:nowrap">Acompanhamento de Processos SEI</span>
+      <span style="font-size:13px;color:#AFC0D2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Média Complexidade</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;flex-shrink:0">
+      <span style="font-size:13px;color:#DCE4EC;white-space:nowrap">{{ userName }} <span style="color:#AFC0D2">· {{ userRole }}</span></span>
+      <button onClick="{{ logout }}" style="height:28px;padding:0 10px;background:transparent;border:1px solid #3B5A7C;color:#fff;border-radius:2px;cursor:pointer;font-size:12.5px" style-hover="background:#1C4570">Sair</button>
+    </div>
+  </div>
+
+  <div style="flex:1;min-height:0;display:grid;grid-template-columns:{{ shellCols }};position:relative">
+  <sc-if value="{{ backdrop }}" hint-placeholder-val="{{ false }}"><div onClick="{{ toggleMenu }}" style="position:fixed;inset:0;background:rgba(20,30,40,.4);z-index:39"></div></sc-if>
+
+  <aside style="{{ asideStyle }}">
+    <sc-if value="{{ narrow }}" hint-placeholder-val="{{ false }}">
+      <div style="height:48px;padding:0 12px 0 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #DADDE1;flex-shrink:0">
+        <span style="font-weight:600;font-size:14px">Navegação</span>
+        <button onClick="{{ toggleMenu }}" style="height:28px;padding:0 10px;border:1px solid #C9CED3;background:#fff;border-radius:2px;cursor:pointer;font-size:12.5px">Fechar</button>
+      </div>
+    </sc-if>
+    <nav style="flex:1;overflow-y:auto;padding:8px 10px 16px">
+      <sc-if value="{{ isSuper }}" hint-placeholder-val="{{ true }}">
+        <div style="font-size:12px;font-weight:600;color:#7A828A;padding:12px 12px 6px">Superintendência</div>
+        <button onClick="{{ goPainel }}" style="{{ navPainelStyle }}"><span style="flex:1;text-align:left">Painel geral</span></button>
+        <button onClick="{{ goLog }}" style="{{ navLogStyle }}"><span style="flex:1;text-align:left">Registro de atividades</span><span style="font-size:12.5px;color:#7A828A">{{ logCount }}</span></button>
+        <button onClick="{{ goUsuarios }}" style="{{ navUsuariosStyle }}"><span style="flex:1;text-align:left">Usuários</span><span style="font-size:12.5px;color:#7A828A">{{ usuariosCount }}</span></button>
+      </sc-if>
+      <sc-for list="{{ navGrupos }}" as="g" hint-placeholder-count="3">
+        <div style="font-size:12px;font-weight:600;color:#7A828A;padding:16px 12px 6px;display:flex;justify-content:space-between"><span>{{ g.grupo }}</span><span style="font-weight:400">Pend.</span></div>
+        <sc-for list="{{ g.items }}" as="s" hint-placeholder-count="4">
+          <button onClick="{{ s.onClick }}" style="{{ s.style }}">
+            <span style="flex:1;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.label }}</span>
+            <span style="{{ s.badgeStyle }}">{{ s.pend }}</span>
+          </button>
+        </sc-for>
+      </sc-for>
+    </nav>
+  </aside>
+
+  <main style="height:100%;overflow-y:auto;display:flex;flex-direction:column;background:#F4F5F6">
+    <header style="flex-shrink:0;position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid #DADDE1">
+      <div style="{{ headPad }}">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-bottom:14px">
+          <div style="min-width:0">
+            <div style="font-size:12.5px;color:#7A828A;margin-bottom:3px">{{ crumb }}</div>
+            <h1 style="font-weight:600;font-size:21px;color:#1F2328;margin:0;line-height:1.25">{{ pageTitle }}</h1>
+          </div>
+          <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+            <sc-if value="{{ headStatsOn }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;gap:16px;font-size:13px;color:#5B636B">
+                <sc-for list="{{ headStats }}" as="k" hint-placeholder-count="3"><span><span style="font-weight:600;color:{{ k.cor }}">{{ k.val }}</span> {{ k.label }}</span></sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ hojeOn }}" hint-placeholder-val="{{ true }}"><span style="font-size:13px;color:#7A828A">{{ hoje }}</span></sc-if>
+            <sc-if value="{{ novoBtnOn }}" hint-placeholder-val="{{ true }}"><button onClick="{{ openNovo }}" style="height:36px;padding:0 16px;background:#12355B;color:#fff;border:1px solid #12355B;border-radius:2px;font-weight:600;font-size:13.5px;cursor:pointer" style-hover="background:#0C2744">Registrar processo</button></sc-if>
+          </div>
+        </div>
+        <sc-if value="{{ servicoVisible }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;gap:24px">
+            <button onClick="{{ setTabPend }}" style="{{ tabPendStyle }}">Pendentes <span style="margin-left:6px;color:#7A828A;font-weight:400">{{ countPend }}</span></button>
+            <button onClick="{{ setTabResp }}" style="{{ tabRespStyle }}">Respondidos <span style="margin-left:6px;color:#7A828A;font-weight:400">{{ countResp }}</span></button>
+          </div>
+        </sc-if>
+      </div>
+    </header>
+
+    <div style="{{ contentPad }}">
+    <sc-if value="{{ storageErroOn }}"><div role="alert" style="padding:12px 16px;margin-bottom:16px;border:1px solid #E8C2BE;background:#FCEDEB;color:#8E1D16;font-size:13px">{{ storageErro }}</div></sc-if>
+
+    <sc-if value="{{ painelVisible }}" hint-placeholder-val="{{ false }}">
+    <div style="max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:20px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1px;background:#DADDE1;border:1px solid #DADDE1;border-radius:2px;overflow:hidden">
+        <div style="background:#fff;padding:14px 18px"><div style="font-size:13px;color:#5B636B">Processos registrados</div><div style="font-size:28px;font-weight:600;margin-top:4px;color:#1F2328">{{ kpiTotal }}</div></div>
+        <div style="background:#fff;padding:14px 18px"><div style="font-size:13px;color:#5B636B">Pendentes</div><div style="font-size:28px;font-weight:600;margin-top:4px;color:#8A5A00">{{ kpiPend }}</div></div>
+        <div style="background:#fff;padding:14px 18px"><div style="font-size:13px;color:#5B636B">Respondidos</div><div style="font-size:28px;font-weight:600;margin-top:4px;color:#2F7A4B">{{ kpiResp }}</div></div>
+        <div style="background:#fff;padding:14px 18px"><div style="font-size:13px;color:#5B636B">Pendentes há mais de 30 dias</div><div style="font-size:28px;font-weight:600;margin-top:4px;color:#A3281F">{{ kpiVelhos }}</div></div>
+        <div style="background:#fff;padding:14px 18px"><div style="font-size:13px;color:#5B636B">Pendentes sem responsável</div><div style="font-size:28px;font-weight:600;margin-top:4px;color:#8A5A00">{{ kpiSemResponsavel }}</div></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(440px,100%),1fr));gap:20px;align-items:start">
+        <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #DADDE1"><h2 style="font-size:14.5px;font-weight:600;margin:0;color:#1F2328">Situação por serviço</h2><span style="font-size:12.5px;color:#7A828A">Clique para abrir</span></div>
+          <div style="overflow-x:auto">
+            <div style="min-width:440px">
+              <div style="display:grid;grid-template-columns:minmax(120px,1fr) 60px 70px 80px 120px;background:#F2F4F6;border-bottom:1px solid #DADDE1">
+                <div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D;padding-left:18px">Serviço</div><div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D;text-align:right">Total</div><div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D;text-align:right">Pendentes</div><div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D;text-align:right">Respondidos</div><div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D">% respondido</div>
+              </div>
+              <sc-for list="{{ servResumo }}" as="r" hint-placeholder-count="10">
+                <div onClick="{{ r.onClick }}" style="display:grid;grid-template-columns:minmax(120px,1fr) 60px 70px 80px 120px;border-bottom:1px solid #ECEEF0;font-size:13.5px;align-items:center;cursor:pointer" style-hover="background:#F7F8F9">
+                  <div style="padding:9px 12px 9px 18px;color:#1F5F9E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.label }}</div>
+                  <div style="padding:9px 12px;text-align:right">{{ r.total }}</div>
+                  <div style="padding:9px 12px;text-align:right;color:#8A5A00;font-weight:600">{{ r.pend }}</div>
+                  <div style="padding:9px 12px;text-align:right;color:#2F7A4B">{{ r.resp }}</div>
+                  <div style="padding:9px 12px;display:flex;align-items:center;gap:8px">
+                    <div style="flex:1;height:6px;background:#ECEEF0;overflow:hidden"><div style="height:100%;background:#2F7A4B;width:{{ r.barW }}"></div></div>
+                    <span style="font-size:12.5px;color:#5B636B;width:34px;text-align:right">{{ r.barW }}</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </section>
+
+        <div style="display:flex;flex-direction:column;gap:20px">
+          <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #DADDE1"><h2 style="font-size:14.5px;font-weight:600;margin:0;color:#1F2328">Pendentes por classificação</h2></div>
+            <sc-for list="{{ porMarc }}" as="m" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;gap:10px;padding:9px 18px;border-bottom:1px solid #ECEEF0;font-size:13.5px">
+                <span style="width:14px;height:14px;flex-shrink:0;background:{{ m.bg }};border:1px solid {{ m.bar }}"></span>
+                <span style="flex:1;color:#2E353B">{{ m.label }}</span>
+                <span style="font-weight:600">{{ m.qtd }}</span>
+              </div>
+            </sc-for>
+          </section>
+          <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #DADDE1"><h2 style="font-size:14.5px;font-weight:600;margin:0;color:#1F2328">Entradas por mês</h2></div>
+            <div style="padding:18px 18px 14px">
+              <div style="display:flex;align-items:flex-end;gap:12px;height:180px;border-bottom:1px solid #C9CED3">
+                <sc-for list="{{ meses }}" as="m" hint-placeholder-count="6">
+                  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:5px">
+                    <div style="font-size:12px;color:#5B636B">{{ m.total }}</div>
+                    <div style="width:100%;max-width:40px;display:flex;flex-direction:column;justify-content:flex-end;height:{{ m.totalH }}">
+                      <div style="background:#C9D3DE;flex:{{ m.pendFlex }}"></div>
+                      <div style="background:#12355B;flex:{{ m.respFlex }}"></div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="display:flex;gap:12px;margin-top:6px">
+                <sc-for list="{{ meses }}" as="m" hint-placeholder-count="6"><div style="flex:1;text-align:center;font-size:12px;color:#5B636B">{{ m.label }}</div></sc-for>
+              </div>
+              <div style="display:flex;gap:18px;margin-top:14px;font-size:12.5px;color:#5B636B">
+                <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;background:#C9D3DE"></span>Pendentes</span>
+                <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;background:#12355B"></span>Respondidos</span>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px;overflow:hidden">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:12px 18px;border-bottom:1px solid #DADDE1;flex-wrap:wrap">
+          <div><h2 style="font-size:14.5px;font-weight:600;margin:0;color:#1F2328">Órgãos com mais solicitações</h2><div style="font-size:12px;color:#7A828A;margin-top:3px">10 órgãos com maior número de processos registrados</div></div>
+          <span style="font-size:12.5px;color:#5B636B">Todos os serviços</span>
+        </div>
+        <div style="padding:8px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr));gap:0 18px">
+          <sc-for list="{{ orgaosRanking }}" as="o" hint-placeholder-count="10">
+            <div style="display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px;border-bottom:1px solid #ECEEF0;min-width:0">
+              <span style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;background:#EEF2F7;color:#12355B;font-size:12px;font-weight:600;border-radius:2px">{{ o.pos }}</span>
+              <div style="min-width:0">
+                <div title="{{ o.nome }}" style="font-size:13.5px;font-weight:500;color:#2E353B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ o.nome }}</div>
+                <div style="height:5px;background:#ECEEF0;margin-top:7px;overflow:hidden"><div style="height:100%;width:{{ o.barW }};background:#12355B"></div></div>
+              </div>
+              <div style="text-align:right;white-space:nowrap"><div style="font-size:15px;font-weight:600;color:#1F2328">{{ o.qtd }}</div><div style="font-size:11.5px;color:#7A828A">{{ o.percentual }} do total</div></div>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(380px,100%),1fr));gap:20px">
+        <sc-for list="{{ recentesGrupos }}" as="g">
+          <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px;overflow:hidden">
+            <div style="padding:12px 18px;border-bottom:1px solid #DADDE1"><h2 style="font-size:14.5px;font-weight:600;margin:0">{{ g.titulo }}</h2><div style="font-size:12px;color:#7A828A;margin-top:3px">{{ g.subtitulo }}</div></div>
+            <sc-for list="{{ g.itens }}" as="r">
+              <button onClick="{{ r.abrir }}" style="display:block;width:100%;text-align:left;border:0;border-bottom:1px solid #ECEEF0;background:#fff;padding:12px 18px;cursor:pointer" style-hover="background:#F7F8F9">
+                <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span style="font-family:'IBM Plex Mono';font-size:13px;color:#1F5F9E;font-weight:600">{{ r.numero }}</span><span style="font-size:12px;color:#5B636B">{{ r.quando }}</span></div>
+                <div style="font-size:13px;color:#2E353B;margin-top:5px">{{ r.acao }} · {{ r.autor }} · {{ r.servicoLabel }}</div>
+                <div style="font-size:13px;color:#5B636B;margin-top:4px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ r.detalhe }}</div>
+              </button>
+            </sc-for>
+            <sc-if value="{{ g.vazio }}"><div style="padding:24px 18px;font-size:13px;line-height:1.6;color:#7A828A">{{ g.mensagem }}</div></sc-if>
+          </section>
+        </sc-for>
+      </div>
+
+      <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #DADDE1"><h2 style="font-size:14.5px;font-weight:600;margin:0;color:#1F2328">Pendências há mais tempo</h2></div>
+        <div style="overflow-x:auto">
+          <div style="min-width:760px">
+            <div style="display:grid;grid-template-columns:200px 170px minmax(120px,1fr) 100px 70px;background:#F2F4F6;border-bottom:1px solid #DADDE1">
+              <div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D;padding-left:18px">Nº processo SEI</div><div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D">Serviço</div><div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D">Órgão solicitante</div><div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D">Recebido</div><div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D;text-align:right;padding-right:18px">Dias</div>
+            </div>
+            <sc-for list="{{ antigos }}" as="p" hint-placeholder-count="8">
+              <div onClick="{{ p.onClick }}" style="display:grid;grid-template-columns:200px 170px minmax(120px,1fr) 100px 70px;border-bottom:1px solid #ECEEF0;font-size:13.5px;align-items:center;cursor:pointer" style-hover="background:#F7F8F9">
+                <div style="padding:9px 12px 9px 18px;font-family:'IBM Plex Mono';font-size:13px;color:#1F5F9E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.principal }}</div>
+                <div style="padding:9px 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.servicoLabel }}</div>
+                <div style="padding:9px 12px;color:#2E353B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.orgao }}</div>
+                <div style="padding:9px 12px;color:#5B636B">{{ p.recebido }}</div>
+                <div style="padding:9px 18px 9px 12px;text-align:right;font-weight:600">{{ p.diasTxt }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </section>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ servicoVisible }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#fff;border:1px solid #DADDE1;border-radius:2px">
+      <div style="padding:12px 14px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid #DADDE1">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <div style="display:flex;flex:1 1 360px;min-width:240px;height:36px;border:1px solid #C9CED3;border-radius:2px;overflow:hidden;background:#fff">
+            <select value="{{ filtros.campo }}" onChange="{{ fCampo }}" style="border:none;border-right:1px solid #DADDE1;background:#F2F4F6;padding:0 8px;font-size:13px;color:#2E353B;cursor:pointer;outline:none">
+              <option value="">Todas as colunas</option><option value="numero">Nº SEI</option><option value="orgao">Órgão</option><option value="demanda">Demanda</option><option value="usuario">Pessoa/família</option><option value="situacao">Situação</option><option value="memo">Memo ao setor</option>
+            </select>
+            <input value="{{ filtros.q }}" onInput="{{ fQ }}" placeholder="Buscar por número, órgão, nome…" style="flex:1;min-width:0;border:none;padding:0 12px;font-size:14px;outline:none;box-shadow:none">
+          </div>
+          <div style="display:flex;height:36px;border:1px solid #C9CED3;border-radius:2px;overflow:hidden;background:#fff">
+            <select value="{{ sortKey }}" onChange="{{ setSortKey }}" style="border:none;padding:0 8px 0 10px;font-size:13px;background:#fff;color:#2E353B;outline:none;cursor:pointer">
+              <sc-for list="{{ sortOpts }}" as="o" hint-placeholder-count="6"><option value="{{ o.k }}">Ordenar por {{ o.l }}</option></sc-for>
+            </select>
+            <button onClick="{{ toggleDir }}" style="border:none;border-left:1px solid #DADDE1;background:#F2F4F6;padding:0 12px;font-size:13px;color:#2E353B;cursor:pointer;white-space:nowrap" style-hover="background:#E8EBEE">{{ dirLabel }}</button>
+          </div>
+          <div style="position:relative">
+            <button onClick="{{ toggleCols }}" style="height:36px;padding:0 14px;background:#fff;color:#1F2328;border:1px solid #C9CED3;border-radius:2px;font-weight:500;font-size:13.5px;cursor:pointer" style-hover="background:#F2F4F6">Colunas ({{ colsVisN }})</button>
+            <sc-if value="{{ colsOpen }}" hint-placeholder-val="{{ false }}">
+              <div style="position:absolute;top:40px;right:0;z-index:20;width:260px;background:#fff;border:1px solid #C9CED3;border-radius:2px;box-shadow:0 6px 18px rgba(20,30,40,.14)">
+                <div style="padding:10px 14px;border-bottom:1px solid #DADDE1;font-size:13px;font-weight:600">Colunas visíveis</div>
+                <div style="padding:6px 0;max-height:340px;overflow-y:auto">
+                  <div style="display:flex;align-items:center;gap:10px;padding:7px 14px;font-size:13px;color:#7A828A"><span style="width:15px;height:15px;background:#C9CED3;flex-shrink:0"></span>Nº processo SEI (fixa)</div>
+                  <sc-for list="{{ colOpts }}" as="c" hint-placeholder-count="8">
+                    <button onClick="{{ c.onClick }}" style="width:100%;display:flex;align-items:center;gap:10px;padding:7px 14px;background:transparent;border:none;cursor:pointer;font-size:13px;color:#1F2328;text-align:left" style-hover="background:#F2F4F6"><span style="{{ c.box }}">{{ c.tick }}</span>{{ c.label }}</button>
+                  </sc-for>
+                </div>
+                <div style="padding:8px 14px;border-top:1px solid #DADDE1;display:flex;justify-content:space-between;align-items:center">
+                  <button onClick="{{ colsPadrao }}" style="background:transparent;border:none;color:#1F5F9E;font-size:13px;cursor:pointer;padding:4px 0;text-decoration:underline">Restaurar padrão</button>
+                  <button onClick="{{ toggleCols }}" style="height:36px;padding:0 16px;background:#12355B;color:#fff;border:1px solid #12355B;border-radius:2px;font-weight:600;font-size:13.5px;cursor:pointer;height:30px;padding:0 12px;font-size:13px">Fechar</button>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <sc-if value="{{ colsOn.setor }}" hint-placeholder-val="{{ true }}">
+            <select value="{{ filtros.setor }}" onChange="{{ fSetor }}" style="{{ pill.setor }}"><option value="">{{ colSetorLabel }}: todos</option><option value="sim">{{ colSetorLabel }}: respondido</option><option value="nao">{{ colSetorLabel }}: sem resposta</option></select>
+          </sc-if>
+          <sc-if value="{{ colsOn.gabinete }}" hint-placeholder-val="{{ true }}">
+            <select value="{{ filtros.gabinete }}" onChange="{{ fGabinete }}" style="{{ pill.gabinete }}"><option value="">Gabinete: todos</option><option value="sim">Gabinete: respondido</option><option value="nao">Gabinete: sem resposta</option></select>
+          </sc-if>
+          <sc-if value="{{ colsOn.obs }}" hint-placeholder-val="{{ true }}">
+            <select value="{{ filtros.obs }}" onChange="{{ fObs }}" style="{{ pill.obs }}"><option value="">Comentários: todos</option><option value="sim">Com comentário</option><option value="nao">Sem comentário</option></select>
+          </sc-if>
+          <select value="{{ filtros.dias }}" onChange="{{ fDias }}" style="{{ pill.dias }}"><option value="">Dias em aberto: todos</option><option value="a">Até 15 dias</option><option value="b">16 a 30 dias</option><option value="c">Mais de 30 dias</option></select>
+          <span style="width:1px;height:20px;background:#DADDE1;margin:0 4px"></span>
+          <sc-for list="{{ marcChips }}" as="m" hint-placeholder-count="5">
+            <button onClick="{{ m.onClick }}" style="{{ m.style }}"><span style="width:11px;height:11px;background:{{ m.bar }}"></span>{{ m.label }}<span style="color:#7A828A">{{ m.qtd }}</span></button>
+          </sc-for>
+          <sc-if value="{{ temFiltro }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ limparFiltros }}" style="height:32px;padding:0 6px;background:transparent;border:none;color:#1F5F9E;font-size:13px;cursor:pointer;text-decoration:underline">Limpar filtros ({{ nFiltros }})</button>
+          </sc-if>
+          <span style="margin-left:auto;font-size:13px;color:#5B636B">{{ resultInfo }}</span>
+        </div>
+      </div>
+
+      <sc-if value="{{ cardsOn }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <sc-for list="{{ linhas }}" as="p" hint-placeholder-count="6">
+          <div onClick="{{ p.onClick }}" style="padding:12px 14px;border-bottom:1px solid #ECEEF0;cursor:pointer" style-hover="background:#F7F8F9">
+            <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:6px">
+              <span style="display:flex;align-items:center;gap:8px;min-width:0">
+                <span style="width:12px;height:12px;flex-shrink:0;background:{{ p.marcBg }};border:1px solid {{ p.marcBar }}"></span>
+                <span style="font-family:'IBM Plex Mono';font-weight:500;font-size:13px;color:#1F5F9E">{{ p.principal }}</span>
+                <sc-if value="{{ p.temVinc }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#5B636B">{{ p.vincTxt }}</span></sc-if>
+              </span>
+              <span style="font-size:13px;font-weight:600;flex-shrink:0;color:{{ p.diasColor }}">{{ p.dias }} dias</span>
+            </div>
+            <div style="font-size:14px;font-weight:500;line-height:1.4;margin-bottom:2px">{{ p.orgao }}</div>
+            <div style="font-size:13px;color:#2E353B;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ p.demanda }}</div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;font-size:12.5px;color:#5B636B">
+              <span>Recebido em {{ p.recebido }}</span>
+              <sc-if value="{{ p.temMarc }}" hint-placeholder-val="{{ false }}"><span style="color:{{ p.marcFg }}">{{ p.marcLabel }}</span></sc-if>
+            </div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ listaVazia }}" hint-placeholder-val="{{ false }}"><div style="padding:40px;text-align:center;color:#7A828A;font-size:14px">Nenhum processo corresponde aos filtros.</div></sc-if>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ tableOn }}" hint-placeholder-val="{{ true }}">
+      <div style="overflow:auto;max-height:calc(100vh - 330px)">
+        <div style="min-width:{{ minW }}">
+          <div style="display:grid;grid-template-columns:{{ gridCols }};position:sticky;top:0;z-index:2;background:#F2F4F6;border-bottom:1px solid #C9CED3">
+            <button onClick="{{ sortH.numero }}" style="align-self:stretch;background:#F2F4F6;border:none;border-right:1px solid #E3E6E9;text-align:left;cursor:pointer;padding:9px 10px;font-size:12.5px;font-weight:600;color:#3D454D;line-height:1.3;display:flex;align-items:flex-start;gap:5px;position:sticky;left:0;z-index:1;border-right:1px solid #DADDE1" style-hover="background:#E8EBEE">Nº processo SEI<span style="font-size:9px;color:#12355B;flex-shrink:0;padding-top:2px">{{ arrows.numero }}</span></button>
+            <sc-if value="{{ vis.recebido }}" hint-placeholder-val="{{ true }}"><button onClick="{{ sortH.recebido }}" style="align-self:stretch;background:#F2F4F6;border:none;border-right:1px solid #E3E6E9;text-align:left;cursor:pointer;padding:9px 10px;font-size:12.5px;font-weight:600;color:#3D454D;line-height:1.3;display:flex;align-items:flex-start;gap:5px;" style-hover="background:#E8EBEE">Recebido / Memo<span style="font-size:9px;color:#12355B;flex-shrink:0;padding-top:2px">{{ arrows.recebido }}</span></button></sc-if>
+            <sc-if value="{{ vis.orgao }}" hint-placeholder-val="{{ true }}"><button onClick="{{ sortH.orgao }}" style="align-self:stretch;background:#F2F4F6;border:none;border-right:1px solid #E3E6E9;text-align:left;cursor:pointer;padding:9px 10px;font-size:12.5px;font-weight:600;color:#3D454D;line-height:1.3;display:flex;align-items:flex-start;gap:5px;" style-hover="background:#E8EBEE">Órgão solicitante<span style="font-size:9px;color:#12355B;flex-shrink:0;padding-top:2px">{{ arrows.orgao }}</span></button></sc-if>
+            <sc-if value="{{ vis.demanda }}" hint-placeholder-val="{{ true }}"><button onClick="{{ sortH.demanda }}" style="align-self:stretch;background:#F2F4F6;border:none;border-right:1px solid #E3E6E9;text-align:left;cursor:pointer;padding:9px 10px;font-size:12.5px;font-weight:600;color:#3D454D;line-height:1.3;display:flex;align-items:flex-start;gap:5px;" style-hover="background:#E8EBEE">Demanda<span style="font-size:9px;color:#12355B;flex-shrink:0;padding-top:2px">{{ arrows.demanda }}</span></button></sc-if>
+            <sc-if value="{{ vis.usuario }}" hint-placeholder-val="{{ true }}"><button onClick="{{ sortH.usuario }}" style="align-self:stretch;background:#F2F4F6;border:none;border-right:1px solid #E3E6E9;text-align:left;cursor:pointer;padding:9px 10px;font-size:12.5px;font-weight:600;color:#3D454D;line-height:1.3;display:flex;align-items:flex-start;gap:5px;" style-hover="background:#E8EBEE">Pessoa/família<span style="font-size:9px;color:#12355B;flex-shrink:0;padding-top:2px">{{ arrows.usuario }}</span></button></sc-if>
+            <sc-if value="{{ vis.situacao }}" hint-placeholder-val="{{ true }}"><button onClick="{{ sortH.situacao }}" style="align-self:stretch;background:#F2F4F6;border:none;border-right:1px solid #E3E6E9;text-align:left;cursor:pointer;padding:9px 10px;font-size:12.5px;font-weight:600;color:#3D454D;line-height:1.3;display:flex;align-items:flex-start;gap:5px;" style-hover="background:#E8EBEE">Situação<span style="font-size:9px;color:#12355B;flex-shrink:0;padding-top:2px">{{ arrows.situacao }}</span></button></sc-if>
+            <sc-if value="{{ vis.setor }}" hint-placeholder-val="{{ true }}"><button onClick="{{ sortH.setor }}" style="align-self:stretch;background:#F2F4F6;border:none;border-right:1px solid #E3E6E9;text-align:left;cursor:pointer;padding:9px 10px;font-size:12.5px;font-weight:600;color:#3D454D;line-height:1.3;display:flex;align-items:flex-start;gap:5px;" style-hover="background:#E8EBEE">{{ colSetorLabel }}<span style="font-size:9px;color:#12355B;flex-shrink:0;padding-top:2px">{{ arrows.setor }}</span></button></sc-if>
+            <sc-if value="{{ vis.gabinete }}" hint-placeholder-val="{{ true }}"><button onClick="{{ sortH.gabinete }}" style="align-self:stretch;background:#F2F4F6;border:none;border-right:1px solid #E3E6E9;text-align:left;cursor:pointer;padding:9px 10px;font-size:12.5px;font-weight:600;color:#3D454D;line-height:1.3;display:flex;align-items:flex-start;gap:5px;" style-hover="background:#E8EBEE">Resp. do Gabinete<span style="font-size:9px;color:#12355B;flex-shrink:0;padding-top:2px">{{ arrows.gabinete }}</span></button></sc-if>
+            <sc-if value="{{ vis.obs }}" hint-placeholder-val="{{ true }}"><button onClick="{{ sortH.obs }}" style="align-self:stretch;background:#F2F4F6;border:none;border-right:1px solid #E3E6E9;text-align:left;cursor:pointer;padding:9px 10px;font-size:12.5px;font-weight:600;color:#3D454D;line-height:1.3;display:flex;align-items:flex-start;gap:5px;" style-hover="background:#E8EBEE">Comentário recente<span style="font-size:9px;color:#12355B;flex-shrink:0;padding-top:2px">{{ arrows.obs }}</span></button></sc-if>
+            <sc-if value="{{ vis.dias }}" hint-placeholder-val="{{ true }}"><button onClick="{{ sortH.dias }}" style="align-self:stretch;background:#F2F4F6;border:none;border-right:1px solid #E3E6E9;text-align:left;cursor:pointer;padding:9px 10px;font-size:12.5px;font-weight:600;color:#3D454D;line-height:1.3;display:flex;align-items:flex-start;gap:5px;justify-content:flex-end;text-align:right;border-right:none" style-hover="background:#E8EBEE">Dias<span style="font-size:9px;color:#12355B;flex-shrink:0;padding-top:2px">{{ arrows.dias }}</span></button></sc-if>
+          </div>
+          <sc-for list="{{ linhas }}" as="p" hint-placeholder-count="12">
+            <div onClick="{{ p.onClick }}" style="display:grid;grid-template-columns:{{ gridCols }};border-bottom:1px solid #ECEEF0;cursor:pointer;align-items:start" style-hover="background:#F7F8F9">
+              <div style="padding:10px 12px;position:sticky;left:0;align-self:stretch;border-right:1px solid #DADDE1;background:{{ p.marcBg }}">
+                <div style="font-family:'IBM Plex Mono';font-weight:500;font-size:12.5px;color:#1F5F9E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4" title="{{ p.numero }}">{{ p.principal }}</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:3px;font-size:12px">
+                  <sc-if value="{{ p.temMarc }}" hint-placeholder-val="{{ false }}"><span style="color:{{ p.marcFg }}">{{ p.marcLabel }}</span></sc-if>
+                  <sc-if value="{{ p.temVinc }}" hint-placeholder-val="{{ false }}"><span style="color:#3D454D">{{ p.vincTxt }}</span></sc-if>
+                  <sc-if value="{{ p.temLink }}" hint-placeholder-val="{{ false }}"><span style="color:#1F5F9E">link SEI</span></sc-if>
+                </div>
+              </div>
+              <sc-if value="{{ vis.recebido }}" hint-placeholder-val="{{ true }}"><div style="padding:10px 10px;border-right:1px solid #EEF0F2;align-self:stretch;font-size:13px;line-height:1.4"><div>{{ p.recebido }}</div><div style="font-size:12px;color:#7A828A;margin-top:2px">Memo: {{ p.memo }}</div></div></sc-if>
+              <sc-if value="{{ vis.orgao }}" hint-placeholder-val="{{ true }}"><div style="padding:10px 10px;border-right:1px solid #EEF0F2;align-self:stretch"><div style="font-size:13px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-weight:500">{{ p.orgao }}</div></div></sc-if>
+              <sc-if value="{{ vis.demanda }}" hint-placeholder-val="{{ true }}"><div style="padding:10px 10px;border-right:1px solid #EEF0F2;align-self:stretch"><div style="font-size:13px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;color:#2E353B">{{ p.demanda }}</div></div></sc-if>
+              <sc-if value="{{ vis.usuario }}" hint-placeholder-val="{{ true }}"><div style="padding:10px 10px;border-right:1px solid #EEF0F2;align-self:stretch"><div style="font-size:13px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;color:#2E353B">{{ p.usuario }}</div></div></sc-if>
+              <sc-if value="{{ vis.situacao }}" hint-placeholder-val="{{ true }}"><div style="padding:10px 10px;border-right:1px solid #EEF0F2;align-self:stretch"><div style="font-size:13px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">{{ p.situacao }}</div></div></sc-if>
+              <sc-if value="{{ vis.setor }}" hint-placeholder-val="{{ true }}"><div style="padding:10px 10px;border-right:1px solid #EEF0F2;align-self:stretch"><div style="font-size:13px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;color:{{ p.setorColor }}">{{ p.respSetor }}</div></div></sc-if>
+              <sc-if value="{{ vis.gabinete }}" hint-placeholder-val="{{ true }}"><div style="padding:10px 10px;border-right:1px solid #EEF0F2;align-self:stretch"><div style="font-size:13px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;color:{{ p.gabColor }}">{{ p.respGabinete }}</div></div></sc-if>
+              <sc-if value="{{ vis.obs }}" hint-placeholder-val="{{ true }}"><div style="padding:10px 10px;border-right:1px solid #EEF0F2;align-self:stretch">
+                <div style="font-size:13px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;color:#2E353B">{{ p.obsTxt }}</div>
+                <sc-if value="{{ p.obsMais }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:#5B636B;margin-top:3px">{{ p.obsMaisTxt }}</div></sc-if>
+              </div></sc-if>
+              <sc-if value="{{ vis.dias }}" hint-placeholder-val="{{ true }}"><div style="padding:10px 12px;text-align:right;font-size:13.5px;font-weight:600;color:{{ p.diasColor }}">{{ p.dias }}</div></sc-if>
+            </div>
+          </sc-for>
+          <sc-if value="{{ listaVazia }}" hint-placeholder-val="{{ false }}"><div style="padding:48px;text-align:center;color:#7A828A;font-size:14px">Nenhum processo corresponde aos filtros.</div></sc-if>
+        </div>
+      </div>
+      </sc-if>
+      <sc-if value="{{ paginacaoOn }}" hint-placeholder-val="{{ true }}">
+        <div style="padding:11px 14px;border-top:1px solid #DADDE1;background:#FAFBFB;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#5B636B">
+            <span>Itens por página</span>
+            <select value="{{ porPagina }}" onChange="{{ setPorPagina }}" style="height:32px;padding:0 28px 0 9px;border:1px solid #C9CED3;background:#fff;border-radius:2px;font-size:13px;color:#2E353B"><option value="25">25</option><option value="50">50</option><option value="100">100</option></select>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <button onClick="{{ paginaAnterior }}" disabled="{{ primeiraPagina }}" style="height:32px;padding:0 12px;background:#fff;color:#1F2328;border:1px solid #C9CED3;border-radius:2px;font-size:13px;cursor:pointer">Anterior</button>
+            <span style="min-width:112px;text-align:center;font-size:13px;color:#3D454D">Página {{ paginaAtual }} de {{ totalPaginas }}</span>
+            <button onClick="{{ proximaPagina }}" disabled="{{ ultimaPagina }}" style="height:32px;padding:0 12px;background:#fff;color:#1F2328;border:1px solid #C9CED3;border-radius:2px;font-size:13px;cursor:pointer">Próxima</button>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ processoVisible }}" hint-placeholder-val="{{ false }}">
+    <div style="max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:16px">
+      <div><button onClick="{{ backToServico }}" style="background:transparent;border:none;color:#1F5F9E;font-size:13.5px;cursor:pointer;padding:0;text-decoration:underline">← Voltar para {{ proc.servicoLabel }}</button></div>
+
+      <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px;padding:18px 22px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:flex-start">
+        <div style="min-width:0">
+          <div style="font-size:13px;color:#5B636B;margin-bottom:4px">Processo SEI · {{ proc.servicoLabel }}</div>
+          <div style="font-family:'IBM Plex Mono';font-weight:600;font-size:20px;color:#1F2328;word-break:break-word">{{ proc.principal }}</div>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:8px;font-size:13px;color:#5B636B">
+            <span style="font-weight:600;padding:2px 8px;border:1px solid {{ proc.stBorder }};background:{{ proc.stBg }};color:{{ proc.stColor }}">{{ proc.abaTxt }}</span>
+            <span>Recebido em {{ proc.recebido }}</span>
+            <sc-if value="{{ proc.temEncaminhamento }}" hint-placeholder-val="{{ false }}"><span>Encaminhamento: <strong style="color:#2E353B">{{ proc.encaminhamento }}</strong></span></sc-if>
+            <span>Dias em aberto: <span style="font-weight:600;color:{{ proc.diasColor }}">{{ proc.dias }}</span></span>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <sc-if value="{{ proc.podeConcluir }}" hint-placeholder-val="false"><button onClick="{{ toggleAba }}" style="height:36px;padding:0 16px;border-radius:2px;font-weight:600;font-size:13.5px;cursor:pointer;border:1px solid {{ proc.acaoBorder }};background:{{ proc.acaoBg }};color:{{ proc.acaoColor }}">{{ proc.acaoBtn }}</button></sc-if>
+          <sc-if value="{{ proc.podeExcluir }}" hint-placeholder-val="{{ false }}"><button onClick="{{ pedirExcluir }}" style="height:36px;padding:0 14px;background:#fff;color:#1F2328;border:1px solid #C9CED3;border-radius:2px;font-weight:500;font-size:13.5px;cursor:pointer;color:#A3281F;border-color:#E2B4AF" style-hover="background:#FBF1F0">Excluir ficha</button></sc-if>
+        </div>
+      </section>
+      <sc-if value="{{ proc.edicaoBloqueada }}" hint-placeholder-val="false"><div style="padding:10px 14px;background:#FFF7E8;border:1px solid #E8D2A4;color:#6F4A08;font-size:13px;line-height:1.5">Este processo foi cadastrado por outra pessoa. Você pode consultar os dados; somente quem cadastrou ou a Superintendente pode alterá-lo.</div></sc-if>
+
+      <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #DADDE1"><div><h2 style="font-size:14.5px;font-weight:600;margin:0;color:#1F2328">Acompanhamento atual</h2><div style="font-size:12.5px;color:#7A828A;margin-top:2px">Defina quem acompanha e qual é a próxima providência.</div></div></div>
+        <div style="padding:14px 18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;align-items:end">
+          <div><label style="display:block;font-size:12.5px;font-weight:500;color:#3D454D;margin-bottom:5px">Responsável pelo acompanhamento</label><input value="{{ responsavelTexto }}" onInput="{{ setResponsavelTexto }}" placeholder="Nome da pessoa responsável" style="width:100%;height:36px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:13.5px;background:#fff;color:#1F2328"></div>
+          <div><label style="display:block;font-size:12.5px;font-weight:500;color:#3D454D;margin-bottom:5px">Próxima ação</label><input value="{{ proximaAcaoTexto }}" onInput="{{ setProximaAcaoTexto }}" placeholder="Ex.: cobrar relatório da unidade" style="width:100%;height:36px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:13.5px;background:#fff;color:#1F2328"></div>
+          <div><label style="display:block;font-size:12.5px;font-weight:500;color:#3D454D;margin-bottom:5px">Data prevista</label><input type="date" value="{{ proximaDataTexto }}" onInput="{{ setProximaDataTexto }}" style="width:100%;height:36px;padding:0 9px;border:1px solid #C9CED3;border-radius:2px;font-size:13px;background:#fff;color:#1F2328"></div>
+          <button onClick="{{ salvarAcompanhamento }}" disabled="{{ proc.edicaoBloqueada }}" style="height:36px;padding:0 16px;background:#12355B;color:#fff;border:1px solid #12355B;border-radius:2px;font-weight:600;font-size:13px;cursor:pointer">Salvar</button>
+        </div>
+        <sc-if value="{{ acompanhamentoSalvoOn }}" hint-placeholder-val="{{ false }}"><div style="padding:0 18px 12px;font-size:12.5px;color:#2F7A4B">Acompanhamento atualizado.</div></sc-if>
+      </section>
+
+      <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
+        <div style="flex:1 1 560px;min-width:0;display:flex;flex-direction:column;gap:16px">
+          <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #DADDE1"><h2 style="font-size:14.5px;font-weight:600;margin:0;color:#1F2328">Demanda</h2></div>
+            <p style="font-size:14.5px;line-height:1.65;margin:0;padding:14px 18px 16px;text-wrap:pretty">{{ proc.demanda }}</p>
+          </section>
+
+          <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px">
+            <div style="padding:12px 18px;border-bottom:1px solid #DADDE1"><h2 style="font-size:14.5px;font-weight:600;margin:0;color:#1F2328">Resumo da tramitação</h2><div style="font-size:12.5px;color:#7A828A;margin-top:4px">Cabeçalhos da planilha. Registre novas informações em Comentários e atualizações abaixo.</div></div>
+            <sc-for list="{{ proc.etapas }}" as="e" hint-placeholder-count="5">
+              <div style="display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:14px;padding:12px 18px;border-bottom:1px solid #ECEEF0;align-items:start">
+                <div style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;border:1px solid {{ e.dotBorder }};background:{{ e.dotBg }};color:{{ e.dotColor }}">{{ e.n }}</div>
+                <div style="min-width:0">
+                  <div style="font-size:12.5px;color:#5B636B;margin-bottom:3px">{{ e.label }}</div>
+                  <sc-if value="{{ e.lendo }}" hint-placeholder-val="{{ true }}"><div style="font-size:14px;line-height:1.55;white-space:pre-wrap;color:{{ e.valColor }}">{{ e.valor }}</div><div style="font-size:12px;color:{{ e.quemColor }};margin-top:3px">{{ e.quem }}</div></sc-if>
+                  <sc-if value="{{ e.editando }}" hint-placeholder-val="{{ false }}">
+                    <sc-if value="{{ e.dataRecebimento }}"><input value="{{ editValue }}" onInput="{{ setEditValue }}" inputmode="numeric" maxlength="10" placeholder="dd/mm/aaaa" aria-label="Data de recebimento" style="width:100%;height:38px;padding:0 10px;border:1px solid #12355B;border-radius:2px;font-size:14px"></sc-if>
+                    <sc-if value="{{ e.textoLivre }}"><textarea value="{{ editValue }}" onInput="{{ setEditValue }}" style="width:100%;min-height:64px;padding:8px 10px;border:1px solid #12355B;border-radius:2px;font-size:14px;line-height:1.5;resize:vertical"></textarea></sc-if>
+                    <sc-if value="{{ editErroOn }}"><div role="alert" style="font-size:13px;color:#A3281F;margin-top:6px">{{ editErro }}</div></sc-if>
+                    <div style="display:flex;gap:8px;margin-top:8px">
+                      <button onClick="{{ salvarEdit }}" style="height:36px;padding:0 16px;background:#12355B;color:#fff;border:1px solid #12355B;border-radius:2px;font-weight:600;font-size:13.5px;cursor:pointer;height:32px;padding:0 14px;font-size:13px">Salvar</button>
+                      <button onClick="{{ cancelEdit }}" style="height:36px;padding:0 14px;background:#fff;color:#1F2328;border:1px solid #C9CED3;border-radius:2px;font-weight:500;font-size:13.5px;cursor:pointer;height:32px;font-size:13px">Cancelar</button>
+                    </div>
+                  </sc-if>
+                </div>
+                <sc-if value="{{ e.podeEditar }}" hint-placeholder-val="{{ true }}"><button onClick="{{ e.onEdit }}" style="background:transparent;border:none;color:#1F5F9E;font-size:13px;cursor:pointer;padding:2px 0;text-decoration:underline">Editar</button></sc-if>
+              </div>
+            </sc-for>
+          </section>
+
+          <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #DADDE1"><h2 style="font-size:14.5px;font-weight:600;margin:0;color:#1F2328">Comentários e atualizações</h2><span style="font-size:12.5px;color:#7A828A">{{ proc.obsCount }}</span></div>
+            <div style="padding:10px 18px;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid #ECEEF0">
+              <input value="{{ comentarioBusca }}" onInput="{{ setComentarioBusca }}" placeholder="Buscar título, texto ou autor" aria-label="Buscar nos comentários" style="flex:1;min-width:160px;height:34px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:13px">
+              <select value="{{ comentarioOrdem }}" onChange="{{ setComentarioOrdem }}" aria-label="Ordem dos comentários" style="height:34px;padding:0 9px;background:#fff;border:1px solid #C9CED3;border-radius:2px;font-size:13px"><option value="recentes">Mais recentes primeiro</option><option value="antigos">Mais antigos primeiro</option></select>
+            </div>
+            <sc-if value="{{ proc.semComentarios }}"><div style="padding:18px;font-size:13px;color:#7A828A">{{ proc.comentarioVazioTexto }}</div></sc-if>
+            <sc-for list="{{ proc.obs }}" as="o" hint-placeholder-count="2">
+              <div style="padding:12px 18px;border-bottom:1px solid #ECEEF0">
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px"><span style="font-size:14px;font-weight:600;color:#1F2328">{{ o.titulo }}</span><span style="font-size:11.5px;padding:2px 7px;background:{{ o.catBg }};color:{{ o.catCor }};border:1px solid {{ o.catBorder }};border-radius:10px">{{ o.categoria }}</span><sc-if value="{{ o.podeEditarComentario }}" hint-placeholder-val="false"><button onClick="{{ o.editar }}" style="margin-left:auto;background:transparent;border:0;color:#1F5F9E;font-size:12px;cursor:pointer;text-decoration:underline">Editar</button></sc-if><sc-if value="{{ o.podeExcluir }}" hint-placeholder-val="false"><button onClick="{{ o.excluir }}" style="background:transparent;border:0;color:#A3281F;font-size:12px;cursor:pointer;text-decoration:underline">Excluir</button></sc-if></div>
+                <div style="display:flex;gap:8px;align-items:baseline;margin-bottom:4px;flex-wrap:wrap;font-size:12.5px;color:#5B636B">
+                  <span style="font-size:13.5px;font-weight:600;color:#1F2328">{{ o.autor }}</span><span>{{ o.perfil }}</span><span>·</span><span>{{ o.data }}</span>
+                </div>
+                <div style="font-size:14px;line-height:1.6;color:#2E353B;white-space:pre-wrap">{{ o.texto }}</div>
+                <sc-if value="{{ o.temDataEvento }}"><div style="font-size:13px;color:#3D454D;margin-top:7px">Data informada: {{ o.dataEvento }}</div></sc-if>
+                <sc-if value="{{ o.temMensagemSei }}"><div style="margin-top:10px;padding:10px 12px;border-left:3px solid #BCCCDD;background:#F5F7FA"><div style="font-size:12px;font-weight:600;color:#5B636B;margin-bottom:5px">Mensagem copiada do SEI</div><div style="font-size:13px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere">{{ o.mensagemSei }}</div></div></sc-if>
+                <sc-for list="{{ o.anexos }}" as="a"><div style="margin-top:10px"><a href="{{ a.url }}" download="{{ a.nome }}" style="font-size:12.5px">{{ a.nome }} · baixar imagem</a><img src="{{ a.url }}" alt="{{ a.nome }}" style="display:block;max-width:100%;max-height:360px;object-fit:contain;margin-top:6px;border:1px solid #DADDE1;border-radius:3px"></div></sc-for>
+              </div>
+            </sc-for>
+            <div style="padding:14px 18px;background:#FAFBFB">
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-bottom:8px">
+                <div><label style="display:block;font-size:13px;font-weight:500;color:#3D454D;margin-bottom:6px">Título do comentário</label><input value="{{ obsTitulo }}" onInput="{{ setObsTitulo }}" placeholder="Ex.: Cobrança ao CREAS" maxlength="80" style="width:100%;height:36px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:14px;background:#fff;color:#1F2328"></div>
+                <div><label style="display:block;font-size:13px;font-weight:500;color:#3D454D;margin-bottom:6px">Categoria</label><select value="{{ obsCategoria }}" onChange="{{ setObsCategoria }}" style="width:100%;height:36px;padding:0 9px;border:1px solid #C9CED3;border-radius:2px;font-size:13px;background:#fff;color:#1F2328"><sc-for list="{{ categoriasAtualizacao }}" as="c"><option value="{{ c.k }}">{{ c.label }}</option></sc-for></select></div>
+              </div>
+              <sc-if value="{{ exigeDataEvento }}"><div style="margin-bottom:10px"><label style="display:block;font-size:13px;font-weight:500;color:#3D454D;margin-bottom:6px">{{ dataEventoLabel }}</label><input value="{{ obsDataEvento }}" onInput="{{ setObsDataEvento }}" inputmode="numeric" maxlength="10" placeholder="dd/mm/aaaa" style="width:180px;height:36px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:14px;background:#fff"></div></sc-if>
+              <label style="display:block;font-size:13px;font-weight:500;color:#3D454D;margin-bottom:6px">Comentário</label>
+              <div style="font-size:12px;color:#5B636B;margin-bottom:6px">Será registrado por {{ userName }} · {{ userRole }}, com data e hora automáticas.</div>
+              <textarea value="{{ obsTexto }}" onInput="{{ setObsTexto }}" placeholder="Descreva a informação registrada ou escreva um comentário normal" style="width:100%;min-height:72px;padding:9px 10px;border:1px solid #C9CED3;border-radius:2px;font-size:14px;line-height:1.55;resize:vertical;background:#fff"></textarea>
+              <label style="display:block;font-size:13px;font-weight:500;color:#3D454D;margin:12px 0 6px">Mensagem do SEI (opcional)</label>
+              <textarea value="{{ obsMensagemSei }}" onInput="{{ setObsMensagemSei }}" placeholder="Cole aqui o texto da mensagem ou despacho do SEI" style="width:100%;min-height:64px;padding:9px 10px;border:1px solid #C9CED3;border-radius:2px;font-size:13px;resize:vertical;background:#fff"></textarea>
+              <label style="display:block;font-size:13px;font-weight:500;color:#3D454D;margin:12px 0 6px">Foto ou captura de tela (opcional)</label>
+              <input type="file" accept="image/png,image/jpeg,image/webp" onChange="{{ selecionarAnexo }}" disabled="{{ anexosCarregando }}" aria-label="Anexar foto ou captura do SEI" style="max-width:100%;font-size:13px">
+              <div style="font-size:12px;color:#7A828A;margin-top:5px">Até 2 imagens PNG, JPG ou WebP, somando até 1 MB por registro.</div>
+              <sc-for list="{{ anexosRascunho }}" as="a"><div style="display:flex;align-items:center;gap:10px;margin-top:8px"><img src="{{ a.url }}" alt="{{ a.nome }}" style="width:56px;height:44px;object-fit:contain;border:1px solid #DADDE1"><span style="font-size:12px;overflow-wrap:anywhere">{{ a.nome }}</span><button onClick="{{ a.remover }}" style="background:none;border:0;color:#A3281F;cursor:pointer;font-size:12px">Remover</button></div></sc-for>
+              <sc-if value="{{ obsErroOn }}" hint-placeholder-val="{{ false }}"><div role="alert" style="font-size:12.5px;color:#A3281F;margin-top:6px">{{ obsErroTexto }}</div></sc-if>
+              <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px"><sc-if value="{{ comentarioEditandoOn }}" hint-placeholder-val="false"><button onClick="{{ cancelarEdicaoComentario }}" style="height:34px;padding:0 14px;background:#fff;color:#3D454D;border:1px solid #C9CED3;border-radius:2px;font-size:13px;cursor:pointer">Cancelar edição</button></sc-if><button onClick="{{ addObs }}" disabled="{{ anexosCarregando }}" style="height:36px;padding:0 16px;background:#12355B;color:#fff;border:1px solid #12355B;border-radius:2px;font-weight:600;font-size:13.5px;cursor:pointer;height:34px" style-hover="background:#0C2744">{{ comentarioBtnTexto }}</button></div>
+            </div>
+          </section>
+        </div>
+
+        <aside style="flex:1 1 300px;max-width:100%;display:flex;flex-direction:column;gap:16px">
+          <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px">
+            <div style="padding:12px 18px;border-bottom:1px solid #DADDE1"><h2 style="font-size:14.5px;font-weight:600;margin:0">Histórico deste processo</h2><div style="font-size:12px;color:#7A828A;margin-top:3px">Edições e comentários registrados no sistema</div></div>
+            <div style="max-height:360px;overflow:auto">
+              <sc-for list="{{ proc.atividades }}" as="a"><div style="padding:12px 18px;border-bottom:1px solid #ECEEF0"><div style="font-size:13px;font-weight:600;color:#1F2328">{{ a.acao }} · {{ a.autor }}</div><div style="font-size:12px;color:#7A828A;margin-top:3px">{{ a.quando }}</div><div style="font-size:13px;line-height:1.55;color:#3D454D;margin-top:5px;white-space:pre-wrap;overflow-wrap:anywhere">{{ a.detalhe }}</div></div></sc-for>
+              <sc-if value="{{ proc.semAtividades }}"><div style="padding:18px;font-size:13px;line-height:1.6;color:#7A828A">Ainda não há alterações registradas neste processo. Os dados e as observações originais vieram da planilha.</div></sc-if>
+            </div>
+          </section>
+          <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #DADDE1"><h2 style="font-size:14.5px;font-weight:600;margin:0;color:#1F2328">Dados do processo</h2></div>
+            <div style="padding:2px 18px 6px">
+              <div style="padding:10px 0;border-bottom:1px solid #ECEEF0"><div style="font-size:12.5px;color:#5B636B;margin-bottom:2px">Órgão solicitante</div><div style="font-size:14px;line-height:1.45">{{ proc.orgao }}</div></div>
+              <div style="padding:10px 0;border-bottom:1px solid #ECEEF0"><div style="font-size:12.5px;color:#5B636B;margin-bottom:2px">Pessoa/família referenciada</div><div style="font-size:14px;line-height:1.45">{{ proc.usuario }}</div></div>
+              <div style="padding:10px 0"><div style="font-size:12.5px;color:#5B636B;margin-bottom:2px">Serviço</div><div style="font-size:14px">{{ proc.servicoLabel }}</div></div>
+            </div>
+          </section>
+
+          <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #DADDE1"><h2 style="font-size:14.5px;font-weight:600;margin:0;color:#1F2328">Classificação de acompanhamento</h2></div>
+            <div style="padding:12px 18px 14px">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+                <sc-for list="{{ proc.marcOpts }}" as="m" hint-placeholder-count="4">
+                  <button onClick="{{ m.onClick }}" disabled="{{ proc.edicaoBloqueada }}" style="{{ m.style }}"><span style="width:11px;height:11px;flex-shrink:0;background:{{ m.bar }}"></span>{{ m.label }}</button>
+                </sc-for>
+              </div>
+              <div style="font-size:12px;color:#7A828A;margin-top:8px">{{ proc.marcOrigem }}</div>
+            </div>
+          </section>
+
+          <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #DADDE1"><h2 style="font-size:14.5px;font-weight:600;margin:0;color:#1F2328">Processos nesta ficha</h2><span style="font-size:12.5px;color:#7A828A">{{ proc.totalProc }}</span></div>
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 18px;border-bottom:1px solid #ECEEF0">
+              <span style="font-family:'IBM Plex Mono';font-size:13px;font-weight:500">{{ proc.principal }}</span><span style="font-size:12.5px;color:#5B636B">Principal</span>
+            </div>
+            <sc-for list="{{ proc.vinc }}" as="v" hint-placeholder-count="0">
+              <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 18px;border-bottom:1px solid #ECEEF0">
+                <span style="font-family:'IBM Plex Mono';font-size:13px">{{ v.numero }}</span>
+                <span style="display:flex;align-items:center;gap:10px;font-size:12.5px"><sc-if value="{{ v.temNota }}" hint-placeholder-val="{{ false }}"><span style="color:#5B636B">{{ v.nota }}</span></sc-if><sc-if value="{{ v.removivel }}" hint-placeholder-val="{{ false }}"><button onClick="{{ v.remover }}" style="background:transparent;border:none;color:#A3281F;font-size:12.5px;cursor:pointer;padding:0;text-decoration:underline">Remover</button></sc-if></span>
+              </div>
+            </sc-for>
+            <sc-if value="{{ proc.podeEditar }}" hint-placeholder-val="true"><div style="display:flex;flex-direction:column;gap:6px;padding:12px 18px 14px;background:#FAFBFB">
+              <input value="{{ vincTexto }}" onInput="{{ setVincTexto }}" placeholder="Nº SEI 25101.000000/2026" style="width:100%;height:38px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:14px;background:#fff;color:#1F2328;height:34px;font-size:13px;font-family:'IBM Plex Mono'">
+              <div style="display:flex;gap:6px">
+                <input value="{{ vincNota }}" onInput="{{ setVincNota }}" placeholder="Anotação (ex.: reiteração)" style="width:100%;height:38px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:14px;background:#fff;color:#1F2328;height:34px;font-size:13px;flex:1;min-width:0">
+                <button onClick="{{ addVinc }}" style="height:36px;padding:0 16px;background:#12355B;color:#fff;border:1px solid #12355B;border-radius:2px;font-weight:600;font-size:13.5px;cursor:pointer;height:34px;padding:0 12px;font-size:13px;flex-shrink:0">Adicionar</button>
+              </div>
+            </div></sc-if>
+          </section>
+
+          <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #DADDE1"><h2 style="font-size:14.5px;font-weight:600;margin:0;color:#1F2328">Link no SEI</h2></div>
+            <div style="padding:12px 18px 14px">
+              <sc-if value="{{ proc.temLink }}" hint-placeholder-val="{{ false }}"><a href="{{ proc.link }}" target="_blank" style="font-size:14px">Abrir processo no SEI ↗</a></sc-if>
+              <sc-if value="{{ proc.podeEditar }}" hint-placeholder-val="{{ true }}"><sc-if value="{{ proc.semLink }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;gap:6px">
+                  <input value="{{ linkTexto }}" onInput="{{ setLink }}" placeholder="Colar endereço do processo" style="width:100%;height:38px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:14px;background:#fff;color:#1F2328;height:34px;font-size:13px;flex:1;min-width:0">
+                  <button onClick="{{ salvarLink }}" style="height:36px;padding:0 16px;background:#12355B;color:#fff;border:1px solid #12355B;border-radius:2px;font-weight:600;font-size:13.5px;cursor:pointer;height:34px;padding:0 12px;font-size:13px;flex-shrink:0">Salvar</button>
+                </div>
+              </sc-if></sc-if>
+              <sc-if value="{{ proc.edicaoBloqueada }}" hint-placeholder-val="{{ false }}"><sc-if value="{{ proc.semLink }}" hint-placeholder-val="{{ true }}"><span style="font-size:13px;color:#7A828A">Link não registrado.</span></sc-if></sc-if>
+            </div>
+          </section>
+        </aside>
+      </div>
+
+      <sc-if value="{{ confirmDel }}" hint-placeholder-val="{{ false }}">
+      <div style="position:fixed;inset:0;background:rgba(20,30,40,.45);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px">
+        <div style="background:#fff;border-radius:2px;max-width:460px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.2)">
+          <div style="padding:20px 22px 16px">
+            <h3 style="font-weight:600;font-size:17px;margin:0 0 10px">Excluir esta ficha?</h3>
+            <p style="font-size:14px;line-height:1.6;color:#2E353B;margin:0">O processo <span style="font-family:'IBM Plex Mono';font-weight:500">{{ proc.numero }}</span> será removido de {{ proc.servicoLabel }}. A exclusão fica registrada em seu nome.</p>
+          </div>
+          <div style="padding:12px 22px;background:#FAFBFB;border-top:1px solid #DADDE1;display:flex;justify-content:flex-end;gap:8px">
+            <button onClick="{{ cancelExcluir }}" style="height:36px;padding:0 14px;background:#fff;color:#1F2328;border:1px solid #C9CED3;border-radius:2px;font-weight:500;font-size:13.5px;cursor:pointer">Cancelar</button>
+            <button onClick="{{ confirmarExcluir }}" style="height:36px;padding:0 16px;background:#12355B;color:#fff;border:1px solid #12355B;border-radius:2px;font-weight:600;font-size:13.5px;cursor:pointer;background:#A3281F;border-color:#A3281F" style-hover="background:#86201A">Excluir</button>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ usuariosVisible }}" hint-placeholder-val="{{ false }}">
+    <div style="max-width:1080px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(360px,100%),1fr));gap:20px;align-items:start">
+      <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px">
+        <div style="padding:14px 18px;border-bottom:1px solid #DADDE1"><h2 style="font-size:16px;font-weight:600;margin:0">Cadastrar usuário</h2><div style="font-size:12.5px;color:#7A828A;margin-top:4px">Novas contas entram com o perfil Administrativo.</div></div>
+        <div style="padding:18px;display:flex;flex-direction:column;gap:14px">
+          <div><label style="display:block;font-size:13px;font-weight:500;color:#3D454D;margin-bottom:6px">Nome completo</label><input value="{{ usuarioForm.nome }}" onInput="{{ setUsuarioNome }}" placeholder="Nome da pessoa" style="width:100%;height:38px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:14px;background:#fff;color:#1F2328"></div>
+          <div><label style="display:block;font-size:13px;font-weight:500;color:#3D454D;margin-bottom:6px">E-mail</label><input type="email" value="{{ usuarioForm.email }}" onInput="{{ setUsuarioEmail }}" placeholder="nome@exemplo.com" style="width:100%;height:38px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:14px;background:#fff;color:#1F2328"></div>
+          <div><label style="display:block;font-size:13px;font-weight:500;color:#3D454D;margin-bottom:6px">Senha inicial</label><input type="password" value="{{ usuarioForm.senha }}" onInput="{{ setUsuarioSenha }}" placeholder="Mínimo de 8 caracteres" style="width:100%;height:38px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:14px;background:#fff;color:#1F2328"><div style="font-size:12px;color:#7A828A;margin-top:5px">A pessoa usará esta senha no primeiro acesso.</div></div>
+          <sc-if value="{{ usuariosErroOn }}" hint-placeholder-val="{{ false }}"><div role="alert" style="padding:10px 12px;background:#FCEDEB;border:1px solid #E8C2BE;color:#8E1D16;font-size:13px">{{ usuariosErro }}</div></sc-if>
+          <sc-if value="{{ usuariosSucessoOn }}" hint-placeholder-val="{{ false }}"><div style="padding:10px 12px;background:#EAF5EE;border:1px solid #C8E3D2;color:#23613B;font-size:13px">{{ usuariosSucesso }}</div></sc-if>
+          <button onClick="{{ cadastrarUsuario }}" disabled="{{ usuariosCarregando }}" style="height:40px;padding:0 16px;background:#12355B;color:#fff;border:1px solid #12355B;border-radius:2px;font-weight:600;font-size:13.5px;cursor:pointer">{{ usuariosBtnTexto }}</button>
+        </div>
+      </section>
+      <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px;overflow:hidden">
+        <div style="padding:14px 18px;border-bottom:1px solid #DADDE1"><h2 style="font-size:16px;font-weight:600;margin:0">Pessoas com acesso</h2><div style="font-size:12.5px;color:#7A828A;margin-top:4px">Perfis cadastrados no Supabase Auth.</div></div>
+        <sc-for list="{{ usuarios }}" as="u" hint-placeholder-count="3">
+          <div style="padding:12px 18px;border-bottom:1px solid #ECEEF0;display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
+            <div style="min-width:0"><div style="font-size:14px;font-weight:600;color:#1F2328">{{ u.nome }}</div><div style="font-size:12.5px;color:#5B636B;margin-top:3px;overflow-wrap:anywhere">{{ u.email }}</div></div>
+            <span style="font-size:11.5px;padding:3px 8px;background:{{ u.bg }};color:{{ u.cor }};border:1px solid {{ u.borda }};border-radius:10px;white-space:nowrap">{{ u.perfil }}</span>
+          </div>
+        </sc-for>
+      </section>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ logVisible }}" hint-placeholder-val="{{ false }}">
+    <div style="max-width:1320px;margin:0 auto;background:#fff;border:1px solid #DADDE1;border-radius:2px">
+      <div style="padding:12px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;border-bottom:1px solid #DADDE1">
+        <select value="{{ logUser }}" onChange="{{ setLogUser }}" style="width:100%;height:38px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:14px;background:#fff;color:#1F2328;width:auto;height:34px;font-size:13px">
+          <option value="">Todos os usuários</option>
+          <sc-for list="{{ logUsers }}" as="u" hint-placeholder-count="3"><option value="{{ u }}">{{ u }}</option></sc-for>
+        </select>
+        <select value="{{ logAcao }}" onChange="{{ setLogAcao }}" style="width:100%;height:38px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:14px;background:#fff;color:#1F2328;width:auto;height:34px;font-size:13px">
+          <option value="">Todas as ações</option>
+          <sc-for list="{{ logAcoes }}" as="a" hint-placeholder-count="5"><option value="{{ a }}">{{ a }}</option></sc-for>
+        </select>
+        <input value="{{ logQ }}" onInput="{{ setLogQ }}" placeholder="Buscar nº SEI ou texto" style="width:100%;height:38px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:14px;background:#fff;color:#1F2328;flex:1 1 240px;width:auto;min-width:200px;height:34px;font-size:13px">
+        <span style="margin-left:auto;font-size:13px;color:#5B636B">{{ logInfo }}</span>
+      </div>
+      <div style="overflow:auto">
+        <div style="min-width:1100px">
+          <div style="display:grid;grid-template-columns:150px 200px 130px 190px 170px minmax(260px,1fr);background:#F2F4F6;border-bottom:1px solid #C9CED3">
+            <div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D;padding-left:14px">Data e hora</div><div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D">Usuário</div><div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D">Ação</div><div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D">Processo</div><div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D">Serviço</div><div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D">Detalhe</div>
+          </div>
+          <sc-for list="{{ logRows }}" as="l" hint-placeholder-count="8">
+            <div style="display:grid;grid-template-columns:150px 200px 130px 190px 170px minmax(260px,1fr);border-bottom:1px solid #ECEEF0;align-items:start;font-size:13px">
+              <div style="padding:10px 12px 10px 14px;font-family:'IBM Plex Mono';font-size:12.5px;color:#2E353B">{{ l.quando }}</div>
+              <div style="padding:10px 12px"><div style="font-weight:500">{{ l.autor }}</div><div style="font-size:12px;color:#7A828A">{{ l.perfil }}</div></div>
+              <div style="padding:10px 12px"><span style="display:inline-block;font-size:12.5px;font-weight:500;padding:1px 7px;background:{{ l.bg }};color:{{ l.cor }}">{{ l.acao }}</span></div>
+              <div style="padding:10px 12px">
+                <sc-if value="{{ l.linkavel }}" hint-placeholder-val="{{ false }}"><button onClick="{{ l.abrir }}" style="background:transparent;border:none;padding:0;cursor:pointer;font-family:'IBM Plex Mono';font-size:12.5px;color:#1F5F9E;text-align:left;text-decoration:underline">{{ l.numero }}</button></sc-if>
+                <sc-if value="{{ l.naoLinkavel }}" hint-placeholder-val="{{ true }}"><span style="font-family:'IBM Plex Mono';font-size:12.5px;color:#5B636B">{{ l.numero }}</span></sc-if>
+              </div>
+              <div style="padding:10px 12px;color:#2E353B">{{ l.servicoLabel }}</div>
+              <div style="padding:10px 12px"><div style="line-height:1.5;color:#2E353B;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ l.detalhe }}</div></div>
+            </div>
+          </sc-for>
+          <sc-if value="{{ logVazio }}" hint-placeholder-val="{{ false }}"><div style="padding:48px;text-align:center;color:#7A828A;font-size:14px">Nenhuma atividade encontrada.</div></sc-if>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ novoVisible }}" hint-placeholder-val="{{ false }}">
+    <div style="max-width:820px;margin:0 auto;background:#fff;border:1px solid #DADDE1;border-radius:2px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #DADDE1;padding:14px 22px"><div><h2 style="font-size:14.5px;font-weight:600;margin:0;color:#1F2328;font-size:16px">Dados do processo</h2><div style="font-size:13px;color:#5B636B;margin-top:2px">O registro entra como pendente no serviço selecionado.</div></div></div>
+      <div style="padding:20px 22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px 18px">
+        <div><label style="display:block;font-size:13px;font-weight:500;color:#3D454D;margin-bottom:6px">Serviço</label>
+          <select value="{{ form.servico }}" onChange="{{ setFormServico }}" style="width:100%;height:38px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:14px;background:#fff;color:#1F2328"><sc-for list="{{ servicoOptions }}" as="o" hint-placeholder-count="9"><option value="{{ o.key }}">{{ o.label }}</option></sc-for></select></div>
+        <div><label style="display:block;font-size:13px;font-weight:500;color:#3D454D;margin-bottom:6px">Encaminhamento</label>
+          <select value="{{ form.encaminhamento }}" onChange="{{ setFormEncaminhamento }}" style="width:100%;height:38px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:14px;background:#fff;color:#1F2328"><option value="">Selecione a unidade</option><sc-for list="{{ encaminhamentoOptions }}" as="o" hint-placeholder-count="5"><option value="{{ o }}">{{ o }}</option></sc-for></select></div>
+        <div><label style="display:block;font-size:13px;font-weight:500;color:#3D454D;margin-bottom:6px">Nº do processo SEI</label><input value="{{ form.numero }}" onInput="{{ setFormNumero }}" placeholder="25101.000000/2026" style="width:100%;height:38px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:14px;background:#fff;color:#1F2328;font-family:'IBM Plex Mono'"></div>
+        <div><label style="display:block;font-size:13px;font-weight:500;color:#3D454D;margin-bottom:6px">Data de recebimento</label><input value="{{ form.recebido }}" onInput="{{ setFormRecebido }}" inputmode="numeric" maxlength="10" placeholder="dd/mm/aaaa" style="width:100%;height:38px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:14px;background:#fff;color:#1F2328"><div style="font-size:12px;color:#7A828A;margin-top:4px">Digite os números. As barras são inseridas automaticamente.</div></div>
+        <div><label style="display:block;font-size:13px;font-weight:500;color:#3D454D;margin-bottom:6px">Link do processo no SEI</label><input value="{{ form.link }}" onInput="{{ setFormLink }}" placeholder="https://" style="width:100%;height:38px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:14px;background:#fff;color:#1F2328"></div>
+        <div><label style="display:block;font-size:13px;font-weight:500;color:#3D454D;margin-bottom:6px">Órgão solicitante</label><input value="{{ form.orgao }}" onInput="{{ setFormOrgao }}" placeholder="Promotoria, Vara, Defensoria…" style="width:100%;height:38px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:14px;background:#fff;color:#1F2328"></div>
+        <div><label style="display:block;font-size:13px;font-weight:500;color:#3D454D;margin-bottom:6px">Pessoa/família referenciada</label><input value="{{ form.usuario }}" onInput="{{ setFormUsuario }}" placeholder="Nome ou “Não se aplica”" style="width:100%;height:38px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:14px;background:#fff;color:#1F2328"></div>
+        <div style="grid-column:1/-1"><label style="display:block;font-size:13px;font-weight:500;color:#3D454D;margin-bottom:6px">Demanda</label><textarea value="{{ form.demanda }}" onInput="{{ setFormDemanda }}" placeholder="Resumo do que o órgão solicita" style="width:100%;height:38px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:14px;background:#fff;color:#1F2328;height:auto;min-height:110px;padding:9px 10px;line-height:1.6;resize:vertical"></textarea></div>
+      </div>
+      <sc-if value="{{ formErroOn }}"><div role="alert" style="padding:0 22px 14px;font-size:13px;color:#A3281F">{{ formErro }}</div></sc-if>
+      <div style="padding:12px 22px;border-top:1px solid #DADDE1;background:#FAFBFB;display:flex;justify-content:flex-end;gap:8px">
+        <button onClick="{{ cancelNovo }}" style="height:36px;padding:0 14px;background:#fff;color:#1F2328;border:1px solid #C9CED3;border-radius:2px;font-weight:500;font-size:13.5px;cursor:pointer" style-hover="background:#F2F4F6">Cancelar</button>
+        <button onClick="{{ salvarNovo }}" style="height:36px;padding:0 16px;background:#12355B;color:#fff;border:1px solid #12355B;border-radius:2px;font-weight:600;font-size:13.5px;cursor:pointer" style-hover="background:#0C2744">Salvar registro</button>
+      </div>
+    </div>
+    </sc-if>
+
+    </div>
+  </main>
+  </div>
+</div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  SUPA_ROOT = 'https://cqcvbrgrstdrcqhakcvc.supabase.co';
+  SUPA_KEY = 'sb_publishable_fR6nS5GOjrISTwNQjTuhUQ_e9zThR05';
+  session = null;
+  DADOS_BASE = {SERVICOS:[],PROCESSOS:[]};
+  FILTROS0 = {q:'',campo:'',setor:'',gabinete:'',obs:'',dias:'',etapa:'',unidade:'',reit:'',marc:''};
+  MARC = {
+    aguardando:{l:'Aguardando',bg:'#FFF6CC',bar:'#E5BE00',fg:'#6B5600',d:'Aguardando relatório ou resposta da unidade'},
+    reiteracao:{l:'Reiteração',bg:'#FFE6C4',bar:'#F29A00',fg:'#7A4600',d:'Órgão reiterou a solicitação'},
+    urgente:{l:'Urgente',bg:'#FCDCD9',bar:'#D93025',fg:'#8E1D16',d:'Prazo curto definido pelo órgão'},
+    concluido:{l:'Concluído',bg:'#E0F2D3',bar:'#5DAA2E',fg:'#2F6415',d:'Relatório recebido ou resolvido'},
+    '':{l:'Sem marcação',bg:'#FFFFFF',bar:'#D5DCE3',fg:'#5E6B78',d:'Ainda não classificado'} };
+  MARC_ORD = ['aguardando','reiteracao','urgente','concluido',''];
+  ETAPAS = ['Recebido na Média Complexidade','Encaminhado ao serviço','Aguardando relatório','Relatório recebido','No Gabinete','Enviado ao demandante'];
+  ETCOR = ['#5E6B78','#5E6B78','#9A6508','#0F5E91','#0A3D62','#17703D'];
+  UNID = [['CREAS Cidade Operária',/cidade oper|cid\.? oper/i],['CREAS Centro',/creas centro/i],['CREAS Sol e Mar',/sol e mar/i],['CREAS Coroadinho',/coroadinho/i],['CREAS Itaqui-Bacanga',/itaqui/i],['CREAS Turu',/turu/i],['Centro POP Cohab',/pop cohab/i],['Centro POP Centro',/pop centro/i]];
+  ENCAMINHAMENTOS = ['CREAS CENTRO','CREAS COROADINHO','CREAS ITAQUI-BACANGA','CREAS CIDADE OPERÁRIA','CREAS SOL E MAR'];
+  enrich(p){ if(p._e) return p; const obsT=(p.obs||[]).map(o=>o.texto).join(' '); const sit=p.situacao||'';
+    const t=[sit,p.respSetor,p.respGabinete,obsT,p.conclusao].join(' ');
+    let et=0; if(p.aba==='respondido'||p.respGabinete||/encaminhou o of[ií]cio|respondeu|ao demandante/i.test(t)) et=5; else if(/gabinete/i.test(sit)) et=4; else if(p.respSetor||/relat[óo]rio recebido|recebido o relat|recebido relat|informa[çc][õo]es recebidas/i.test(t)) et=3; else if(/aguardando/i.test(t)) et=2; else if(/encaminh/i.test(t)||p.memo) et=1;
+    const src=[sit,p.respSetor,obsT,p.memo,p.demanda].join(' '); const u=this.UNID.find(x=>x[1].test(src));
+    const nums=(p.numero||'').replace(/\s/g,'').match(/\d{5}\.?\d{6}\/\d{4}/g)||[];
+    const of=/of[íi]cio\s*n?\.?\s*[º°o]?\s*(\d{3,5}(?:\/\d{4})?)/i.exec(t);
+    return {...p,_e:1,etapa:p.etapa??et,unidade:p.unidade??(u?u[0]:''),reit:p.reit??nums.slice(1),oficio:p.oficio??(of?'Ofício nº '+of[1]:'')}; }
+  state = {
+    screen:'login', role:null,
+    loginEmail:'spsmediasemcas@gmail.com', loginSenha:'', loginErro:'', loginCarregando:false, dbOnline:false,
+    activeServico:'PAEFI', activeTab:'pendentes', comentarioBusca:'', comentarioOrdem:'recentes',
+    selectedId:null, linkTexto:'', obsTitulo:'', obsCategoria:'comentario', obsTexto:'', obsDataEvento:'', obsMensagemSei:'', obsAnexos:[], anexosCarregando:false, obsErro:false, obsErroTexto:'', comentarioEditando:null, storageErro:'', responsavelTexto:'', proximaAcaoTexto:'', proximaDataTexto:'', acompanhamentoSalvo:false, editKey:null, editValue:'',
+    sortKey:'recebido', sortDir:'asc', vincTexto:'', vincNota:'', pagina:1, porPagina:25, filtros:{q:'',campo:'',setor:'',gabinete:'',obs:'',dias:'',etapa:'',unidade:'',reit:'',marc:''}, oficioTexto:'', vw:(typeof window!=='undefined'?window.innerWidth:1400), menuOpen:false, colsOpen:false, colsSel:null,
+    form:{servico:'PAEFI',encaminhamento:'',numero:'',recebido:'',orgao:'',usuario:'',link:'',demanda:''},
+    servicos:[], processos:[], log:[], user:{nome:'',perfil:''}, confirmDel:false, logUser:'', logAcao:'', logQ:'',
+    usuarios:[],usuarioForm:{nome:'',email:'',senha:''},usuariosErro:'',usuariosSucesso:'',usuariosCarregando:false,
+  };
+  touched = new Set(); deleted = new Set();
+  CAMPO = {recebido:'Data do recebimento na Média Complexidade',memo:'Data do memo enviado para o setor',situacao:'Situação',respSetor:'Data de resposta do setor',respGabinete:'Data de resposta do Gabinete',conclusao:'Conclusão'};
+  ACAO_COR = {'Exclusão':['#FCEDEB','#A52A22'],'Resposta':['#E6F4EC','#17703D'],'Reabertura':['#FBF1DF','#8A5A06'],'Edição':['#E8F2FA','#0F5E91'],'Comentário':['#EEF0F3','#2F3B46'],'Observação':['#EEF0F3','#2F3B46'],'Cadastro':['#E8F2FA','#0F5E91'],'Link SEI':['#E8F2FA','#0F5E91'],'Acesso':['#F3F5F7','#5E6B78'],'Importação':['#F3F5F7','#5E6B78']};
+  agora(){ const d=new Date(),p=n=>String(n).padStart(2,'0'); return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes()); }
+  nomeDoEmail(e){ return (e||'').split('@')[0].split(/[._-]+/).filter(Boolean).map(w=>w[0].toUpperCase()+w.slice(1).toLowerCase()).join(' ')||'Usuário'; }
+  async supa(path,{method='GET',body=null,token=null,prefer=''}={}){
+    const headers={apikey:this.SUPA_KEY,'Content-Type':'application/json'};
+    const access=token||(this.session&&this.session.access_token);
+    if(access) headers.Authorization='Bearer '+access;
+    if(prefer) headers.Prefer=prefer;
+    const res=await fetch(this.SUPA_ROOT+path,{method,headers,body:body==null?undefined:JSON.stringify(body)});
+    const raw=await res.text(); let data=null; try{data=raw?JSON.parse(raw):null;}catch(e){data=raw;}
+    if(!res.ok){const msg=data&&typeof data==='object'?(data.message||data.error_description||data.error||'Falha na comunicação com o banco'):'Falha na comunicação com o banco';throw new Error(msg);}
+    return data;
+  }
+  comentarioDb(c,i,pid){
+    return {process_id:pid,source_index:c.sourceIndex??i,title:c.titulo||(c.data==='importado'?'Observação importada':'Comentário anterior'),category:c.categoria||(c.data==='importado'?'Planilha':'Comentário'),comment_type:c.tipo||(c.data==='importado'?'importado':'comentario'),body:c.texto||'',sei_message:c.mensagemSei||'',attachments:c.anexos||[],event_date_text:c.dataEvento||'',author_name:c.autor||'',author_role:c.perfil||(c.data==='importado'?'Planilha':''),display_date:c.data||'',author_user_id:c.authorUserId||(c.data==='importado'?null:(this.session&&this.session.user?this.session.user.id:null))};
+  }
+  processoDb(p){
+    const raw={...p};delete raw._e;
+    return {id:p.id,service_key:p.servico,status:p.aba==='respondido'?'respondido':'pendente',sei_number:p.numero||'',received_date_text:p.recebido||'',memo_sent_text:p.memo||'',requester_agency:p.orgao||'',demand:p.demanda||'',referenced_person:p.usuario||'',situation:p.situacao||'',sector_response_text:p.respSetor||'',cabinet_response_text:p.respGabinete||'',conclusion_text:p.conclusao||'',sei_link:p.link||'',marking:p.marcacao||'',marking_origin:p.marcacaoOrigem||'',deadline_days:String(p.prazoDias||''),stage:Number(p.etapa||0),unit_name:p.unidade||'',forwarding:p.encaminhamento||'',response_office:p.oficio||'',internal_responsible:p.responsavelInterno||'',next_action:p.proximaAcao||'',next_action_date:p.proximaData||'',reiterations:p.reit||[],history:p.hist||{},raw_data:raw,created_by:p.createdBy||null,updated_by:p.updatedBy||null};
+  }
+  async syncProcessToDb(p){
+    if(!this.session)return;
+    await this.supa('/rest/v1/processes?on_conflict=id',{method:'POST',body:[this.processoDb(p)],prefer:'resolution=merge-duplicates,return=minimal'});
+    const comentarios=(p.obs||[]).map((c,i)=>this.comentarioDb(c,i,p.id));
+    if(comentarios.length)await this.supa('/rest/v1/process_comments?on_conflict=process_id,source_index',{method:'POST',body:comentarios,prefer:'resolution=merge-duplicates,return=minimal'});
+  }
+  async syncAuditToDb(e){
+    if(!this.session)return;
+    const pid=e.acao==='Exclusão'?null:(e.pid||null);
+    await this.supa('/rest/v1/process_audit_log',{method:'POST',body:[{process_id:pid,action:e.acao,details:e.detalhe||'',author_name:e.autor||'',author_role:e.perfil||'',author_user_id:this.session.user.id}],prefer:'return=minimal'});
+  }
+  async loadDbData(){
+    const [svs,rows,comments,audits,usuariosDb]=await Promise.all([
+      this.supa('/rest/v1/services?select=*&order=group_name,key'),
+      this.supa('/rest/v1/processes?select=*&order=id&limit=1000'),
+      this.supa('/rest/v1/process_comments?select=*&order=process_id,source_index&limit=1000'),
+      this.state.role==='super'?this.supa('/rest/v1/process_audit_log?select=*&order=event_at.desc&limit=300'):Promise.resolve([]),
+      this.state.role==='super'?this.supa('/rest/v1/user_profiles?select=user_id,email,display_name,role,active&order=display_name'):Promise.resolve([])
+    ]);
+    const porProcesso=new Map();
+    (comments||[]).forEach(c=>{const o={id:c.id,sourceIndex:c.source_index,authorUserId:c.author_user_id,titulo:c.title,categoria:c.category,tipo:c.comment_type,texto:c.body,mensagemSei:c.sei_message,anexos:c.attachments||[],dataEvento:c.event_date_text,autor:c.author_name,perfil:c.author_role,data:c.display_date};if(!porProcesso.has(c.process_id))porProcesso.set(c.process_id,[]);porProcesso.get(c.process_id).push(o);});
+    const processos=(rows||[]).map(r=>{const base={...(r.raw_data||{})};const p={...base,id:r.id,servico:r.service_key,aba:r.status,numero:r.sei_number,recebido:r.received_date_text,memo:r.memo_sent_text,orgao:r.requester_agency,demanda:r.demand,usuario:r.referenced_person,situacao:r.situation,respSetor:r.sector_response_text,respGabinete:r.cabinet_response_text,conclusao:r.conclusion_text,link:r.sei_link,marcacao:r.marking,marcacaoOrigem:r.marking_origin,prazoDias:r.deadline_days,etapa:r.stage,unidade:r.unit_name,encaminhamento:r.forwarding,oficio:r.response_office,responsavelInterno:r.internal_responsible,proximaAcao:r.next_action,proximaData:r.next_action_date,reit:r.reiterations||[],hist:r.history||{},createdBy:r.created_by,updatedBy:r.updated_by,obs:porProcesso.get(r.id)||[]};delete p._e;return this.enrich(p);});
+    const porId=new Map(processos.map(p=>[p.id,p]));
+    const log=(audits||[]).map(a=>{const p=porId.get(a.process_id);const d=new Date(a.event_at);return {id:a.id,timestamp:d.getTime(),quando:d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).replace(',',''),autor:a.author_name||'—',perfil:a.author_role||'',acao:a.action,pid:a.process_id||'',numero:p?p.numero:'—',servico:p?p.servico:'',detalhe:a.details||''};});
+    const servicos=(svs||[]).map(v=>({key:v.key,label:v.label,grupo:v.group_name,setorLabel:v.sector_label,cols:v.columns_config||{}}));
+    this.touched=new Set();this.deleted=new Set();
+    const usuarios=(usuariosDb||[]).map(u=>({id:u.user_id,nome:u.display_name||this.nomeDoEmail(u.email),email:u.email,perfil:u.role==='superintendente'?'Superintendente':'Administrativo',bg:u.role==='superintendente'?'#E8F2FA':'#F3F5F7',cor:u.role==='superintendente'?'#0F5E91':'#3D454D',borda:u.role==='superintendente'?'#C4DDEC':'#DADDE1'}));
+    this.setState({servicos,processos,log,usuarios,dbOnline:true,storageErro:''});
+  }
+  async entrarComSessao(sessao){
+    this.session=sessao;
+    const perfis=await this.supa('/rest/v1/user_profiles?select=user_id,email,display_name,role,active&user_id=eq.'+encodeURIComponent(sessao.user.id),{token:sessao.access_token});
+    const perfil=perfis&&perfis[0];if(!perfil||!perfil.active)throw new Error('Usuário sem perfil ativo no sistema.');
+    const role=perfil.role==='superintendente'?'super':'administrativo',nome=perfil.display_name||this.nomeDoEmail(perfil.email);
+    await new Promise(resolve=>this.setState({role,user:{nome,perfil:role==='super'?'Superintendente':'Administrativo'},screen:role==='super'?'painel':'servico',activeServico:'PAEFI',activeTab:'pendentes',pagina:1,filtros:{...this.FILTROS0},loginErro:'',loginCarregando:false},resolve));
+    await this.loadDbData();this.registrar('Acesso',null,'Entrou no sistema');
+  }
+  persist(){ try{ const s=this.state; localStorage.setItem('semcas_spsemc_v2',JSON.stringify({recs:s.processos.filter(p=>this.touched.has(p.id)),deleted:[...this.deleted],log:s.log})); }catch(e){} }
+  podeEditarProcesso(p){return !!p&&(this.state.role==='super'||(this.state.role==='administrativo'&&this.session&&p.createdBy===this.session.user.id));}
+  registrar(acao,p,detalhe){ const u=this.state.user; const e={id:'l'+Date.now()+Math.random().toString(36).slice(2,6),timestamp:Date.now(),quando:this.agora(),autor:u.nome||'—',perfil:u.perfil||'',acao,pid:p?p.id:'',numero:p?p.numero:'—',servico:p?p.servico:'',detalhe:detalhe||''};
+    this.setState(s=>({log:[e,...s.log]}),()=>this.persist());this.syncAuditToDb(e).catch(err=>this.setState({storageErro:'A ação foi feita neste navegador, mas o histórico não foi sincronizado: '+err.message})); }
+  mut(id,fn,acao,detalhe){ const s=this.state,p0=s.processos.find(p=>p.id===id); if(!p0) return false;if(!this.podeEditarProcesso(p0)){this.setState({storageErro:'Você pode alterar somente processos cadastrados por você.'});return false;} let p1={...fn(p0),updatedBy:this.session&&this.session.user?this.session.user.id:null};if(s.role!=='super'&&(p1.aba==='respondido'||p1.marcacao==='concluido'||Number(p1.etapa)===5)){this.setState({storageErro:'Somente a Superintendente pode concluir ou responder um processo.'});return false;} const touched=new Set([...this.touched,id]), processos=s.processos.map(p=>p.id===id?p1:p); const u=s.user;
+    const evento={id:'l'+Date.now()+Math.random().toString(36).slice(2,6),timestamp:Date.now(),quando:this.agora(),autor:u.nome||'—',perfil:u.perfil||'',acao,pid:id,numero:p1.numero,servico:p1.servico,detalhe:detalhe||''},log=[evento,...s.log];
+    try{localStorage.setItem('semcas_spsemc_v2',JSON.stringify({recs:processos.filter(p=>touched.has(p.id)),deleted:[...this.deleted],log}));}
+    catch(e){this.setState({storageErro:'Não foi possível salvar neste navegador. O espaço local pode estar cheio. Reduza os anexos e tente novamente.'});return false;}
+    this.touched=touched;this.setState({processos,log,storageErro:''});Promise.all([this.syncProcessToDb(p1),this.syncAuditToDb(evento)]).catch(err=>this.setState({storageErro:'A alteração foi feita neste navegador, mas não foi sincronizada: '+err.message}));return true; }
+  stamp(){ return {autor:this.state.user.nome,data:this.agora()}; }
+  hojeUTC(){ const d=new Date(); return Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()); }
+  MES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  SETOR = {CREAS:'CREAS',ABORDAGEM:'Abordagem Social','CENTRO POP':'Centro POP',PCDIF:'PCDIF'};
+
+  onResize=()=>this.setState({vw:window.innerWidth});
+  componentWillUnmount(){ window.removeEventListener('resize',this.onResize); }
+  toggleMenu=()=>this.setState(s=>({menuOpen:!s.menuOpen}));
+  async componentDidMount(){
+    window.addEventListener('resize',this.onResize);
+    try{
+      const m=this.DADOS_BASE; let procs=m.PROCESSOS, log=[];
+      try{ const o=JSON.parse(localStorage.getItem('semcas_spsemc_v2')||'null');
+        if(o){ (o.deleted||[]).forEach(x=>this.deleted.add(x)); const map={}; (o.recs||[]).forEach(r=>{map[r.id]=r;this.touched.add(r.id);});
+          const base=new Set(procs.map(p=>p.id)); procs=[...(o.recs||[]).filter(r=>!base.has(r.id)),...procs.map(p=>map[p.id]||p)].filter(p=>!this.deleted.has(p.id)); log=o.log||[]; } }catch(e){}
+      const consolidados=this.consolidarServicos(m.SERVICOS,procs);
+      if(!log.length) log=[{id:'l0',quando:'29/09/2026 08:00',autor:'Sistema',perfil:'Importação automática',acao:'Importação',pid:'',numero:'—',servico:'',detalhe:'Planilha "Processos no SEI" importada: '+m.PROCESSOS.length+' processos consolidados em '+consolidados.servicos.length+' serviços'}];
+      await new Promise(resolve=>this.setState({servicos:consolidados.servicos,processos:consolidados.processos.map(p=>this.enrich(p)),log},resolve));
+      try{const sessao=JSON.parse(localStorage.getItem('semcas_supabase_session')||'null');if(sessao&&sessao.access_token&&sessao.user)await this.entrarComSessao(sessao);}catch(e){localStorage.removeItem('semcas_supabase_session');this.session=null;this.setState({screen:'login',role:null,dbOnline:false});}
+    }
+    catch(e){ console.error('Falha ao carregar dados',e); }
+  }
+  hojeTxt(){ const d=new Date(); return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear(); }
+  ts(d){ const m=/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?!\d)/.exec((d||'').trim()); if(!m) return null; const y=+m[3],mo=+m[2],da=+m[1]; if(y<1900||y>9999||mo<1||mo>12||da<1||da>31) return null; const t=Date.UTC(y,mo-1,da), dt=new Date(t); return dt.getUTCFullYear()===y&&dt.getUTCMonth()===mo-1&&dt.getUTCDate()===da?t:null; }
+  mascaraData(v){ const n=String(v||'').replace(/\D/g,'').slice(0,8); return n.length<=2?n:n.length<=4?n.slice(0,2)+'/'+n.slice(2):n.slice(0,2)+'/'+n.slice(2,4)+'/'+n.slice(4); }
+  dataValida(v){ return /^\d{2}\/\d{2}\/\d{4}$/.test(v)&&this.ts(v)!==null; }
+  dias(p){ if(p.aba==='respondido') return null; const t=this.ts(p.recebido), hoje=this.hojeUTC(); if(t==null||t>hoje) return null; return Math.round((hoje-t)/86400000); }
+  diasColor(d){ return d==null?'#9AA6B2':(d>30?'#B8322A':(d>15?'#9A6508':'#3A4753')); }
+  sv(k){ return this.state.servicos.find(x=>x.key===k)||{key:k,label:k,grupo:'',cols:{},setorLabel:''}; }
+  setorNome(k){ const s=this.sv(k).setorLabel||''; const u=s.toUpperCase(); return this.SETOR[u]||s; }
+  norm(t){ return String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase(); }
+  orgaoConsolidado(valor){
+    const original=String(valor||'').replace(/\s+/g,' ').trim().replace(/[.]+$/,'');
+    const n=this.norm(original).replace(/[ªº°]/g,'').replace(/[“”"]/g,'');
+    let m;
+    if(/plantao judicial criminal/.test(n)&&/comarca da ilha/.test(n)) return 'Plantão Judicial Criminal de 1º Grau da Comarca da Ilha de São Luís';
+    if((m=/\b(\d{1,2})\s*(?:promotoria|pjesp)/.exec(n))) return Number(m[1])+'ª Promotoria de Justiça';
+    if((m=/\b(\d{1,2})\s*vara/.exec(n))&&/infancia|juventude/.test(n)) return Number(m[1])+'ª Vara da Infância e Juventude';
+    if((m=/\b(\d{1,2})\s*vara/.exec(n))&&/violencia domestica/.test(n)) return Number(m[1])+'ª Vara Especial de Violência Doméstica e Familiar contra a Mulher';
+    if((m=/\b(\d{1,2})\s*vara criminal/.exec(n))&&/crianc|adolesc/.test(n)) return Number(m[1])+'ª Vara Criminal Especializada em Crimes contra Crianças e Adolescentes';
+    if(/conselho tutelar/.test(n)&&/sao francisco/.test(n)&&/cohama/.test(n)) return 'Conselho Tutelar - Área São Francisco/Cohama';
+    if(/centro pop/.test(n)&&/centro/.test(n)) return 'Centro POP Centro';
+    return original;
+  }
+  consolidarServicos(servicos,processos){
+    const destino={ADJPS:'SPSEMC',JURIDICO:'SPSEMC',CREAS:'PAEFI'};
+    const removidos=new Set(Object.keys(destino));
+    const lista=servicos.filter(s=>!removidos.has(s.key)).map(s=>s.key==='PCDIF'?{...s,label:'PCDIF'}:s);
+    const fichas=processos.map(p=>destino[p.servico]?{...p,servico:destino[p.servico]}:p);
+    return {servicos:lista,processos:fichas};
+  }
+  upd(id,fn){ this.setState(s=>({processos:s.processos.map(p=>p.id===id?fn(p):p)})); }
+
+  setLoginEmail=e=>this.setState({loginEmail:e.target.value});
+  setLoginSenha=e=>this.setState({loginSenha:e.target.value});
+  doLogin=async()=>{const email=this.state.loginEmail.trim(),password=this.state.loginSenha;if(!email||!password){this.setState({loginErro:'Informe o e-mail e a senha.',loginCarregando:false});return;}this.setState({loginCarregando:true,loginErro:''});try{const sessao=await this.supa('/auth/v1/token?grant_type=password',{method:'POST',body:{email,password}});localStorage.setItem('semcas_supabase_session',JSON.stringify(sessao));await this.entrarComSessao(sessao);}catch(e){this.session=null;localStorage.removeItem('semcas_supabase_session');this.setState({screen:'login',role:null,dbOnline:false,loginCarregando:false,loginErro:e.message==='Invalid login credentials'?'E-mail ou senha inválidos.':e.message});}};
+  logout=async()=>{const sessao=this.session;this.registrar('Acesso',null,'Saiu do sistema');try{if(sessao)await this.supa('/auth/v1/logout',{method:'POST',token:sessao.access_token});}catch(e){}this.session=null;localStorage.removeItem('semcas_supabase_session');this.setState({screen:'login',role:null,loginSenha:'',dbOnline:false});};
+  goPainel=()=>this.setState({screen:'painel',menuOpen:false});
+  goLog=()=>{ if(this.state.role==='super') this.setState({screen:'log',menuOpen:false}); };
+  goUsuarios=()=>{if(this.state.role==='super')this.setState({screen:'usuarios',menuOpen:false,usuariosErro:'',usuariosSucesso:''});};
+  setUsuarioNome=e=>this.setState(s=>({usuarioForm:{...s.usuarioForm,nome:e.target.value},usuariosErro:'',usuariosSucesso:''}));
+  setUsuarioEmail=e=>this.setState(s=>({usuarioForm:{...s.usuarioForm,email:e.target.value},usuariosErro:'',usuariosSucesso:''}));
+  setUsuarioSenha=e=>this.setState(s=>({usuarioForm:{...s.usuarioForm,senha:e.target.value},usuariosErro:'',usuariosSucesso:''}));
+  carregarUsuarios=async()=>{if(this.state.role!=='super'||!this.session)return;try{const perfis=await this.supa('/rest/v1/user_profiles?select=user_id,email,display_name,role,active&order=display_name.asc',{token:this.session.access_token});this.setState({usuarios:(perfis||[]).map(u=>({id:u.user_id,nome:u.display_name||this.nomeDoEmail(u.email),email:u.email,perfil:u.role==='superintendente'?'Superintendente':'Administrativo',bg:u.role==='superintendente'?'#E8F2FA':'#F3F5F7',cor:u.role==='superintendente'?'#0F5E91':'#3D454D',borda:u.role==='superintendente'?'#C4DDEC':'#DADDE1'}))});}catch(e){this.setState({usuariosErro:'Não foi possível atualizar a lista: '+e.message});}};
+  cadastrarUsuario=async()=>{if(this.state.role!=='super'||!this.session)return;const f=this.state.usuarioForm,nome=f.nome.trim(),email=f.email.trim().toLowerCase(),password=f.senha;if(!nome||!email||password.length<8){this.setState({usuariosErro:'Informe nome, e-mail válido e senha com no mínimo 8 caracteres.',usuariosSucesso:''});return;}if(location.protocol==='file:'){this.setState({usuariosErro:'O cadastro de usuários funciona após publicar o pacote no Netlify.',usuariosSucesso:''});return;}this.setState({usuariosCarregando:true,usuariosErro:'',usuariosSucesso:''});try{const r=await fetch('/.netlify/functions/create-user',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+this.session.access_token},body:JSON.stringify({display_name:nome,email,password})});const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.message||data.error||'Não foi possível cadastrar o usuário.');this.setState({usuarioForm:{nome:'',email:'',senha:''},usuariosCarregando:false,usuariosSucesso:'Usuário cadastrado com perfil Administrativo.'});await this.carregarUsuarios();}catch(e){this.setState({usuariosCarregando:false,usuariosErro:e.message,usuariosSucesso:''});}};
+  setLogUser=e=>this.setState({logUser:e.target.value});
+  setLogAcao=e=>this.setState({logAcao:e.target.value});
+  setLogQ=e=>this.setState({logQ:e.target.value});
+  avancarEtapa=()=>this.mudarEtapa(1);
+  voltarEtapa=()=>this.mudarEtapa(-1);
+  mudarEtapa=(d)=>{ const p0=this.state.processos.find(p=>p.id===this.state.selectedId); if(!p0) return; const e=Math.max(0,Math.min(5,(p0.etapa||0)+d)); if(e===p0.etapa) return;if(e===5&&this.state.role!=='super'){this.setState({storageErro:'Somente a Superintendente pode concluir um processo.'});return;}
+    const hoje=this.hojeTxt(), u=p0.unidade?' do '+p0.unidade:'';
+    const sit=['Recebido na Média Complexidade','Encaminhado ao serviço em '+hoje,'Aguardando relatório'+u,'Relatório recebido'+u+' em '+hoje,'Encaminhado ao Gabinete em '+hoje,'Gabinete encaminhou o ofício ao demandante em '+hoje][e];
+    const st=this.stamp();
+    this.mut(p0.id,p=>({...p,etapa:e,situacao:sit,aba:e===5?'respondido':(p.aba==='respondido'&&e<5?'pendente':p.aba),hist:{...(p.hist||{}),etapa:st,situacao:st}}),e===5?'Resposta':'Edição','Etapa: '+this.ETAPAS[e]); };
+  setUnidade=e=>{ const v=e.target.value; this.mut(this.state.selectedId,p=>({...p,unidade:v}),'Edição','Unidade executora: '+(v||'não definida')); };
+  setOficioTexto=e=>this.setState({oficioTexto:e.target.value});
+  salvarOficio=()=>{ let v=this.state.oficioTexto.trim(); if(!v) return; if(/^\d/.test(v)) v='Ofício nº '+v; this.mut(this.state.selectedId,p=>({...p,oficio:v}),'Edição','Ofício de resposta: '+v); this.setState({oficioTexto:''}); };
+  limparOficio=()=>{ const p=this.state.processos.find(x=>x.id===this.state.selectedId); this.setState({oficioTexto:p?p.oficio:''}); this.mut(this.state.selectedId,p=>({...p,oficio:''}),'Edição','Ofício de resposta removido para correção'); };
+  setMarcacao=(k)=>{ const p0=this.state.processos.find(p=>p.id===this.state.selectedId); if(!p0||(p0.marcacao||'')===k) return;if(k==='concluido'&&this.state.role!=='super'){this.setState({storageErro:'Somente a Superintendente pode marcar como concluído.'});return;} const st=this.stamp();
+    this.mut(p0.id,p=>({...p,marcacao:k,hist:{...(p.hist||{}),marcacao:st}}),'Edição','Marcação: '+this.MARC[k].l); };
+  toggleMarc=(k)=>this.setState(s=>({filtros:{...s.filtros,marc:s.filtros.marc===k?'':k},pagina:1}));
+  COLS = [['recebido','Recebido / Memo'],['orgao','Órgão solicitante'],['demanda','Demanda'],['usuario','Pessoa/família referenciada'],['situacao','Situação'],['setor','Resposta do setor'],['gabinete','Resposta do Gabinete'],['obs','Comentário mais recente'],['dias','Dias em aberto']];
+  COLS_PADRAO = ['recebido','orgao','demanda','situacao','dias'];
+  colsAtuais(){ if(this.state.colsSel) return this.state.colsSel; try{ const v=JSON.parse(localStorage.getItem('semcas_cols_v1')||'null'); if(Array.isArray(v)) return v; }catch(e){} return this.COLS_PADRAO; }
+  salvarCols(v){ try{ localStorage.setItem('semcas_cols_v1',JSON.stringify(v)); }catch(e){} this.setState({colsSel:v}); }
+  toggleCols=()=>this.setState(s=>({colsOpen:!s.colsOpen}));
+  toggleCol=(k)=>{ const c=this.colsAtuais(); this.salvarCols(c.includes(k)?c.filter(x=>x!==k):[...c,k]); };
+  colsPadrao=()=>this.salvarCols([...this.COLS_PADRAO]);
+  pedirExcluir=()=>this.setState({confirmDel:true});
+  cancelExcluir=()=>this.setState({confirmDel:false});
+  confirmarExcluir=()=>{ const id=this.state.selectedId; const p=this.state.processos.find(x=>x.id===id); if(!p||!this.podeEditarProcesso(p)) return;
+    this.deleted.add(id); this.touched.delete(id);
+    this.setState(s=>({processos:s.processos.filter(x=>x.id!==id),confirmDel:false,screen:'servico',selectedId:null}),()=>{this.registrar('Exclusão',p,'Ficha excluída · '+p.orgao);this.supa('/rest/v1/processes?id=eq.'+encodeURIComponent(id),{method:'DELETE',prefer:'return=minimal'}).catch(err=>this.setState({storageErro:'A ficha saiu da tela, mas não foi excluída do banco: '+err.message}));}); };
+  goServico=(k)=>this.setState({menuOpen:false,screen:'servico',activeServico:k,activeTab:'pendentes',pagina:1,filtros:{...this.FILTROS0}});
+  setTabPend=()=>this.setState({activeTab:'pendentes',pagina:1});
+  setTabResp=()=>this.setState({activeTab:'respondidos',pagina:1});
+  sortBy=(k)=>this.setState(s=>s.sortKey===k?{sortDir:s.sortDir==='asc'?'desc':'asc',pagina:1}:{sortKey:k,sortDir:'asc',pagina:1});
+  setSortKey=e=>this.setState({sortKey:e.target.value,pagina:1});
+  toggleDir=()=>this.setState(s=>({sortDir:s.sortDir==='asc'?'desc':'asc'}));
+  RE_SEI=/(\d{5})\s*\.?\s*(\d{6})\s*\/\s*(\d{4})/g;
+  fmtSEI(m){ return m[1]+'.'+m[2]+'/'+m[3]; }
+  nums(p){ const raw=String(p.numero||''); const ms=[...raw.matchAll(this.RE_SEI)];
+    if(!ms.length) return {principal:raw.trim()||'—',vinc:(p.vincExtra||[]).map(v=>({...v,extra:true})),seq:[0,0]};
+    const vinc=ms.slice(1).map((m,i)=>{ const fim=i+2<ms.length?ms[i+2].index:raw.length; const trecho=raw.slice(m.index+m[0].length,fim); const nm=/\(([^)]*)\)?/.exec(trecho)||/(reitera[çc][ãa]o|apenso|anexo)/i.exec(trecho);
+      let nota=nm?(nm[1]||nm[0]).trim():''; if(/^rei/i.test(nota)) nota='Reiteração'; return {numero:this.fmtSEI(m),nota}; });
+    return {principal:this.fmtSEI(ms[0]),vinc:[...vinc,...(p.vincExtra||[]).map(v=>({...v,extra:true}))],seq:[+ms[0][3],+ms[0][2]]}; }
+  setVincTexto=e=>this.setState({vincTexto:e.target.value});
+  setVincNota=e=>this.setState({vincNota:e.target.value});
+  addVinc=()=>{ const t=this.state.vincTexto.trim(); if(!t) return; const m=[...t.matchAll(this.RE_SEI)][0]; const numero=m?this.fmtSEI(m):t; const nota=this.state.vincNota.trim();
+    this.mut(this.state.selectedId,p=>({...p,vincExtra:[...(p.vincExtra||[]),{numero,nota}]}),'Edição','Processo vinculado à ficha: '+numero+(nota?' ('+nota+')':'')); this.setState({vincTexto:'',vincNota:''}); };
+  remVinc=(i)=>{ const p0=this.state.processos.find(p=>p.id===this.state.selectedId); const v=(p0.vincExtra||[])[i]; if(!v) return;
+    this.mut(p0.id,p=>({...p,vincExtra:(p.vincExtra||[]).filter((_,j)=>j!==i)}),'Edição','Processo removido da ficha: '+v.numero); };
+  paginaAnterior=()=>this.setState(s=>({pagina:Math.max(1,s.pagina-1)}));
+  proximaPagina=()=>this.setState(s=>({pagina:s.pagina+1}));
+  setPorPagina=e=>this.setState({porPagina:+e.target.value||25,pagina:1});
+  ff=(k)=>e=>{ const v=e.target.value; this.setState(s=>({filtros:{...s.filtros,[k]:v},pagina:1})); };
+  limparFiltros=()=>this.setState({filtros:{...this.FILTROS0},pagina:1});
+  openProcesso=(p)=>this.setState({screen:'processo',selectedId:p.id,activeServico:p.servico,comentarioBusca:'',comentarioOrdem:'recentes',linkTexto:'',obsTitulo:'',obsCategoria:'comentario',obsTexto:'',obsDataEvento:'',obsMensagemSei:'',obsAnexos:[],anexosCarregando:false,obsErro:false,comentarioEditando:null,responsavelTexto:p.responsavelInterno||'',proximaAcaoTexto:p.proximaAcao||'',proximaDataTexto:p.proximaData||'',acompanhamentoSalvo:false,editKey:null,confirmDel:false});
+  backToServico=()=>this.setState({screen:'servico',editKey:null});
+  setLink=e=>this.setState({linkTexto:e.target.value});
+  salvarLink=()=>{ const l=this.state.linkTexto.trim(); if(!l) return; const st=this.stamp(); this.mut(this.state.selectedId,p=>({...p,link:l,hist:{...(p.hist||{}),link:st}}),'Link SEI','Adicionou o link do processo no SEI'); this.setState({linkTexto:''}); };
+  setObsTitulo=e=>this.setState({obsTitulo:e.target.value,obsErro:false});
+  setComentarioBusca=e=>this.setState({comentarioBusca:e.target.value});
+  setComentarioOrdem=e=>this.setState({comentarioOrdem:e.target.value});
+  CATEGORIAS_REGISTRO=[{k:'comentario',label:'Comentário',campo:null},{k:'memo',label:'Data do memo enviado ao setor',campo:'memo'},{k:'situacao',label:'Situação',campo:'situacao'},{k:'respSetor',label:'Data de resposta do setor',campo:'respSetor'},{k:'respGabinete',label:'Data de resposta do gabinete',campo:'respGabinete'},{k:'conclusao',label:'Conclusão do processo',campo:'conclusao'}];
+  categoriasProcesso(p){const servico=p?.servico||this.state.activeServico,cols=this.sv(servico).cols||{};return this.CATEGORIAS_REGISTRO.filter(c=>c.k!=='respSetor'||cols.setor).filter(c=>c.k!=='respGabinete'||cols.gabinete).filter(c=>c.k!=='conclusao'||cols.conclusao).map(c=>c.k==='respSetor'?{...c,label:'Data de resposta do '+(this.setorNome(servico)||'setor')}:c);}
+  setObsCategoria=e=>this.setState({obsCategoria:e.target.value,obsDataEvento:'',obsErro:false});
+  setObsDataEvento=e=>this.setState({obsDataEvento:this.mascaraData(e.target.value),obsErro:false});
+  setObsMensagemSei=e=>this.setState({obsMensagemSei:e.target.value,obsErro:false});
+  selecionarAnexo=async e=>{const file=e.target.files?.[0];e.target.value='';if(!file||this.state.anexosCarregando)return; const pid=this.state.selectedId;
+    if(!['image/png','image/jpeg','image/webp'].includes(file.type)){this.setState({obsErro:true,obsErroTexto:'Selecione uma imagem PNG, JPG ou WebP.'});return;}
+    if(this.state.obsAnexos.length>=2||file.size+this.state.obsAnexos.reduce((a,x)=>a+x.tamanho,0)>1048576){this.setState({obsErro:true,obsErroTexto:'Use até 2 imagens, somando até 1 MB por registro.'});return;}
+    this.setState({anexosCarregando:true,obsErro:false});try{const url=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(new Error('Leitura falhou'));r.readAsDataURL(file);});if(this.state.selectedId!==pid||this.state.screen!=='processo')return;this.setState(s=>({obsAnexos:[...s.obsAnexos,{nome:file.name,tamanho:file.size,url}],anexosCarregando:false}));}
+    catch(err){if(this.state.selectedId===pid)this.setState({anexosCarregando:false,obsErro:true,obsErroTexto:'Não foi possível ler a imagem. Selecione novamente.'});} };
+  removerAnexo=i=>this.setState(s=>({obsAnexos:s.obsAnexos.filter((_,j)=>i!==j)}));
+  setObsTexto=e=>this.setState({obsTexto:e.target.value,obsErro:false});
+  iniciarEdicaoComentario=(pid,sourceIndex)=>{const p=this.state.processos.find(x=>x.id===pid),o=(p?.obs||[]).find(x=>x.sourceIndex===sourceIndex),uid=this.session?.user?.id;if(!o||(o.tipo||'comentario')!=='comentario'||(this.state.role!=='super'&&o.authorUserId!==uid))return;this.setState({comentarioEditando:{pid,sourceIndex,id:o.id},obsTitulo:o.titulo||'',obsCategoria:'comentario',obsTexto:o.texto||'',obsDataEvento:'',obsMensagemSei:o.mensagemSei||'',obsAnexos:(o.anexos||[]).map(a=>({...a})),obsErro:false,comentarioBusca:''});};
+  cancelarEdicaoComentario=()=>this.setState({comentarioEditando:null,obsTitulo:'',obsCategoria:'comentario',obsTexto:'',obsDataEvento:'',obsMensagemSei:'',obsAnexos:[],obsErro:false});
+  addObs=()=>{ const s=this.state, titulo=s.obsTitulo.trim(), t=s.obsTexto.trim(), mensagemSei=s.obsMensagemSei.trim();if(s.anexosCarregando)return;const p0=s.processos.find(p=>p.id===s.selectedId),cat=this.categoriasProcesso(p0).find(c=>c.k===s.obsCategoria);if(!cat)return;
+    if(!titulo||(!t&&!mensagemSei&&!s.obsAnexos.length)){this.setState({obsErro:true,obsErroTexto:'Informe o título e uma descrição, mensagem do SEI ou imagem.'});return;}
+    const precisaData=['memo','respSetor','respGabinete','conclusao'].includes(cat.k);if(precisaData&&!this.dataValida(s.obsDataEvento)){this.setState({obsErro:true,obsErroTexto:'Informe uma data válida no formato dd/mm/aaaa.'});return;}
+    if(cat.k==='situacao'&&!t){this.setState({obsErro:true,obsErroTexto:'Descreva a situação do processo no campo Comentário.'});return;}
+    const data=this.agora(),dataEvento=precisaData?s.obsDataEvento:'',categoria=cat.label, u=s.user;
+    const sourceIndex=Math.max(-1,...(p0.obs||[]).map(o=>Number.isInteger(o.sourceIndex)?o.sourceIndex:-1))+1;
+    const registro={titulo,categoria,tipo:cat.k,texto:t,mensagemSei,anexos:s.obsAnexos.map(a=>({...a})),dataEvento,autor:u.nome,perfil:u.perfil,data,authorUserId:this.session.user.id,sourceIndex};
+    if(s.comentarioEditando){const ed=s.comentarioEditando,antigo=(p0.obs||[]).find(o=>o.sourceIndex===ed.sourceIndex),uid=this.session?.user?.id;if(!antigo||(s.role!=='super'&&antigo.authorUserId!==uid)){this.setState({obsErro:true,obsErroTexto:'Você pode editar somente comentários feitos por você.'});return;}const novo={...antigo,...registro,id:antigo.id,sourceIndex:antigo.sourceIndex,authorUserId:antigo.authorUserId,autor:antigo.autor,perfil:antigo.perfil,data:antigo.data};const processos=s.processos.map(p=>p.id===p0.id?{...p,obs:(p.obs||[]).map(o=>o.sourceIndex===ed.sourceIndex?novo:o)}:p);this.setState({processos,comentarioEditando:null,obsTitulo:'',obsCategoria:'comentario',obsTexto:'',obsDataEvento:'',obsMensagemSei:'',obsAnexos:[],obsErro:false,comentarioOrdem:'recentes'});const filtro=antigo.id?('id=eq.'+encodeURIComponent(antigo.id)):('process_id=eq.'+encodeURIComponent(p0.id)+'&source_index=eq.'+encodeURIComponent(antigo.sourceIndex));this.supa('/rest/v1/process_comments?'+filtro,{method:'PATCH',body:this.comentarioDb(novo,antigo.sourceIndex,p0.id),prefer:'return=minimal'}).then(()=>this.registrar('Edição',p0,'Comentário atualizado: '+titulo)).catch(err=>this.setState({storageErro:'A edição ficou visível nesta tela, mas não foi sincronizada: '+err.message}));return;}
+    if(!this.podeEditarProcesso(p0)&&cat.k!=='comentario'){this.setState({obsErro:true,obsErroTexto:'Você pode comentar neste processo, mas somente quem o cadastrou ou a Superintendente pode alterar os cabeçalhos.'});return;}
+    if(!this.podeEditarProcesso(p0)){const processos=s.processos.map(p=>p.id===s.selectedId?{...p,obs:[...(p.obs||[]),registro]}:p);this.setState({processos,obsTitulo:'',obsCategoria:'comentario',obsTexto:'',obsDataEvento:'',obsMensagemSei:'',obsAnexos:[],obsErro:false,comentarioBusca:'',comentarioOrdem:'recentes'});this.supa('/rest/v1/process_comments?on_conflict=process_id,source_index',{method:'POST',body:[this.comentarioDb(registro,sourceIndex,p0.id)],prefer:'resolution=merge-duplicates,return=minimal'}).then(()=>this.registrar('Comentário',p0,categoria+': '+titulo)).catch(err=>this.setState({storageErro:'O comentário ficou visível nesta tela, mas não foi sincronizado: '+err.message}));return;}
+    const valor=cat.k==='situacao'?t:[dataEvento,t].filter(Boolean).join(' — '),antes=cat.campo?p0[cat.campo]||'':'';
+    const salvo=this.mut(s.selectedId,p=>({...p,...(cat.campo?{[cat.campo]:valor,hist:{...(p.hist||{}),[cat.campo]:{autor:u.nome,data}}}:{}),obs:[...(p.obs||[]),registro]}),cat.campo?'Atualização':'Comentário',categoria+': '+titulo+(cat.campo?' · de '+(antes||'(não registrado)')+' para '+valor:''));
+    if(salvo)this.setState({obsTitulo:'',obsCategoria:'comentario',obsTexto:'',obsDataEvento:'',obsMensagemSei:'',obsAnexos:[],obsErro:false,comentarioBusca:'',comentarioOrdem:'recentes'}); };
+  setResponsavelTexto=e=>this.setState({responsavelTexto:e.target.value,acompanhamentoSalvo:false});
+  setProximaAcaoTexto=e=>this.setState({proximaAcaoTexto:e.target.value,acompanhamentoSalvo:false});
+  setProximaDataTexto=e=>this.setState({proximaDataTexto:e.target.value,acompanhamentoSalvo:false});
+  salvarAcompanhamento=()=>{ const responsavelInterno=this.state.responsavelTexto.trim(), proximaAcao=this.state.proximaAcaoTexto.trim(), proximaData=this.state.proximaDataTexto; const st=this.stamp();
+    this.mut(this.state.selectedId,p=>({...p,responsavelInterno,proximaAcao,proximaData,hist:{...(p.hist||{}),acompanhamento:st}}),'Edição','Acompanhamento atualizado'); this.setState({acompanhamentoSalvo:true}); };
+  excluirComentario=async(pid,sourceIndex,id)=>{const p=this.state.processos.find(x=>x.id===pid),o=(p?.obs||[]).find(x=>x.sourceIndex===sourceIndex);if(!p||!o)return;const uid=this.session?.user?.id;if(this.state.role!=='super'&&o.authorUserId!==uid){this.setState({storageErro:'Você pode excluir somente comentários feitos por você.'});return;}const antes=p.obs;const depois=antes.filter(x=>x.sourceIndex!==sourceIndex);this.setState(s=>({processos:s.processos.map(x=>x.id===pid?{...x,obs:depois}:x)}));try{const filtro=id?('id=eq.'+encodeURIComponent(id)):('process_id=eq.'+encodeURIComponent(pid)+'&source_index=eq.'+encodeURIComponent(sourceIndex));await this.supa('/rest/v1/process_comments?'+filtro,{method:'DELETE',prefer:'return=minimal'});this.registrar('Exclusão',p,'Comentário excluído: '+(o.titulo||o.categoria||'comentário'));}catch(e){this.setState(s=>({processos:s.processos.map(x=>x.id===pid?{...x,obs:antes}:x),storageErro:'Não foi possível excluir o comentário: '+e.message}));}};
+  startEdit=(k,v)=>this.setState({editKey:k,editValue:v||'',editErro:''});
+  setEditValue=e=>this.setState({editValue:this.state.editKey==='recebido'?this.mascaraData(e.target.value):e.target.value,editErro:''});
+  cancelEdit=()=>this.setState({editKey:null});
+  salvarEdit=()=>{ const k=this.state.editKey, v=this.state.editValue.trim(); const antes=((this.state.processos.find(p=>p.id===this.state.selectedId)||{})[k])||''; if(k==='recebido'&&!this.dataValida(v)){this.setState({editErro:'Informe uma data válida no formato dd/mm/aaaa.'});return;} this.setState({editKey:null,editErro:''}); if(v===antes) return;
+    const st=this.stamp(); this.mut(this.state.selectedId,p=>({...p,[k]:v,hist:{...(p.hist||{}),[k]:st}}),'Edição',this.CAMPO[k]+': de '+(antes||'(não registrado)')+' para '+(v||'(apagado)')); };
+  toggleAba=()=>{ if(this.state.role!=='super'){this.setState({storageErro:'Somente a Superintendente pode concluir ou reabrir processos.'});return;} const p0=this.state.processos.find(p=>p.id===this.state.selectedId); const r=!!p0&&p0.aba==='respondido';
+    this.mut(this.state.selectedId,p=>({...p,aba:r?'pendente':'respondido'}),r?'Reabertura':'Resposta',r?'Processo reaberto como pendente':'Processo movido para Respondidos'); };
+  openNovo=()=>this.setState({menuOpen:false,screen:'novo',formErro:'',form:{servico:this.state.activeServico||'PAEFI',encaminhamento:'',numero:'',recebido:'',orgao:'',usuario:'',link:'',demanda:''}});
+  cancelNovo=()=>this.setState({screen:this.state.role==='super'?'painel':'servico'});
+  uf=(k)=>e=>{ const v=k==='recebido'?this.mascaraData(e.target.value):e.target.value; this.setState(s=>({form:{...s.form,[k]:v},formErro:''})); };
+  salvarNovo=()=>{ const f=this.state.form; if(!f.numero.trim()||!f.demanda.trim()){this.setState({formErro:'Informe o número SEI e a demanda.'});return;} if(!this.dataValida(f.recebido)){this.setState({formErro:'Informe uma data de recebimento válida no formato dd/mm/aaaa.'});return;}
+    const uid=this.session?.user?.id||null;const np0={id:'n'+Date.now(),servico:f.servico,encaminhamento:f.encaminhamento||'',aba:'pendente',numero:f.numero.trim(),recebido:f.recebido||this.hojeTxt(),memo:'',orgao:f.orgao||'—',demanda:f.demanda,usuario:f.usuario||'',situacao:'Recebido na Média Complexidade',respSetor:'',respGabinete:'',obs:[],conclusao:'',link:f.link||'',createdBy:uid,updatedBy:uid}; const np=this.enrich({...np0,etapa:0});
+    this.touched.add(np.id); this.setState(s=>({processos:[np,...s.processos],screen:'processo',selectedId:np.id,activeServico:f.servico,activeTab:'pendentes'}),()=>{this.syncProcessToDb(np).then(()=>this.registrar('Cadastro',np,'Novo processo registrado em '+this.sv(np.servico).label)).catch(err=>this.setState({storageErro:'O cadastro ficou neste navegador, mas não foi salvo no banco: '+err.message}));this.openProcesso(np);}); };
+
+  tab(a){ return 'background:transparent;border:none;border-bottom:2px solid '+(a?'#12355B':'transparent')+';padding:8px 2px 10px;font-size:14px;font-weight:'+(a?'600':'400')+';color:'+(a?'#12355B':'#3D454D')+';cursor:pointer;display:flex;align-items:center'; }
+
+  renderVals(){
+    const s=this.state, procs=s.processos, fmt=n=>n.toLocaleString('pt-BR'); const narrow=s.vw<720;
+    const userName=s.user.nome||'—'; const isSuper=s.role==='super';
+    const roleBtn=(a)=>'height:38px;border-radius:0;font-weight:'+(a?'600':'400')+';font-size:13.5px;cursor:pointer;border:1px solid '+(a?'#12355B':'#C9CED3')+';background:'+(a?'#12355B':'#fff')+';color:'+(a?'#fff':'#2E353B');
+
+    const grupos=[];
+    s.servicos.forEach(sv=>{
+      const pend=procs.filter(p=>p.servico===sv.key&&p.aba==='pendente').length;
+      const active=(s.screen==='servico'||s.screen==='processo')&&s.activeServico===sv.key;
+      const it={label:sv.label,pend,onClick:()=>this.goServico(sv.key),
+        style:'width:100%;display:flex;align-items:center;gap:8px;height:32px;padding:0 10px 0 12px;margin-bottom:1px;border:none;border-radius:0;cursor:pointer;font-size:13.5px;text-align:left;font-weight:'+(active?'600':'500')+';background:'+(active?'#E6ECF3':'transparent')+';box-shadow:'+(active?'inset 2px 0 0 #12355B':'none')+';color:'+(active?'#12355B':'#2E353B'),
+        badgeStyle:'margin-left:auto;font-size:12.5px;font-weight:'+(pend>0?'600':'400')+';color:'+(pend>0?(active?'#12355B':'#3D454D'):'#A3AAB1')};
+      let g=grupos.find(x=>x.grupo===sv.grupo); if(!g){g={grupo:sv.grupo,items:[]};grupos.push(g);} g.items.push(it);
+    });
+    const lg=s.screen==='log';
+    const navLogStyle='width:100%;display:flex;align-items:center;gap:8px;height:32px;padding:0 10px 0 12px;margin-bottom:1px;border:none;border-radius:0;cursor:pointer;font-size:13.5px;text-align:left;font-weight:'+(lg?'600':'500')+';background:'+(lg?'#E6ECF3':'transparent')+';box-shadow:'+(lg?'inset 2px 0 0 #12355B':'none')+';color:'+(lg?'#12355B':'#2E353B');
+    const us=s.screen==='usuarios';
+    const navUsuariosStyle='width:100%;display:flex;align-items:center;gap:8px;height:32px;padding:0 10px 0 12px;margin-bottom:1px;border:none;border-radius:0;cursor:pointer;font-size:13.5px;text-align:left;font-weight:'+(us?'600':'500')+';background:'+(us?'#E6ECF3':'transparent')+';box-shadow:'+(us?'inset 2px 0 0 #12355B':'none')+';color:'+(us?'#12355B':'#2E353B');
+    const pa=s.screen==='painel';
+    const navPainelStyle='width:100%;display:flex;align-items:center;gap:8px;height:32px;padding:0 10px 0 12px;margin-bottom:1px;border:none;border-radius:0;cursor:pointer;font-size:13.5px;text-align:left;font-weight:'+(pa?'600':'500')+';background:'+(pa?'#E6ECF3':'transparent')+';box-shadow:'+(pa?'inset 2px 0 0 #12355B':'none')+';color:'+(pa?'#12355B':'#2E353B');
+
+    // painel
+    const total=procs.length, resp=procs.filter(p=>p.aba==='respondido').length, pendL=procs.filter(p=>p.aba==='pendente');
+    const velhos=pendL.filter(p=>{const d=this.dias(p);return d!=null&&d>30;}).length;
+    const semResponsavel=pendL.filter(p=>!String(p.responsavelInterno||'').trim()).length;
+    const servResumo=s.servicos.map(sv=>{const t=procs.filter(p=>p.servico===sv.key);const r=t.filter(p=>p.aba==='respondido').length;
+      return {label:sv.label,total:t.length,pend:t.length-r,resp:r,barW:(t.length?Math.round(r/t.length*100):0)+'%',onClick:()=>this.goServico(sv.key)};}).filter(x=>x.total>0).sort((a,b)=>b.pend-a.pend);
+    const orgaosMap=new Map();
+    procs.forEach(p=>{const nome=this.orgaoConsolidado(p.orgao);if(!nome||nome==='—')return;const k=this.norm(nome);const atual=orgaosMap.get(k);if(atual)atual.qtd++;else orgaosMap.set(k,{nome,qtd:1});});
+    const orgaosBase=[...orgaosMap.values()].sort((a,b)=>b.qtd-a.qtd||a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'})).slice(0,10);
+    const maxOrgao=Math.max(1,...orgaosBase.map(o=>o.qtd));
+    const orgaosRanking=orgaosBase.map((o,i)=>({...o,pos:String(i+1),qtd:fmt(o.qtd),percentual:(total?Math.round(o.qtd/total*100):0)+'%',barW:Math.max(4,Math.round(o.qtd/maxOrgao*100))+'%'}));
+    const hojeUTC=this.hojeUTC();
+    const bk={}; procs.forEach(p=>{const t=this.ts(p.recebido); if(t==null||t>hojeUTC) return; const d=new Date(t); const k=d.getUTCFullYear()*100+d.getUTCMonth(); if(!bk[k]) bk[k]={t:0,r:0,m:d.getUTCMonth(),y:d.getUTCFullYear()}; bk[k].t++; if(p.aba==='respondido') bk[k].r++;});
+    const ord=Object.keys(bk).sort().slice(-6).map(k=>bk[k]); const maxT=Math.max(1,...ord.map(v=>v.t));
+    const meses=ord.map(v=>({label:this.MES[v.m]+'/'+String(v.y).slice(2),total:v.t,totalH:Math.max(4,Math.round(v.t/maxT*160))+'px',pendFlex:String(v.t-v.r),respFlex:String(v.r)}));
+    const antigos=pendL.map(p=>({p,d:this.dias(p)})).filter(x=>x.d!=null).sort((a,b)=>b.d-a.d).slice(0,10)
+      .map(({p,d})=>({...p,principal:this.nums(p).principal,servicoLabel:this.sv(p.servico).label,diasTxt:fmt(d),onClick:()=>this.openProcesso(p)}));
+
+    const recPorId=new Map(procs.map(p=>[p.id,p]));
+    const logTempo=l=>{if(Number.isFinite(l.timestamp))return l.timestamp;const m=/^(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2})$/.exec(l.quando||'');return m?new Date(+m[3],+m[2]-1,+m[1],+m[4],+m[5]).getTime():0;};
+    const atividades=s.log.map((l,i)=>({...l,_i:i,_t:logTempo(l)})).filter(l=>recPorId.has(l.pid)).sort((a,b)=>b._t-a._t||a._i-b._i);
+    const recentes=(cadastro)=>{const vistos=new Set();return atividades.filter(l=>cadastro?l.acao==='Cadastro':!['Cadastro','Acesso','Importação','Exclusão'].includes(l.acao)).filter(l=>{if(vistos.has(l.pid))return false;vistos.add(l.pid);return true;}).slice(0,8).map(l=>{const p=recPorId.get(l.pid);return {...l,numero:this.nums(p).principal,servicoLabel:this.sv(p.servico).label,abrir:()=>this.openProcesso(p)};});};
+    const adicionados=recentes(true), atualizados=recentes(false);
+    const recentesGrupos=[{titulo:'Processos atualizados recentemente',subtitulo:'Últimos 8 processos alterados neste sistema',itens:atualizados,vazio:!atualizados.length,mensagem:'As edições e os novos comentários aparecerão aqui assim que forem registrados.'},{titulo:'Processos adicionados recentemente',subtitulo:'Últimos 8 cadastros feitos neste sistema',itens:adicionados,vazio:!adicionados.length,mensagem:'Nenhum novo cadastro registrado. A data de recebimento da planilha não é a data de cadastro no sistema.'}];
+
+    // lista
+    const cur=this.sv(s.activeServico), cols=cur.cols||{};
+    const colsOn={usuario:!!cols.usuario,setor:!!cols.setor,gabinete:!!cols.gabinete,obs:!!cols.obs};
+    const colSel=this.colsAtuais();
+    const vis={recebido:colSel.includes('recebido'),orgao:colSel.includes('orgao'),demanda:colSel.includes('demanda'),usuario:colsOn.usuario&&colSel.includes('usuario'),situacao:colSel.includes('situacao'),setor:colsOn.setor&&colSel.includes('setor'),gabinete:colsOn.gabinete&&colSel.includes('gabinete'),obs:colsOn.obs&&colSel.includes('obs'),dias:colSel.includes('dias')};
+    const WD={recebido:'104px',orgao:'minmax(120px,1fr)',demanda:'minmax(160px,1.7fr)',usuario:'minmax(110px,.8fr)',situacao:'minmax(150px,1.4fr)',setor:'minmax(110px,.9fr)',gabinete:'minmax(110px,.8fr)',obs:'minmax(150px,1.2fr)',dias:'60px'};
+    const W=['172px']; this.COLS.forEach(([k])=>{ if(vis[k]) W.push(WD[k]); });
+    const minW=(172+this.COLS.filter(([k])=>vis[k]).reduce((a,[k])=>a+(parseInt((WD[k].match(/\d+/)||[0])[0])||0),0))+'px';
+    const setorNm=this.setorNome(s.activeServico);
+    const colOpts=this.COLS.filter(([k])=>!(k==='usuario'&&!colsOn.usuario)&&!(k==='setor'&&!colsOn.setor)&&!(k==='gabinete'&&!colsOn.gabinete)&&!(k==='obs'&&!colsOn.obs)).map(([k,l])=>{ const on=colSel.includes(k);
+      return {label:k==='setor'?('Resposta do '+(setorNm||'setor')):l,tick:on?'✓':'',onClick:()=>this.toggleCol(k),
+        box:'width:15px;height:15px;border-radius:2px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;border:1.5px solid '+(on?'#0A3D62':'#9AA6B2')+';background:'+(on?'#0A3D62':'#fff')}; });
+    const inS=procs.filter(p=>p.servico===s.activeServico);
+    const countPend=inS.filter(p=>p.aba==='pendente').length, countResp=inS.length-countPend;
+    const wantResp=s.activeTab==='respondidos';
+    const F=s.filtros; let f=inS.filter(p=>wantResp?p.aba==='respondido':p.aba==='pendente');
+    const has=(v,q)=>!q||this.norm(v).includes(this.norm(q));
+    const tri=(v,q)=>!q||(q==='sim'?!!v:!v);
+    f=f.filter(p=>{ const obsAll=(p.obs||[]).map(o=>[o.titulo,o.texto,o.autor,o.categoria].filter(Boolean).join(' ')).join(' '); const d=this.dias(p);
+      const alvo=F.campo?p[F.campo]:[p.numero,p.recebido,p.memo,p.orgao,p.demanda,p.usuario,p.situacao,p.respSetor,p.respGabinete,obsAll].join(' ');
+      return has(alvo,F.q)
+        &&(!F.marc||(F.marc==='_'?!p.marcacao:p.marcacao===F.marc))&&(!F.etapa||String(p.etapa)===F.etapa)&&(!F.unidade||p.unidade===F.unidade)&&(!F.reit||(p.reit||[]).length>0)&&tri(p.respSetor,F.setor)&&tri(p.respGabinete,F.gabinete)&&tri(obsAll,F.obs)
+        &&(!F.dias||(d!=null&&(F.dias==='a'?d<=15:F.dias==='b'?(d>15&&d<=30):d>30))); });
+    const dirN=s.sortDir==='asc'?1:-1, sk=s.sortKey;
+    const sval=(p)=>{ if(sk==='recebido') return this.ts(p.recebido); if(sk==='dias') return this.dias(p); if(sk==='numero'){ const q=this.nums(p).seq; return q[0]?q[0]*1e7+q[1]:null; }
+      if(sk==='obs'){ const o=p.obs||[]; return o.length?o[o.length-1].texto:''; } return p[{orgao:'orgao',demanda:'demanda',usuario:'usuario',situacao:'situacao',setor:'respSetor',gabinete:'respGabinete'}[sk]]||''; };
+    const vazio=v=>v==null||v===''||v==='—';
+    f=f.map(p=>[p,sval(p)]).sort((A,B)=>{ const a=A[1],b=B[1]; if(vazio(a)&&vazio(b)) return 0; if(vazio(a)) return 1; if(vazio(b)) return -1;
+      return (typeof a==='number'&&typeof b==='number'?a-b:String(a).localeCompare(String(b),'pt-BR',{sensitivity:'base',numeric:true}))*dirN; }).map(x=>x[0]);
+    const totalPaginas=Math.max(1,Math.ceil(f.length/s.porPagina));
+    const pagina=Math.min(Math.max(1,s.pagina),totalPaginas), inicio=(pagina-1)*s.porPagina;
+    const shown=f.slice(inicio,inicio+s.porPagina);
+    const nFiltros=['q','setor','gabinete','obs','dias','etapa','unidade','reit','marc'].filter(k=>F[k]).length;
+    const pillS=(on)=>'appearance:none;-webkit-appearance:none;height:32px;padding:0 28px 0 10px;border-radius:2px;font-size:13px;font-weight:'+(on?'600':'400')+';cursor:pointer;outline:none;border:1px solid '+(on?'#12355B':'#C9CED3')+';background:'+(on?'#EEF2F7':'#fff')+' url("data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%226%22><path d=%22M1 1l4 4 4-4%22 fill=%22none%22 stroke=%22%235E6B78%22 stroke-width=%221.5%22/></svg>") no-repeat right 11px center;color:'+(on?'#12355B':'#2E353B');
+    const pill={etapa:pillS(!!F.etapa),unidade:pillS(!!F.unidade),reit:pillS(!!F.reit),setor:pillS(!!F.setor),gabinete:pillS(!!F.gabinete),obs:pillS(!!F.obs),dias:pillS(!!F.dias)};
+    const linhas=shown.map(p=>{ const d=this.dias(p); const ob=p.obs||[]; const last=ob[ob.length-1];
+      const et=p.etapa||0, rn=(p.reit||[]).length; const mk=this.MARC[p.marcacao||'']||this.MARC[''];
+      const nn=this.nums(p);
+      return {...p, principal:nn.principal, temVinc:nn.vinc.length>0, vincTxt:'+'+nn.vinc.length+(nn.vinc.length>1?' processos':' processo'), marcBg:mk.bg, marcBar:mk.bar, marcFg:mk.fg, marcLabel:mk.l, temMarc:!!p.marcacao, temPrazo:!!p.prazoDias, prazoTxt:'Prazo '+p.prazoDias+' dias', onClick:()=>this.openProcesso(p), temLink:!!p.link, etN:String(et+1), etCor:this.ETCOR[et], etapaLabel:this.ETAPAS[et], temReit:rn>0, reitTxt:'Reiterado '+rn+'×', unidadeTxt:p.unidade||'—',
+        memo:p.memo||'—', usuario:p.usuario||'—', situacao:p.situacao||'—',
+        respSetor:p.respSetor||'Sem resposta', setorColor:p.respSetor?'#16202B':'#B0BAC4',
+        respGabinete:p.respGabinete||'Sem resposta', gabColor:p.respGabinete?'#16202B':'#B0BAC4',
+        obsTxt:last?((last.titulo?last.titulo+': ':'')+last.texto):'—', obsMais:ob.length>1, obsMaisTxt:'+'+(ob.length-1)+' comentário(s)',
+        dias:d==null?'—':fmt(d), diasColor:this.diasColor(d)}; });
+
+    // detalhe
+    const sel=procs.find(p=>p.id===s.selectedId); let proc=null;
+    if(sel){
+      const podeEditar=this.podeEditarProcesso(sel);
+      const scols=this.sv(sel.servico).cols||{}; const setorN=this.setorNome(sel.servico);
+      const defs=[['recebido','Data do recebimento do documento na Média Complexidade',true],['memo','Data do memo enviado para o setor',true],['situacao','Situação',true],
+        ['respSetor','Data de resposta do '+(setorN||'setor'),!!scols.setor],['respGabinete','Data de resposta do Gabinete',!!scols.gabinete],['conclusao','Conclusão',!!scols.conclusao]].filter(x=>x[2]);
+      let n=0;
+      const etapas=defs.filter(x=>x[2]).map(([k,label])=>{ n++; const v=sel[k]||''; const ed=s.editKey===k;
+        const hi=(sel.hist||{})[k];
+        return {quem: hi?('Lançado por '+hi.autor+' em '+hi.data):(v?'Importado da planilha':''), quemColor: hi?'#1F5F9E':'#7A828A',
+          n:String(n),label,valor:v||'Não registrado',valColor:v?'#16202B':'#9AA6B2',lendo:!ed,editando:ed,
+          podeEditar:podeEditar&&k==='recebido'&&!ed,dataRecebimento:k==='recebido',textoLivre:k!=='recebido',dotBorder:v?'#12355B':'#C9CED3',dotBg:v?'#12355B':'#fff',dotColor:v?'#fff':'#7A828A',onEdit:()=>this.startEdit(k,v)}; });
+      const d=this.dias(sel); const r=sel.aba==='respondido';
+      const catEstilo={Atualização:['#EEF2F7','#24476B','#D3DEE9'],Cobrança:['#FFF4DD','#7A4D00','#E9D19D'],Pendência:['#FCEDEB','#8E1D16','#E8C2BE'],Decisão:['#E8F2FA','#0F5E91','#C4DDEC'],Orientação:['#EEEAF8','#59408C','#D7CDEE']};
+      const uid=this.session?.user?.id;const todosObs=(sel.obs||[]).map((o,i)=>{const categoria=o.categoria||(o.data==='importado'?'Planilha':'Sem categoria'), ce=catEstilo[categoria]||['#F3F5F7','#5B636B','#DADDE1'],sourceIndex=Number.isInteger(o.sourceIndex)?o.sourceIndex:i,proprio=o.authorUserId===uid; return {...o,sourceIndex,titulo:o.titulo||(o.data==='importado'?'Observação importada':'Comentário anterior'),categoria,anexos:o.anexos||[],temDataEvento:!!o.dataEvento,temMensagemSei:!!o.mensagemSei,catBg:ce[0],catCor:ce[1],catBorder:ce[2],perfil:o.perfil||'Planilha',data:o.data==='importado'?'importado da planilha':o.data,podeEditarComentario:(o.tipo||'comentario')==='comentario'&&(isSuper||proprio),editar:()=>this.iniciarEdicaoComentario(sel.id,sourceIndex),podeExcluir:isSuper||proprio,excluir:()=>this.excluirComentario(sel.id,sourceIndex,o.id)};});
+      const obs=todosObs.filter(o=>this.norm([o.titulo,o.texto,o.autor,o.categoria,o.dataEvento,o.mensagemSei].join(' ')).includes(this.norm(s.comentarioBusca)));
+      if(s.comentarioOrdem==='recentes')obs.reverse();
+      const processoAtividades=atividades.filter(l=>l.pid===sel.id);
+      proc={...sel,servicoLabel:this.sv(sel.servico).label,usuario:sel.usuario||'Não informado',temEncaminhamento:!!sel.encaminhamento,etapas,obs,atividades:processoAtividades,semAtividades:!processoAtividades.length,semComentarios:!obs.length,comentarioVazioTexto:todosObs.length?'Nenhum comentário corresponde à busca.':'Nenhum comentário registrado. Adicione a primeira atualização abaixo.',
+        obsCount:obs.length+' de '+todosObs.length+' registro(s)',
+        dias:d==null?'—':fmt(d),diasColor:this.diasColor(d),temLink:!!sel.link,semLink:!sel.link,
+        abaTxt:r?'Respondido':'Pendente',stColor:r?'#1E8E4E':'#8A5A06',stBg:r?'#F1F8F4':'#FDF6EA',stBorder:r?'#CFE7D8':'#F0DDB8',
+        podeEditar,podeExcluir:podeEditar,podeConcluir:isSuper,edicaoBloqueada:!podeEditar,
+        ...(()=>{ const nn=this.nums(sel); const nBase=nn.vinc.filter(v=>!v.extra).length; return {principal:nn.principal,totalProc:String(1+nn.vinc.length),
+          vinc:nn.vinc.map((v,i)=>({numero:v.numero,nota:v.nota||'',temNota:!!v.nota,n:String(i+2),removivel:podeEditar&&!!v.extra,remover:()=>this.remVinc(i-nBase)}))}; })(),
+        marcOpts:this.MARC_ORD.filter(k=>k).map(k=>{ const m=this.MARC[k], on=(sel.marcacao||'')===k; return {label:m.l,bar:m.bar,onClick:()=>this.setMarcacao(k),
+          style:'display:flex;align-items:center;gap:7px;height:32px;padding:0 10px;border-radius:2px;cursor:pointer;font-size:13px;font-weight:'+(on?'600':'400')+';border:1px solid '+(on?m.bar:'#C9CED3')+';background:'+(on?m.bg:'#fff')+';color:'+(on?m.fg:'#3A4753')}; }),
+        marcOrigem:(sel.hist&&sel.hist.marcacao)?('Alterada por '+sel.hist.marcacao.autor+' em '+sel.hist.marcacao.data):(sel.marcacaoOrigem==='planilha'?'Cor importada da planilha':'Clique para classificar'),
+        passos:this.ETAPAS.map((l,i)=>{ const e=sel.etapa||0, done=i<e, cur=i===e; return {n:String(i+1),label:l,bg:done?'#0A3D62':(cur?'#fff':'#fff'),fg:done?'#fff':(cur?'#0A3D62':'#9AA6B2'),bd:done||cur?'#0A3D62':'#D5DCE3',line:i===5?'transparent':(i<e?'#0A3D62':'#E1E6EB'),fw:cur?'700':'500',tc:cur?'#0A3D62':(done?'#3A4753':'#9AA6B2')}; }),
+         podeAvancar:podeEditar&&(sel.etapa||0)<5&&(isSuper||(sel.etapa||0)<4), podeVoltar:podeEditar&&(sel.etapa||0)>0, proxEtapa:this.ETAPAS[Math.min(5,(sel.etapa||0)+1)],
+        etapaQuem:(sel.hist&&sel.hist.etapa)?('Atualizada por '+sel.hist.etapa.autor+' em '+sel.hist.etapa.data):'Identificada automaticamente pela Situação',
+        unidade:sel.unidade||'', oficio:sel.oficio||'', temOficio:!!sel.oficio, semOficio:!sel.oficio, reit:sel.reit||[], reitN:String((sel.reit||[]).length), temReit:(sel.reit||[]).length>0,
+        acaoTxt:r?'Este processo está na aba Respondidos.':'Quando a resposta for enviada ao demandante, mova o processo para Respondidos.',
+        acaoBtn:r?'Reabrir como pendente':'Mover para Respondidos',
+        acaoBg:r?'#fff':'#2F7A4B',acaoColor:r?'#1F2328':'#fff',acaoBorder:r?'#C9CED3':'#2F7A4B'};
+    }
+
+    const lq=this.norm(s.logQ);
+    const logF=s.log.filter(l=>(!s.logUser||l.autor===s.logUser)&&(!s.logAcao||l.acao===s.logAcao)&&(!lq||this.norm(l.numero+' '+l.detalhe).includes(lq)));
+    const vivos=new Set(procs.map(p=>p.id));
+    const logRows=logF.slice(0,300).map(l=>{ const c=this.ACAO_COR[l.acao]||['#EEF0F3','#2F3B46']; const ok=!!l.pid&&vivos.has(l.pid);
+      return {...l,bg:c[0],cor:c[1],servicoLabel:l.servico?this.sv(l.servico).label:'—',linkavel:ok,naoLinkavel:!ok,abrir:()=>{const p=procs.find(x=>x.id===l.pid); if(p) this.openProcesso(p);}}; });
+    const pendAll=procs.filter(p=>p.aba==='pendente'); const maxE=Math.max(1,...[0,1,2,3,4].map(i=>pendAll.filter(p=>(p.etapa||0)===i).length));
+    const porEtapa=[0,1,2,3,4].map(i=>{const q=pendAll.filter(p=>(p.etapa||0)===i).length; return {n:String(i+1),label:this.ETAPAS[i],qtd:fmt(q),w:Math.round(q/maxE*100)+'%'};});
+    const ug={}; pendAll.filter(p=>(p.etapa||0)===2).forEach(p=>{const k=p.unidade||'Unidade não identificada'; const d=this.dias(p); if(!ug[k]) ug[k]={q:0,v:0,m:0}; ug[k].q++; if(d!=null&&d>30) ug[k].v++; if(d!=null&&d>ug[k].m) ug[k].m=d;});
+    const porUnidade=Object.entries(ug).sort((a,b)=>b[1].q-a[1].q).map(([nome,v])=>({nome,qtd:fmt(v.q),velhos:fmt(v.v),max:v.m?fmt(v.m)+' dias':'—'}));
+    const inSvc=procs.filter(p=>p.servico===s.activeServico&&(s.activeTab==='respondidos'?p.aba==='respondido':p.aba==='pendente'));
+    const marcChips=this.MARC_ORD.map(k=>{ const m=this.MARC[k], fk=k||'_', on=F.marc===fk; const q=inSvc.filter(p=>(p.marcacao||'')===k).length;
+      return {label:m.l,bar:m.bar,qtd:String(q),onClick:()=>this.toggleMarc(fk),
+        style:'display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 10px;border-radius:2px;cursor:pointer;font-size:13px;font-weight:'+(on?'600':'400')+';border:1px solid '+(on?m.bar:'#C9CED3')+';background:'+(on?m.bg:'#fff')+';color:'+(on?m.fg:'#2E353B')}; });
+    const porMarc=this.MARC_ORD.filter(k=>k!=='concluido').map(k=>{ const m=this.MARC[k]; return {label:m.l,bg:m.bg,bar:m.bar,fg:m.fg,desc:m.d,qtd:fmt(pendAll.filter(p=>(p.marcacao||'')===k).length)}; });
+    return {
+      narrow, backdrop:narrow&&s.menuOpen, toggleMenu:this.toggleMenu,
+      shellCols: narrow?'minmax(0,1fr)':'232px minmax(0,1fr)',
+      asideStyle:'background:#FFFFFF;border-right:1px solid #DADDE1;display:flex;flex-direction:column;height:100%;overflow:hidden;'+(narrow?('position:fixed;left:0;top:0;bottom:0;width:280px;z-index:40;box-shadow:0 0 40px rgba(0,0,0,.3);transition:transform .2s;transform:translateX('+(s.menuOpen?'0':'-100%')+')'):''),
+      headPad: s.vw<700?'padding:14px 14px 0':'padding:18px 32px 0',
+      contentPad: 'flex:1;'+(s.vw<700?'padding:14px 12px 32px':'padding:24px 32px 48px'),
+      cardsOn: s.vw<760, tableOn: s.vw>=760,
+      hojeOn: s.vw>=900 && !(s.screen==='servico'&&s.vw>=1100),
+      headStatsOn: s.screen==='servico' && s.vw>=1100,
+      headStats:[{label:'há +30 dias',val:fmt(inS.filter(p=>p.aba==='pendente'&&(this.dias(p)||0)>30).length),cor:'#A3281F'},{label:'em reiteração',val:fmt(inS.filter(p=>p.aba==='pendente'&&p.marcacao==='reiteracao').length),cor:'#8A5A00'},{label:'urgentes',val:fmt(inS.filter(p=>p.aba==='pendente'&&p.marcacao==='urgente').length),cor:'#A3281F'}],
+      marcChips,porMarc,vis,colOpts,colsVisN:String(1+Object.values(vis).filter(Boolean).length),colsOpen:s.colsOpen,toggleCols:this.toggleCols,colsPadrao:this.colsPadrao,porUnidade,etapaOpts:this.ETAPAS.map((l,i)=>({v:String(i),l:(i+1)+'. '+l})),unidadeAll:this.UNID.map(u=>u[0]),
+      fEtapa:this.ff('etapa'),fUnidade:this.ff('unidade'),fReit:this.ff('reit'),
+      avancarEtapa:this.avancarEtapa,voltarEtapa:this.voltarEtapa,setUnidade:this.setUnidade,oficioTexto:s.oficioTexto,setOficioTexto:this.setOficioTexto,salvarOficio:this.salvarOficio,limparOficio:this.limparOficio,
+      logVisible:s.screen==='log',navLogStyle,goLog:this.goLog,logCount:String(s.log.length),
+      usuariosVisible:s.screen==='usuarios',navUsuariosStyle,goUsuarios:this.goUsuarios,usuariosCount:String(s.usuarios.length),usuarios:s.usuarios,usuarioForm:s.usuarioForm,setUsuarioNome:this.setUsuarioNome,setUsuarioEmail:this.setUsuarioEmail,setUsuarioSenha:this.setUsuarioSenha,cadastrarUsuario:this.cadastrarUsuario,usuariosErro:s.usuariosErro,usuariosErroOn:!!s.usuariosErro,usuariosSucesso:s.usuariosSucesso,usuariosSucessoOn:!!s.usuariosSucesso,usuariosCarregando:s.usuariosCarregando,usuariosBtnTexto:s.usuariosCarregando?'Cadastrando…':'Cadastrar usuário',
+      logRows,logVazio:logRows.length===0,logInfo:fmt(logF.length)+' registro(s)',
+      logUsers:[...new Set(s.log.map(l=>l.autor))],logAcoes:[...new Set(s.log.map(l=>l.acao))],
+      logUser:s.logUser,logAcao:s.logAcao,logQ:s.logQ,setLogUser:this.setLogUser,setLogAcao:this.setLogAcao,setLogQ:this.setLogQ,
+      confirmDel:s.confirmDel,pedirExcluir:this.pedirExcluir,cancelExcluir:this.cancelExcluir,confirmarExcluir:this.confirmarExcluir,
+      loginVisible:s.screen==='login',appVisible:s.screen!=='login',
+      loginEmail:s.loginEmail,loginSenha:s.loginSenha,setLoginEmail:this.setLoginEmail,setLoginSenha:this.setLoginSenha,
+      doLogin:this.doLogin,loginErro:s.loginErro||'',loginErroOn:!!s.loginErro,loginCarregando:s.loginCarregando,loginBtnTexto:s.loginCarregando?'Entrando…':'Entrar',
+      isSuper:s.role==='super',userName,userRole:s.user.perfil,userInitials:userName.split(' ').filter(Boolean).map(w=>w[0]).slice(0,2).join(''),
+      navGrupos:grupos,navPainelStyle,goPainel:this.goPainel,openNovo:this.openNovo,logout:this.logout,
+      painelVisible:s.screen==='painel',servicoVisible:s.screen==='servico',processoVisible:s.screen==='processo',novoVisible:s.screen==='novo',novoBtnOn:!['novo','log','usuarios'].includes(s.screen),
+      crumb:s.screen==='usuarios'?'Superintendência / Controle de acesso':s.screen==='log'?'Auditoria · somente Superintendente':s.screen==='painel'?'Visão geral da Superintendência':(s.screen==='novo'?'Cadastro':(s.screen==='processo'?('Serviços / '+cur.label):'Serviços')),
+      pageTitle:s.screen==='usuarios'?'Usuários':s.screen==='log'?'Registro de atividades':s.screen==='painel'?'Painel geral':(s.screen==='novo'?'Novo processo':(s.screen==='processo'?'Detalhe do processo':cur.label)),
+      hoje:new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'short',year:'numeric'}).format(new Date()).replace('.',''),
+      kpiTotal:fmt(total),kpiPend:fmt(total-resp),kpiResp:fmt(resp),kpiVelhos:fmt(velhos),kpiSemResponsavel:fmt(semResponsavel),kpiTaxa:(total?Math.round(resp/total*100):0)+'%',
+      servResumo,orgaosRanking,meses,antigos,recentesGrupos,
+      sortKey:s.sortKey,setSortKey:this.setSortKey,toggleDir:this.toggleDir,dirLabel:s.sortDir==='asc'?'↑ Crescente':'↓ Decrescente',
+      sortOpts:[['numero','Nº processo'],['recebido','Recebimento'],['orgao','Órgão'],['demanda','Demanda'],['usuario','Pessoa/família'],['situacao','Situação'],['setor','Resposta do setor'],['gabinete','Resposta do Gabinete'],['obs','Comentário recente'],['dias','Dias em aberto']].map(([k,l])=>({k,l})),
+      sortH:Object.fromEntries(['numero','recebido','orgao','demanda','usuario','situacao','setor','gabinete','obs','dias'].map(k=>[k,()=>this.sortBy(k)])),
+      arrows:Object.fromEntries(['numero','recebido','orgao','demanda','usuario','situacao','setor','gabinete','obs','dias'].map(k=>[k,s.sortKey===k?(s.sortDir==='asc'?'▲':'▼'):''])),
+      vincTexto:s.vincTexto,vincNota:s.vincNota,setVincTexto:this.setVincTexto,setVincNota:this.setVincNota,addVinc:this.addVinc,
+      filtros:F,colsOn,gridCols:W.join(' '),minW,
+      colSetorLabel:'Resposta do '+(this.setorNome(s.activeServico)||'setor'),
+      fQ:this.ff('q'),fCampo:this.ff('campo'),pill,
+      fSetor:this.ff('setor'),fGabinete:this.ff('gabinete'),fObs:this.ff('obs'),fDias:this.ff('dias'),
+      temFiltro:nFiltros>0,nFiltros,limparFiltros:this.limparFiltros,
+      linhas,listaVazia:linhas.length===0,countPend,countResp,
+      resultInfo:f.length?('Exibindo '+fmt(inicio+1)+'–'+fmt(Math.min(inicio+shown.length,f.length))+' de '+fmt(f.length)): 'Nenhum processo',
+      paginacaoOn:f.length>0,porPagina:String(s.porPagina),setPorPagina:this.setPorPagina,paginaAtual:String(pagina),totalPaginas:String(totalPaginas),primeiraPagina:pagina<=1,ultimaPagina:pagina>=totalPaginas,paginaAnterior:this.paginaAnterior,proximaPagina:this.proximaPagina,
+      setTabPend:this.setTabPend,setTabResp:this.setTabResp,tabPendStyle:this.tab(!wantResp),tabRespStyle:this.tab(wantResp),
+      proc,backToServico:this.backToServico,editValue:s.editValue,editErro:s.editErro||'',editErroOn:!!s.editErro,setEditValue:this.setEditValue,salvarEdit:this.salvarEdit,cancelEdit:this.cancelEdit,
+      responsavelTexto:s.responsavelTexto,proximaAcaoTexto:s.proximaAcaoTexto,proximaDataTexto:s.proximaDataTexto,acompanhamentoSalvoOn:s.acompanhamentoSalvo,setResponsavelTexto:this.setResponsavelTexto,setProximaAcaoTexto:this.setProximaAcaoTexto,setProximaDataTexto:this.setProximaDataTexto,salvarAcompanhamento:this.salvarAcompanhamento,
+      comentarioBusca:s.comentarioBusca,comentarioOrdem:s.comentarioOrdem,setComentarioBusca:this.setComentarioBusca,setComentarioOrdem:this.setComentarioOrdem,obsTitulo:s.obsTitulo,obsCategoria:s.obsCategoria,obsTexto:s.obsTexto,obsErroOn:s.obsErro,obsErroTexto:s.obsErroTexto,setObsTitulo:this.setObsTitulo,setObsCategoria:this.setObsCategoria,setObsTexto:this.setObsTexto,addObs:this.addObs,toggleAba:this.toggleAba,comentarioEditandoOn:!!s.comentarioEditando,comentarioBtnTexto:s.comentarioEditando?'Salvar edição':'Registrar atualização ou comentário',cancelarEdicaoComentario:this.cancelarEdicaoComentario,
+      categoriasAtualizacao:proc&&proc.podeEditar?this.categoriasProcesso(sel):this.categoriasProcesso(sel).filter(c=>c.k==='comentario'),obsDataEvento:s.obsDataEvento,exigeDataEvento:['memo','respSetor','respGabinete','conclusao'].includes(s.obsCategoria),dataEventoLabel:(this.CATEGORIAS_REGISTRO.find(c=>c.k===s.obsCategoria)||{}).label||'Data',setObsDataEvento:this.setObsDataEvento,obsMensagemSei:s.obsMensagemSei,setObsMensagemSei:this.setObsMensagemSei,selecionarAnexo:this.selecionarAnexo,anexosCarregando:s.anexosCarregando,anexosRascunho:s.obsAnexos.map((a,i)=>({...a,remover:()=>this.removerAnexo(i)})),storageErroOn:!!s.storageErro,storageErro:s.storageErro,
+      linkTexto:s.linkTexto,setLink:this.setLink,salvarLink:this.salvarLink,
+      form:s.form,formErro:s.formErro||'',formErroOn:!!s.formErro,cancelNovo:this.cancelNovo,salvarNovo:this.salvarNovo,
+      servicoOptions:s.servicos.map(sv=>({key:sv.key,label:sv.label})),
+      encaminhamentoOptions:this.ENCAMINHAMENTOS,setFormEncaminhamento:this.uf('encaminhamento'),
+      setFormServico:this.uf('servico'),setFormNumero:this.uf('numero'),setFormRecebido:this.uf('recebido'),
+      setFormOrgao:this.uf('orgao'),setFormUsuario:this.uf('usuario'),setFormLink:this.uf('link'),setFormDemanda:this.uf('demanda'),
+    };
+  }
+}
+</script>
+</body>
+</html>
+
