@@ -1,13 +1,8 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html>
 <head>
 <meta charset="utf-8">
-<title>Acompanhamento de Processos SEI — Média Complexidade</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Sistema interno de acompanhamento de processos SEI da Média Complexidade.">
-<meta name="author" content="Jurandy1">
-<meta name="theme-color" content="#12355B">
-<link rel="icon" href="data:,">
 <script src="./support.js"></script>
 </head>
 <body>
@@ -45,13 +40,25 @@
         <h1 style="font-size:24px;font-weight:600;margin:0;color:#1F2328">Acompanhamento de Processos SEI</h1>
       </div>
       <div style="background:#fff;border:1px solid #DADDE1;border-radius:2px;padding:24px">
+        <sc-if value="{{ recuperandoOn }}" hint-placeholder-val="{{ false }}"><div>
+        <div style="font-size:14px;font-weight:600;color:#1F2328;margin-bottom:14px">Defina uma nova senha</div>
+        <label style="display:block;font-size:13px;font-weight:500;color:#3D454D;margin-bottom:6px">Nova senha</label>
+        <input type="password" value="{{ senhaNova }}" onInput="{{ setSenhaNova }}" placeholder="Mínimo de 8 caracteres" style="width:100%;height:38px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:14px;background:#fff;color:#1F2328;margin-bottom:16px">
+        <label style="display:block;font-size:13px;font-weight:500;color:#3D454D;margin-bottom:6px">Confirmar nova senha</label>
+        <input type="password" value="{{ senhaConfirma }}" onInput="{{ setSenhaConfirma }}" placeholder="Repita a nova senha" style="width:100%;height:38px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:14px;background:#fff;color:#1F2328;margin-bottom:16px">
+        <sc-if value="{{ senhaErroOn }}" hint-placeholder-val="{{ false }}"><div role="alert" style="margin:-4px 0 14px;padding:10px 12px;background:#FCEDEB;border:1px solid #E8C2BE;color:#8E1D16;font-size:13px;line-height:1.45">{{ senhaErro }}</div></sc-if>
+        <button onClick="{{ salvarSenhaRecuperada }}" disabled="{{ senhaCarregando }}" style="height:36px;padding:0 16px;background:#12355B;color:#fff;border:1px solid #12355B;border-radius:2px;font-weight:600;font-size:13.5px;cursor:pointer;width:100%;height:42px;font-size:14px" style-hover="background:#0C2744">{{ senhaBtnTexto }}</button>
+        </div></sc-if>
+        <sc-if value="{{ loginNormalOn }}" hint-placeholder-val="{{ true }}"><div>
         <label style="display:block;font-size:13px;font-weight:500;color:#3D454D;margin-bottom:6px">E-mail funcional</label>
         <input value="{{ loginEmail }}" onInput="{{ setLoginEmail }}" placeholder="nome@semcas.saoluis.ma.gov.br" style="width:100%;height:38px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:14px;background:#fff;color:#1F2328;margin-bottom:16px">
         <label style="display:block;font-size:13px;font-weight:500;color:#3D454D;margin-bottom:6px">Senha</label>
         <input type="password" value="{{ loginSenha }}" onInput="{{ setLoginSenha }}" placeholder="Digite sua senha" style="width:100%;height:38px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:14px;background:#fff;color:#1F2328;margin-bottom:16px">
         <sc-if value="{{ loginErroOn }}" hint-placeholder-val="{{ false }}"><div role="alert" style="margin:-4px 0 14px;padding:10px 12px;background:#FCEDEB;border:1px solid #E8C2BE;color:#8E1D16;font-size:13px;line-height:1.45">{{ loginErro }}</div></sc-if>
         <button onClick="{{ doLogin }}" disabled="{{ loginCarregando }}" style="height:36px;padding:0 16px;background:#12355B;color:#fff;border:1px solid #12355B;border-radius:2px;font-weight:600;font-size:13.5px;cursor:pointer;width:100%;height:42px;font-size:14px" style-hover="background:#0C2744">{{ loginBtnTexto }}</button>
-        <div style="margin-top:14px;font-size:13px"><a href="#">Esqueci minha senha</a></div>
+        <sc-if value="{{ loginInfoOn }}" hint-placeholder-val="{{ false }}"><div role="status" style="margin:14px 0 0;padding:10px 12px;background:#E6F4EC;border:1px solid #CFE7D8;color:#17703D;font-size:13px;line-height:1.45">{{ loginInfo }}</div></sc-if>
+        <div style="margin-top:14px;font-size:13px"><a href="#" onClick="{{ esqueciSenha }}">Esqueci minha senha</a></div>
+        </div></sc-if>
       </div>
       <div style="font-size:12.5px;color:#7A828A;margin-top:14px;line-height:1.5">Acesso interno autenticado. O perfil é definido pelo cadastro da Superintendência e os dados são sincronizados com o Supabase.</div>
     </div>
@@ -710,7 +717,7 @@ class Component extends DCLogic {
   SUPA_ROOT = 'https://cqcvbrgrstdrcqhakcvc.supabase.co';
   SUPA_KEY = 'sb_publishable_fR6nS5GOjrISTwNQjTuhUQ_e9zThR05';
   session = null;
-  DADOS_BASE = {SERVICOS:[],PROCESSOS:[]};
+  DADOS_BASE = {"SERVICOS":[{"key":"PAEFI","label":"PAEFI","grupo":"Serviços de referência","setorLabel":"CREAS","cols":{"usuario":true,"situacao":true,"setor":true,"gabinete":true,"obs":true,"conclusao":true}},{"key":"SEAS","label":"SEAS · Abordagem Social","grupo":"Serviços de referência","setorLabel":"Abordagem","cols":{"usuario":true,"situacao":true,"setor":true,"gabinete":true,"obs":true}},{"key":"CREAS","label":"CREAS","grupo":"Serviços de referência","setorLabel":"CREAS","cols":{"usuario":true,"situacao":true,"setor":true,"gabinete":true,"obs":true}},{"key":"CENTROS_POPS","label":"Centros POP","grupo":"Serviços de referência","setorLabel":"Centro POP","cols":{"usuario":true,"situacao":true,"setor":true,"gabinete":true,"obs":true}},{"key":"MEDIDAS","label":"Medidas Socioeducativas","grupo":"Serviços de referência","setorLabel":"CREAS","cols":{"usuario":true,"situacao":true,"setor":true,"gabinete":true,"obs":true}},{"key":"AEPETI","label":"AEPETI","grupo":"Programas","setorLabel":"","cols":{"usuario":true,"situacao":true,"gabinete":true,"obs":true}},{"key":"PCDIF","label":"PCD e Pessoa Idosa (PCDIF)","grupo":"Programas","setorLabel":"PCDIF","cols":{"usuario":true,"situacao":true,"setor":true,"gabinete":true,"obs":true}},{"key":"ADJPS","label":"ADJPS","grupo":"Gestão","setorLabel":"","cols":{"usuario":true,"situacao":true,"obs":true}},{"key":"JURIDICO","label":"Jurídico","grupo":"Gestão","setorLabel":"","cols":{"usuario":true,"situacao":true,"obs":true}},{"key":"SPSEMC","label":"SPSEMC (interno)","grupo":"Gestão","setorLabel":"","cols":{"usuario":true,"situacao":true,"gabinete":true,"obs":true}},{"key":"CONVITES","label":"Convites e reuniões","grupo":"Gestão","setorLabel":"","cols":{"situacao":true}},{"key":"DEMANDAS_EQUIV","label":"Demandas equivocadas","grupo":"Gestão","setorLabel":"","cols":{"usuario":true,"situacao":true,"gabinete":true,"obs":true}}]};
   FILTROS0 = {q:'',campo:'',setor:'',gabinete:'',obs:'',dias:'',etapa:'',unidade:'',reit:'',marc:''};
   MARC = {
     aguardando:{l:'Aguardando',bg:'#FFF6CC',bar:'#E5BE00',fg:'#6B5600',d:'Aguardando relatório ou resposta da unidade'},
@@ -746,10 +753,26 @@ class Component extends DCLogic {
   ACAO_COR = {'Exclusão':['#FCEDEB','#A52A22'],'Resposta':['#E6F4EC','#17703D'],'Reabertura':['#FBF1DF','#8A5A06'],'Edição':['#E8F2FA','#0F5E91'],'Comentário':['#EEF0F3','#2F3B46'],'Observação':['#EEF0F3','#2F3B46'],'Cadastro':['#E8F2FA','#0F5E91'],'Link SEI':['#E8F2FA','#0F5E91'],'Acesso':['#F3F5F7','#5E6B78'],'Importação':['#F3F5F7','#5E6B78']};
   agora(){ const d=new Date(),p=n=>String(n).padStart(2,'0'); return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes()); }
   nomeDoEmail(e){ return (e||'').split('@')[0].split(/[._-]+/).filter(Boolean).map(w=>w[0].toUpperCase()+w.slice(1).toLowerCase()).join(' ')||'Usuário'; }
-  async supa(path,{method='GET',body=null,token=null,prefer=''}={}){
+  async renovarSessao(){
+    if(!this.session||!this.session.refresh_token) throw new Error('Sessão expirada. Saia e entre novamente.');
+    if(!this._renovando) this._renovando=(async()=>{
+      const res=await fetch(this.SUPA_ROOT+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:this.SUPA_KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:this.session.refresh_token})});
+      const d=await res.json().catch(()=>null);
+      if(!res.ok||!d||!d.access_token) throw new Error('Sessão expirada. Saia e entre novamente.');
+      this.session=d; try{localStorage.setItem('semcas_supabase_session',JSON.stringify(d));}catch(e){}
+      return d; })().finally(()=>{this._renovando=null;});
+    return this._renovando;
+  }
+  async supaTodos(path){
+    const todos=[],tam=1000;
+    for(let offset=0;;offset+=tam){ const pag=await this.supa(path+'&limit='+tam+'&offset='+offset)||[]; todos.push(...pag); if(pag.length<tam) return todos; }
+  }
+  async supa(path,{method='GET',body=null,token=null,prefer='',retry=true}={}){
+    if(!token&&this.session&&this.session.refresh_token&&this.session.expires_at&&this.session.expires_at*1000-Date.now()<60000) await this.renovarSessao();
     const headers={apikey:this.SUPA_KEY,'Content-Type':'application/json',Authorization:'Bearer '+(token||(this.session&&this.session.access_token)||this.SUPA_KEY)};
     if(prefer) headers.Prefer=prefer;
     const res=await fetch(this.SUPA_ROOT+path,{method,headers,body:body==null?undefined:JSON.stringify(body)});
+    if(res.status===401&&retry&&!token&&this.session&&this.session.refresh_token){ await this.renovarSessao(); return this.supa(path,{method,body,token,prefer,retry:false}); }
     const raw=await res.text(); let data=null; try{data=raw?JSON.parse(raw):null;}catch(e){data=raw;}
     if(!res.ok){const detalhe=data&&typeof data==='object'?(data.message||data.error_description||data.msg||(typeof data.error==='string'?data.error:'')||data.error_code):'';throw new Error(detalhe||'Falha na comunicação com o banco');}
     return data;
@@ -764,8 +787,19 @@ class Component extends DCLogic {
   async syncProcessToDb(p){
     if(!this.session)return;
     await this.supa('/rest/v1/processes?on_conflict=id',{method:'POST',body:[this.processoDb(p)],prefer:'resolution=merge-duplicates,return=minimal'});
-    const comentarios=(p.obs||[]).map((c,i)=>this.comentarioDb(c,i,p.id));
-    if(comentarios.length)await this.supa('/rest/v1/process_comments?on_conflict=process_id,source_index',{method:'POST',body:comentarios,prefer:'resolution=merge-duplicates,return=minimal'});
+  }
+  // Insere um comentário novo sem sobrescrever comentários de outros usuários: o índice é calculado a partir do banco.
+  async inserirComentario(pid,registro){
+    for(let tentativa=0;;tentativa++){
+      const ult=await this.supa('/rest/v1/process_comments?select=source_index&process_id=eq.'+encodeURIComponent(pid)+'&order=source_index.desc&limit=1');
+      const idx=Math.max(Number.isInteger(registro.sourceIndex)?registro.sourceIndex:0,ult&&ult[0]?ult[0].source_index+1:0);
+      try{
+        const criado=await this.supa('/rest/v1/process_comments',{method:'POST',body:[this.comentarioDb({...registro,sourceIndex:idx},idx,pid)],prefer:'return=representation'});
+        const novo=criado&&criado[0];
+        this.setState(s=>({processos:s.processos.map(p=>p.id!==pid?p:{...p,obs:(p.obs||[]).map(o=>o._tmp&&o._tmp===registro._tmp?{...o,_tmp:undefined,id:novo?novo.id:o.id,sourceIndex:idx}:o)})}));
+        return novo;
+      }catch(err){ if(tentativa<3&&/duplicate key|23505|conflict/i.test(err.message)){ registro={...registro,sourceIndex:idx+1}; continue; } throw err; }
+    }
   }
   async syncAuditToDb(e){
     if(!this.session)return;
@@ -775,8 +809,8 @@ class Component extends DCLogic {
   async loadDbData(){
     const [svs,rows,comments,audits,usuariosDb]=await Promise.all([
       this.supa('/rest/v1/services?select=*&order=group_name,key'),
-      this.supa('/rest/v1/processes?select=*&order=id&limit=1000'),
-      this.supa('/rest/v1/process_comments?select=*&order=process_id,source_index&limit=1000'),
+      this.supaTodos('/rest/v1/processes?select=*&order=id'),
+      this.supaTodos('/rest/v1/process_comments?select=*&order=process_id,source_index,id'),
       this.state.role==='super'?this.supa('/rest/v1/process_audit_log?select=*&order=event_at.desc&limit=300'):Promise.resolve([]),
       this.state.role==='super'?this.supa('/rest/v1/user_profiles?select=user_id,email,display_name,role,active&order=display_name'):Promise.resolve([])
     ]);
@@ -788,11 +822,12 @@ class Component extends DCLogic {
     const servicos=(svs||[]).map(v=>({key:v.key,label:v.label,grupo:v.group_name,setorLabel:v.sector_label,cols:v.columns_config||{}}));
     this.touched=new Set();this.deleted=new Set();
     const usuarios=(usuariosDb||[]).map(u=>({id:u.user_id,nome:u.display_name||this.nomeDoEmail(u.email),email:u.email,perfil:u.role==='superintendente'?'Superintendente':'Administrativo',bg:u.role==='superintendente'?'#E8F2FA':'#F3F5F7',cor:u.role==='superintendente'?'#0F5E91':'#3D454D',borda:u.role==='superintendente'?'#C4DDEC':'#DADDE1'}));
+    this._ultimaCarga=Date.now();
     this.setState({servicos,processos,log,usuarios,dbOnline:true,storageErro:''});
   }
   async entrarComSessao(sessao){
     this.session=sessao;
-    const perfis=await this.supa('/rest/v1/user_profiles?select=user_id,email,display_name,role,active&user_id=eq.'+encodeURIComponent(sessao.user.id),{token:sessao.access_token});
+    const perfis=await this.supa('/rest/v1/user_profiles?select=user_id,email,display_name,role,active&user_id=eq.'+encodeURIComponent(sessao.user.id));
     const perfil=perfis&&perfis[0];if(!perfil||!perfil.active)throw new Error('Usuário sem perfil ativo no sistema.');
     const role=perfil.role==='superintendente'?'super':'administrativo',nome=perfil.display_name||this.nomeDoEmail(perfil.email);
     await new Promise(resolve=>this.setState({role,user:{nome,perfil:role==='super'?'Superintendente':'Administrativo'},screen:role==='super'?'painel':'servico',activeServico:'PAEFI',activeTab:'pendentes',pagina:1,filtros:{...this.FILTROS0},loginErro:'',loginCarregando:false},resolve));
@@ -801,22 +836,24 @@ class Component extends DCLogic {
   persist(){ try{ const s=this.state; localStorage.setItem('semcas_spsemc_v2',JSON.stringify({recs:s.processos.filter(p=>this.touched.has(p.id)),deleted:[...this.deleted],log:s.log})); }catch(e){} }
   podeEditarProcesso(p){return !!p&&(this.state.role==='super'||(this.state.role==='administrativo'&&this.session&&p.createdBy===this.session.user.id));}
   registrar(acao,p,detalhe){ const u=this.state.user; const e={id:'l'+Date.now()+Math.random().toString(36).slice(2,6),timestamp:Date.now(),quando:this.agora(),autor:u.nome||'—',perfil:u.perfil||'',acao,pid:p?p.id:'',numero:p?p.numero:'—',servico:p?p.servico:'',detalhe:detalhe||''};
-    this.setState(s=>({log:[e,...s.log]}),()=>this.persist());this.syncAuditToDb(e).catch(err=>this.setState({storageErro:'A ação foi feita neste navegador, mas o histórico não foi sincronizado: '+err.message})); }
-  mut(id,fn,acao,detalhe){ const s=this.state,p0=s.processos.find(p=>p.id===id); if(!p0) return false;if(!this.podeEditarProcesso(p0)){this.setState({storageErro:'Você pode alterar somente processos cadastrados por você.'});return false;} let p1={...fn(p0),updatedBy:this.session&&this.session.user?this.session.user.id:null};if(s.role!=='super'&&(p1.aba==='respondido'||p1.marcacao==='concluido'||Number(p1.etapa)===5)){this.setState({storageErro:'Somente a Superintendente pode concluir ou responder um processo.'});return false;} const touched=new Set([...this.touched,id]), processos=s.processos.map(p=>p.id===id?p1:p); const u=s.user;
+    this.setState(s=>({log:[e,...s.log]}),()=>this.persist());return this.syncAuditToDb(e).catch(err=>this.setState({storageErro:'A ação foi feita neste navegador, mas o histórico não foi sincronizado: '+err.message})); }
+  mut(id,fn,acao,detalhe){ const s=this.state,p0=s.processos.find(p=>p.id===id); if(!p0) return false;if(!this.podeEditarProcesso(p0)){this.setState({storageErro:'Você pode alterar somente processos cadastrados por você.'});return false;} let p1={...fn(p0),updatedBy:this.session&&this.session.user?this.session.user.id:null};const fechado=p=>[p.aba==='respondido',p.marcacao==='concluido',Number(p.etapa)===5];if(s.role!=='super'&&fechado(p1).some((v,i)=>v!==fechado(p0)[i])){this.setState({storageErro:'Somente a Superintendente pode concluir ou responder um processo.'});return false;} const touched=new Set([...this.touched,id]), processos=s.processos.map(p=>p.id===id?p1:p); const u=s.user;
     const evento={id:'l'+Date.now()+Math.random().toString(36).slice(2,6),timestamp:Date.now(),quando:this.agora(),autor:u.nome||'—',perfil:u.perfil||'',acao,pid:id,numero:p1.numero,servico:p1.servico,detalhe:detalhe||''},log=[evento,...s.log];
-    try{localStorage.setItem('semcas_spsemc_v2',JSON.stringify({recs:processos.filter(p=>touched.has(p.id)),deleted:[...this.deleted],log}));}
-    catch(e){this.setState({storageErro:'Não foi possível salvar neste navegador. O espaço local pode estar cheio. Reduza os anexos e tente novamente.'});return false;}
-    this.touched=touched;this.setState({processos,log,storageErro:''});Promise.all([this.syncProcessToDb(p1),this.syncAuditToDb(evento)]).catch(err=>this.setState({storageErro:'A alteração foi feita neste navegador, mas não foi sincronizada: '+err.message}));return true; }
+    // Cópia local é só conveniência: o banco é a fonte oficial, então falta de espaço no navegador não bloqueia a gravação.
+    try{localStorage.setItem('semcas_spsemc_v2',JSON.stringify({recs:processos.filter(p=>touched.has(p.id)).map(p=>({...p,obs:(p.obs||[]).map(o=>({...o,anexos:[]}))})),deleted:[...this.deleted],log:log.slice(0,300)}));}catch(e){}
+    this.touched=touched;this.setState({processos,log,storageErro:''});const sync=this.syncProcessToDb(p1).then(()=>this.syncAuditToDb(evento));sync.catch(err=>this.setState({storageErro:'A alteração foi feita neste navegador, mas não foi sincronizada: '+err.message}));return sync; }
+  linkSeguro(l){ l=String(l||'').trim(); return /^https:\/\/\S+$/i.test(l)?l:''; }
+  onVisivel=()=>{ if(document.visibilityState==='visible'&&this.session&&this.state.screen!=='login'&&this.state.screen!=='novo'&&!this.state.editKey&&!this.state.comentarioEditando&&Date.now()-(this._ultimaCarga||0)>120000) this.loadDbData().catch(()=>{}); };
   stamp(){ return {autor:this.state.user.nome,data:this.agora()}; }
   hojeUTC(){ const d=new Date(); return Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()); }
   MES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
   SETOR = {CREAS:'CREAS',ABORDAGEM:'Abordagem Social','CENTRO POP':'Centro POP',PCDIF:'PCDIF'};
 
   onResize=()=>this.setState({vw:window.innerWidth});
-  componentWillUnmount(){ window.removeEventListener('resize',this.onResize); }
+  componentWillUnmount(){ window.removeEventListener('resize',this.onResize); document.removeEventListener('visibilitychange',this.onVisivel); }
   toggleMenu=()=>this.setState(s=>({menuOpen:!s.menuOpen}));
   async componentDidMount(){
-    window.addEventListener('resize',this.onResize);
+    window.addEventListener('resize',this.onResize); document.addEventListener('visibilitychange',this.onVisivel);
     try{
       const m=this.DADOS_BASE; let procs=m.PROCESSOS, log=[];
       try{ const o=JSON.parse(localStorage.getItem('semcas_spsemc_v2')||'null');
@@ -825,6 +862,7 @@ class Component extends DCLogic {
       const consolidados=this.consolidarServicos(m.SERVICOS,procs);
       if(!log.length) log=[{id:'l0',quando:'29/09/2026 08:00',autor:'Sistema',perfil:'Importação automática',acao:'Importação',pid:'',numero:'—',servico:'',detalhe:'Planilha "Processos no SEI" importada: '+m.PROCESSOS.length+' processos consolidados em '+consolidados.servicos.length+' serviços'}];
       await new Promise(resolve=>this.setState({servicos:consolidados.servicos,processos:consolidados.processos.map(p=>this.enrich(p)),log},resolve));
+      try{if(await this.lerRetornoRecuperacao())return;}catch(e){this.session=null;this.setState({screen:'login',recuperando:false,loginErro:'O link de acesso é inválido ou expirou. Solicite outro em "Esqueci minha senha".'});return;}
       try{const sessao=JSON.parse(localStorage.getItem('semcas_supabase_session')||'null');if(sessao&&sessao.access_token&&sessao.user)await this.entrarComSessao(sessao);}catch(e){localStorage.removeItem('semcas_supabase_session');this.session=null;this.setState({screen:'login',role:null,dbOnline:false});}
     }
     catch(e){ console.error('Falha ao carregar dados',e); }
@@ -860,10 +898,31 @@ class Component extends DCLogic {
   }
   upd(id,fn){ this.setState(s=>({processos:s.processos.map(p=>p.id===id?fn(p):p)})); }
 
-  setLoginEmail=e=>this.setState({loginEmail:e.target.value});
+  setLoginEmail=e=>this.setState({loginEmail:e.target.value,loginInfo:''});
+  esqueciSenha=async e=>{ if(e&&e.preventDefault) e.preventDefault(); const email=this.state.loginEmail.trim();
+    if(!/^\S+@\S+\.\S+$/.test(email)){this.setState({loginErro:'Informe seu e-mail funcional acima para receber o link de redefinição.',loginInfo:''});return;}
+    this.setState({loginErro:'',loginInfo:'Enviando…'});
+    try{ await this.supa('/auth/v1/recover?redirect_to='+encodeURIComponent(location.origin+location.pathname),{method:'POST',token:this.SUPA_KEY,body:{email}});
+      this.setState({loginInfo:'Se o e-mail estiver cadastrado, você receberá um link para criar uma nova senha. Verifique também a caixa de spam.'}); }
+    catch(err){ this.setState({loginInfo:'',loginErro:/rate limit|seconds/i.test(err.message)?'Muitas solicitações seguidas. Aguarde alguns minutos e tente novamente.':err.message}); } };
+  async lerRetornoRecuperacao(){
+    const h=new URLSearchParams((location.hash||'').replace(/^#/,'')); if(!h.get('access_token')&&!h.get('error')) return false;
+    try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}
+    if(h.get('error')){ this.setState({screen:'login',loginErro:/expired/i.test(h.get('error_code')||h.get('error_description')||'')?'O link de redefinição expirou. Solicite outro em "Esqueci minha senha".':'Link de acesso inválido: '+(h.get('error_description')||h.get('error'))}); return true; }
+    const token=h.get('access_token'); const user=await this.supa('/auth/v1/user',{token});
+    this.session={access_token:token,refresh_token:h.get('refresh_token'),expires_at:+h.get('expires_at')||Math.floor(Date.now()/1000)+(+h.get('expires_in')||3600),token_type:'bearer',user};
+    if(h.get('type')==='recovery'){ this.setState({screen:'login',recuperando:true,senhaNova:'',senhaConfirma:'',senhaErro:'',loginErro:''}); return true; }
+    localStorage.setItem('semcas_supabase_session',JSON.stringify(this.session)); await this.entrarComSessao(this.session); return true; }
+  salvarSenhaRecuperada=async()=>{ const nova=this.state.senhaNova,conf=this.state.senhaConfirma;
+    if(nova.length<8){this.setState({senhaErro:'A nova senha precisa ter no mínimo 8 caracteres.'});return;}
+    if(nova!==conf){this.setState({senhaErro:'A confirmação não confere com a nova senha.'});return;}
+    this.setState({senhaCarregando:true,senhaErro:''});
+    try{ await this.supa('/auth/v1/user',{method:'PUT',body:{password:nova}}); localStorage.setItem('semcas_supabase_session',JSON.stringify(this.session));
+      this.setState({recuperando:false,senhaCarregando:false,senhaNova:'',senhaConfirma:''}); await this.entrarComSessao(this.session); }
+    catch(err){ this.setState({senhaCarregando:false,senhaErro:/should be different|same/i.test(err.message)?'A nova senha precisa ser diferente da anterior.':err.message}); } };
   setLoginSenha=e=>this.setState({loginSenha:e.target.value});
   doLogin=async()=>{const email=this.state.loginEmail.trim(),password=this.state.loginSenha;if(!email||!password){this.setState({loginErro:'Informe o e-mail e a senha.',loginCarregando:false});return;}this.setState({loginCarregando:true,loginErro:''});try{const sessao=await this.supa('/auth/v1/token?grant_type=password',{method:'POST',body:{email,password}});localStorage.setItem('semcas_supabase_session',JSON.stringify(sessao));await this.entrarComSessao(sessao);}catch(e){this.session=null;localStorage.removeItem('semcas_supabase_session');this.setState({screen:'login',role:null,dbOnline:false,loginCarregando:false,loginErro:/invalid login credentials|invalid_credentials/i.test(e.message)?'E-mail ou senha inválidos.':(/email not confirmed/i.test(e.message)?'Confirme o e-mail desse usuário no Supabase antes de entrar.':e.message)});}};
-  logout=async()=>{const sessao=this.session;this.registrar('Acesso',null,'Saiu do sistema');try{if(sessao)await this.supa('/auth/v1/logout',{method:'POST',token:sessao.access_token});}catch(e){}this.session=null;localStorage.removeItem('semcas_supabase_session');this.setState({screen:'login',role:null,loginSenha:'',dbOnline:false,senhaAberta:false});};
+  logout=async()=>{const sessao=this.session;await this.registrar('Acesso',null,'Saiu do sistema');try{if(sessao)await this.supa('/auth/v1/logout',{method:'POST',token:sessao.access_token});}catch(e){}this.session=null;localStorage.removeItem('semcas_supabase_session');this.setState({screen:'login',role:null,loginSenha:'',dbOnline:false,senhaAberta:false});};
   abrirSenha=()=>this.setState({senhaAberta:true,senhaAtual:'',senhaNova:'',senhaConfirma:'',senhaErro:'',senhaOk:'',menuOpen:false});
   fecharSenha=()=>this.setState({senhaAberta:false,senhaErro:'',senhaOk:''});
   setSenhaAtual=e=>this.setState({senhaAtual:e.target.value,senhaErro:'',senhaOk:''});
@@ -934,7 +993,7 @@ class Component extends DCLogic {
   openProcesso=(p)=>this.setState({screen:'processo',selectedId:p.id,activeServico:p.servico,comentarioBusca:'',comentarioOrdem:'recentes',linkTexto:'',obsTitulo:'',obsCategoria:'comentario',obsTexto:'',obsDataEvento:'',obsMensagemSei:'',obsAnexos:[],anexosCarregando:false,obsErro:false,comentarioEditando:null,responsavelTexto:p.responsavelInterno||'',proximaAcaoTexto:p.proximaAcao||'',proximaDataTexto:p.proximaData||'',acompanhamentoSalvo:false,editKey:null,confirmDel:false});
   backToServico=()=>this.setState({screen:'servico',editKey:null});
   setLink=e=>this.setState({linkTexto:e.target.value});
-  salvarLink=()=>{ const l=this.state.linkTexto.trim(); if(!l) return; const st=this.stamp(); this.mut(this.state.selectedId,p=>({...p,link:l,hist:{...(p.hist||{}),link:st}}),'Link SEI','Adicionou o link do processo no SEI'); this.setState({linkTexto:''}); };
+  salvarLink=()=>{ const l=this.state.linkTexto.trim(); if(!l) return; if(!this.linkSeguro(l)){this.setState({storageErro:"Informe um link completo começando com https://"});return;} const st=this.stamp(); this.mut(this.state.selectedId,p=>({...p,link:l,hist:{...(p.hist||{}),link:st}}),'Link SEI','Adicionou o link do processo no SEI'); this.setState({linkTexto:''}); };
   setObsTitulo=e=>this.setState({obsTitulo:e.target.value,obsErro:false});
   setComentarioBusca=e=>this.setState({comentarioBusca:e.target.value});
   setComentarioOrdem=e=>this.setState({comentarioOrdem:e.target.value});
@@ -958,12 +1017,13 @@ class Component extends DCLogic {
     if(cat.k==='situacao'&&!t){this.setState({obsErro:true,obsErroTexto:'Descreva a situação do processo no campo Comentário.'});return;}
     const data=this.agora(),dataEvento=precisaData?s.obsDataEvento:'',categoria=cat.label, u=s.user;
     const sourceIndex=Math.max(-1,...(p0.obs||[]).map(o=>Number.isInteger(o.sourceIndex)?o.sourceIndex:-1))+1;
-    const registro={titulo,categoria,tipo:cat.k,texto:t,mensagemSei,anexos:s.obsAnexos.map(a=>({...a})),dataEvento,autor:u.nome,perfil:u.perfil,data,authorUserId:this.session.user.id,sourceIndex};
-    if(s.comentarioEditando){const ed=s.comentarioEditando,antigo=(p0.obs||[]).find(o=>o.sourceIndex===ed.sourceIndex),uid=this.session?.user?.id;if(!antigo||(s.role!=='super'&&antigo.authorUserId!==uid)){this.setState({obsErro:true,obsErroTexto:'Você pode editar somente comentários feitos por você.'});return;}const novo={...antigo,...registro,id:antigo.id,sourceIndex:antigo.sourceIndex,authorUserId:antigo.authorUserId,autor:antigo.autor,perfil:antigo.perfil,data:antigo.data};const processos=s.processos.map(p=>p.id===p0.id?{...p,obs:(p.obs||[]).map(o=>o.sourceIndex===ed.sourceIndex?novo:o)}:p);this.setState({processos,comentarioEditando:null,obsTitulo:'',obsCategoria:'comentario',obsTexto:'',obsDataEvento:'',obsMensagemSei:'',obsAnexos:[],obsErro:false,comentarioOrdem:'recentes'});const filtro=antigo.id?('id=eq.'+encodeURIComponent(antigo.id)):('process_id=eq.'+encodeURIComponent(p0.id)+'&source_index=eq.'+encodeURIComponent(antigo.sourceIndex));this.supa('/rest/v1/process_comments?'+filtro,{method:'PATCH',body:this.comentarioDb(novo,antigo.sourceIndex,p0.id),prefer:'return=minimal'}).then(()=>this.registrar('Edição',p0,'Comentário atualizado: '+titulo)).catch(err=>this.setState({storageErro:'A edição ficou visível nesta tela, mas não foi sincronizada: '+err.message}));return;}
+    const registro={titulo,categoria,tipo:cat.k,texto:t,mensagemSei,anexos:s.obsAnexos.map(a=>({...a})),dataEvento,autor:u.nome,perfil:u.perfil,data,authorUserId:this.session.user.id,sourceIndex,_tmp:'c'+Date.now()+Math.random().toString(36).slice(2,6)};
+    if(s.comentarioEditando){const ed=s.comentarioEditando,antigo=(p0.obs||[]).find(o=>o.sourceIndex===ed.sourceIndex),uid=this.session?.user?.id;if(!antigo||(s.role!=='super'&&antigo.authorUserId!==uid)){this.setState({obsErro:true,obsErroTexto:'Você pode editar somente comentários feitos por você.'});return;}const novo={...antigo,...registro,id:antigo.id,_tmp:antigo._tmp,sourceIndex:antigo.sourceIndex,authorUserId:antigo.authorUserId,autor:antigo.autor,perfil:antigo.perfil,data:antigo.data};const processos=s.processos.map(p=>p.id===p0.id?{...p,obs:(p.obs||[]).map(o=>o.sourceIndex===ed.sourceIndex?novo:o)}:p);this.setState({processos,comentarioEditando:null,obsTitulo:'',obsCategoria:'comentario',obsTexto:'',obsDataEvento:'',obsMensagemSei:'',obsAnexos:[],obsErro:false,comentarioOrdem:'recentes'});const filtro=antigo.id?('id=eq.'+encodeURIComponent(antigo.id)):('process_id=eq.'+encodeURIComponent(p0.id)+'&source_index=eq.'+encodeURIComponent(antigo.sourceIndex));this.supa('/rest/v1/process_comments?'+filtro,{method:'PATCH',body:this.comentarioDb(novo,antigo.sourceIndex,p0.id),prefer:'return=minimal'}).then(()=>this.registrar('Edição',p0,'Comentário atualizado: '+titulo)).catch(err=>this.setState({storageErro:'A edição ficou visível nesta tela, mas não foi sincronizada: '+err.message}));return;}
     if(!this.podeEditarProcesso(p0)&&cat.k!=='comentario'){this.setState({obsErro:true,obsErroTexto:'Você pode comentar neste processo, mas somente quem o cadastrou ou a Superintendente pode alterar os cabeçalhos.'});return;}
-    if(!this.podeEditarProcesso(p0)){const processos=s.processos.map(p=>p.id===s.selectedId?{...p,obs:[...(p.obs||[]),registro]}:p);this.setState({processos,obsTitulo:'',obsCategoria:'comentario',obsTexto:'',obsDataEvento:'',obsMensagemSei:'',obsAnexos:[],obsErro:false,comentarioBusca:'',comentarioOrdem:'recentes'});this.supa('/rest/v1/process_comments?on_conflict=process_id,source_index',{method:'POST',body:[this.comentarioDb(registro,sourceIndex,p0.id)],prefer:'resolution=merge-duplicates,return=minimal'}).then(()=>this.registrar('Comentário',p0,categoria+': '+titulo)).catch(err=>this.setState({storageErro:'O comentário ficou visível nesta tela, mas não foi sincronizado: '+err.message}));return;}
+    if(!this.podeEditarProcesso(p0)){const processos=s.processos.map(p=>p.id===s.selectedId?{...p,obs:[...(p.obs||[]),registro]}:p);this.setState({processos,obsTitulo:'',obsCategoria:'comentario',obsTexto:'',obsDataEvento:'',obsMensagemSei:'',obsAnexos:[],obsErro:false,comentarioBusca:'',comentarioOrdem:'recentes'});this.inserirComentario(p0.id,registro).then(()=>this.registrar('Comentário',p0,categoria+': '+titulo)).catch(err=>this.setState({storageErro:'O comentário ficou visível nesta tela, mas não foi sincronizado: '+err.message}));return;}
     const valor=cat.k==='situacao'?t:[dataEvento,t].filter(Boolean).join(' — '),antes=cat.campo?p0[cat.campo]||'':'';
     const salvo=this.mut(s.selectedId,p=>({...p,...(cat.campo?{[cat.campo]:valor,hist:{...(p.hist||{}),[cat.campo]:{autor:u.nome,data}}}:{}),obs:[...(p.obs||[]),registro]}),cat.campo?'Atualização':'Comentário',categoria+': '+titulo+(cat.campo?' · de '+(antes||'(não registrado)')+' para '+valor:''));
+    if(salvo)salvo.then(()=>this.inserirComentario(p0.id,registro),()=>{}).catch(err=>this.setState({storageErro:'O comentário ficou visível nesta tela, mas não foi sincronizado: '+err.message}));
     if(salvo)this.setState({obsTitulo:'',obsCategoria:'comentario',obsTexto:'',obsDataEvento:'',obsMensagemSei:'',obsAnexos:[],obsErro:false,comentarioBusca:'',comentarioOrdem:'recentes'}); };
   setResponsavelTexto=e=>this.setState({responsavelTexto:e.target.value,acompanhamentoSalvo:false});
   setProximaAcaoTexto=e=>this.setState({proximaAcaoTexto:e.target.value,acompanhamentoSalvo:false});
@@ -981,8 +1041,8 @@ class Component extends DCLogic {
   openNovo=()=>this.setState({menuOpen:false,screen:'novo',formErro:'',form:{servico:this.state.activeServico||'PAEFI',encaminhamento:'',numero:'',recebido:'',orgao:'',usuario:'',link:'',demanda:''}});
   cancelNovo=()=>this.setState({screen:this.state.role==='super'?'painel':'servico'});
   uf=(k)=>e=>{ const v=k==='recebido'?this.mascaraData(e.target.value):e.target.value; this.setState(s=>({form:{...s.form,[k]:v},formErro:''})); };
-  salvarNovo=()=>{ const f=this.state.form; if(!f.numero.trim()||!f.demanda.trim()){this.setState({formErro:'Informe o número SEI e a demanda.'});return;} if(!this.dataValida(f.recebido)){this.setState({formErro:'Informe uma data de recebimento válida no formato dd/mm/aaaa.'});return;}
-    const uid=this.session?.user?.id||null;const np0={id:'n'+Date.now(),servico:f.servico,encaminhamento:f.encaminhamento||'',aba:'pendente',numero:f.numero.trim(),recebido:f.recebido||this.hojeTxt(),memo:'',orgao:f.orgao||'—',demanda:f.demanda,usuario:f.usuario||'',situacao:'Recebido na Média Complexidade',respSetor:'',respGabinete:'',obs:[],conclusao:'',link:f.link||'',createdBy:uid,updatedBy:uid}; const np=this.enrich({...np0,etapa:0});
+  salvarNovo=()=>{ const f=this.state.form; if(!f.numero.trim()||!f.demanda.trim()){this.setState({formErro:'Informe o número SEI e a demanda.'});return;} if(!this.dataValida(f.recebido)){this.setState({formErro:'Informe uma data de recebimento válida no formato dd/mm/aaaa.'});return;} if(f.link.trim()&&!this.linkSeguro(f.link)){this.setState({formErro:'O link do SEI deve começar com https://'});return;}
+    const uid=this.session?.user?.id||null;const np0={id:'n'+Date.now(),servico:f.servico,encaminhamento:f.encaminhamento||'',aba:'pendente',numero:f.numero.trim(),recebido:f.recebido||this.hojeTxt(),memo:'',orgao:f.orgao||'—',demanda:f.demanda,usuario:f.usuario||'',situacao:'Recebido na Média Complexidade',respSetor:'',respGabinete:'',obs:[],conclusao:'',link:this.linkSeguro(f.link.trim()),createdBy:uid,updatedBy:uid}; const np=this.enrich({...np0,etapa:0});
     this.touched.add(np.id); this.setState(s=>({processos:[np,...s.processos],screen:'processo',selectedId:np.id,activeServico:f.servico,activeTab:'pendentes'}),()=>{this.syncProcessToDb(np).then(()=>this.registrar('Cadastro',np,'Novo processo registrado em '+this.sv(np.servico).label)).catch(err=>this.setState({storageErro:'O cadastro ficou neste navegador, mas não foi salvo no banco: '+err.message}));this.openProcesso(np);}); };
 
   tab(a){ return 'background:transparent;border:none;border-bottom:2px solid '+(a?'#12355B':'transparent')+';padding:8px 2px 10px;font-size:14px;font-weight:'+(a?'600':'400')+';color:'+(a?'#12355B':'#3D454D')+';cursor:pointer;display:flex;align-items:center'; }
@@ -1071,7 +1131,7 @@ class Component extends DCLogic {
     const linhas=shown.map(p=>{ const d=this.dias(p); const ob=p.obs||[]; const last=ob[ob.length-1];
       const et=p.etapa||0, rn=(p.reit||[]).length; const mk=this.MARC[p.marcacao||'']||this.MARC[''];
       const nn=this.nums(p);
-      return {...p, principal:nn.principal, temVinc:nn.vinc.length>0, vincTxt:'+'+nn.vinc.length+(nn.vinc.length>1?' processos':' processo'), marcBg:mk.bg, marcBar:mk.bar, marcFg:mk.fg, marcLabel:mk.l, temMarc:!!p.marcacao, temPrazo:!!p.prazoDias, prazoTxt:'Prazo '+p.prazoDias+' dias', onClick:()=>this.openProcesso(p), temLink:!!p.link, etN:String(et+1), etCor:this.ETCOR[et], etapaLabel:this.ETAPAS[et], temReit:rn>0, reitTxt:'Reiterado '+rn+'×', unidadeTxt:p.unidade||'—',
+      return {...p, principal:nn.principal, temVinc:nn.vinc.length>0, vincTxt:'+'+nn.vinc.length+(nn.vinc.length>1?' processos':' processo'), marcBg:mk.bg, marcBar:mk.bar, marcFg:mk.fg, marcLabel:mk.l, temMarc:!!p.marcacao, temPrazo:!!p.prazoDias, prazoTxt:'Prazo '+p.prazoDias+' dias', onClick:()=>this.openProcesso(p), temLink:!!this.linkSeguro(p.link), etN:String(et+1), etCor:this.ETCOR[et], etapaLabel:this.ETAPAS[et], temReit:rn>0, reitTxt:'Reiterado '+rn+'×', unidadeTxt:p.unidade||'—',
         memo:p.memo||'—', usuario:p.usuario||'—', situacao:p.situacao||'—',
         respSetor:p.respSetor||'Sem resposta', setorColor:p.respSetor?'#16202B':'#B0BAC4',
         respGabinete:p.respGabinete||'Sem resposta', gabColor:p.respGabinete?'#16202B':'#B0BAC4',
@@ -1093,13 +1153,13 @@ class Component extends DCLogic {
           podeEditar:podeEditar&&k==='recebido'&&!ed,dataRecebimento:k==='recebido',textoLivre:k!=='recebido',dotBorder:v?'#12355B':'#C9CED3',dotBg:v?'#12355B':'#fff',dotColor:v?'#fff':'#7A828A',onEdit:()=>this.startEdit(k,v)}; });
       const d=this.dias(sel); const r=sel.aba==='respondido';
       const catEstilo={Atualização:['#EEF2F7','#24476B','#D3DEE9'],Cobrança:['#FFF4DD','#7A4D00','#E9D19D'],Pendência:['#FCEDEB','#8E1D16','#E8C2BE'],Decisão:['#E8F2FA','#0F5E91','#C4DDEC'],Orientação:['#EEEAF8','#59408C','#D7CDEE']};
-      const uid=this.session?.user?.id;const todosObs=(sel.obs||[]).map((o,i)=>{const categoria=o.categoria||(o.data==='importado'?'Planilha':'Sem categoria'), ce=catEstilo[categoria]||['#F3F5F7','#5B636B','#DADDE1'],sourceIndex=Number.isInteger(o.sourceIndex)?o.sourceIndex:i,proprio=o.authorUserId===uid; return {...o,sourceIndex,titulo:o.titulo||(o.data==='importado'?'Observação importada':'Comentário anterior'),categoria,anexos:o.anexos||[],temDataEvento:!!o.dataEvento,temMensagemSei:!!o.mensagemSei,catBg:ce[0],catCor:ce[1],catBorder:ce[2],perfil:o.perfil||'Planilha',data:o.data==='importado'?'importado da planilha':o.data,podeEditarComentario:(o.tipo||'comentario')==='comentario'&&(isSuper||proprio),editar:()=>this.iniciarEdicaoComentario(sel.id,sourceIndex),podeExcluir:isSuper||proprio,excluir:()=>this.excluirComentario(sel.id,sourceIndex,o.id)};});
+      const uid=this.session?.user?.id;const todosObs=(sel.obs||[]).map((o,i)=>{const categoria=o.categoria||(o.data==='importado'?'Planilha':'Sem categoria'), ce=catEstilo[categoria]||['#F3F5F7','#5B636B','#DADDE1'],sourceIndex=Number.isInteger(o.sourceIndex)?o.sourceIndex:i,proprio=o.authorUserId===uid; return {...o,sourceIndex,titulo:o.titulo||(o.data==='importado'?'Observação importada':'Comentário anterior'),categoria,anexos:(o.anexos||[]).filter(a=>a&&/^data:image\/(png|jpeg|webp);base64,/.test(a.url||'')),temDataEvento:!!o.dataEvento,temMensagemSei:!!o.mensagemSei,catBg:ce[0],catCor:ce[1],catBorder:ce[2],perfil:o.perfil||'Planilha',data:o.data==='importado'?'importado da planilha':o.data,podeEditarComentario:(o.tipo||'comentario')==='comentario'&&(isSuper||proprio),editar:()=>this.iniciarEdicaoComentario(sel.id,sourceIndex),podeExcluir:isSuper||proprio,excluir:()=>this.excluirComentario(sel.id,sourceIndex,o.id)};});
       const obs=todosObs.filter(o=>this.norm([o.titulo,o.texto,o.autor,o.categoria,o.dataEvento,o.mensagemSei].join(' ')).includes(this.norm(s.comentarioBusca)));
       if(s.comentarioOrdem==='recentes')obs.reverse();
       const processoAtividades=atividades.filter(l=>l.pid===sel.id);
       proc={...sel,servicoLabel:this.sv(sel.servico).label,usuario:sel.usuario||'Não informado',temEncaminhamento:!!sel.encaminhamento,etapas,obs,atividades:processoAtividades,semAtividades:!processoAtividades.length,semComentarios:!obs.length,comentarioVazioTexto:todosObs.length?'Nenhum comentário corresponde à busca.':'Nenhum comentário registrado. Adicione a primeira atualização abaixo.',
         obsCount:obs.length+' de '+todosObs.length+' registro(s)',
-        dias:d==null?'—':fmt(d),diasColor:this.diasColor(d),temLink:!!sel.link,semLink:!sel.link,
+        dias:d==null?'—':fmt(d),diasColor:this.diasColor(d),link:this.linkSeguro(sel.link),temLink:!!this.linkSeguro(sel.link),semLink:!this.linkSeguro(sel.link),
         abaTxt:r?'Respondido':'Pendente',stColor:r?'#1E8E4E':'#8A5A06',stBg:r?'#F1F8F4':'#FDF6EA',stBorder:r?'#CFE7D8':'#F0DDB8',
         podeEditar,podeExcluir:podeEditar,podeConcluir:isSuper,edicaoBloqueada:!podeEditar,
         ...(()=>{ const nn=this.nums(sel); const nBase=nn.vinc.filter(v=>!v.extra).length; return {principal:nn.principal,totalProc:String(1+nn.vinc.length),
@@ -1150,7 +1210,7 @@ class Component extends DCLogic {
       logUsers:[...new Set(s.log.map(l=>l.autor))],logAcoes:[...new Set(s.log.map(l=>l.acao))],
       logUser:s.logUser,logAcao:s.logAcao,logQ:s.logQ,setLogUser:this.setLogUser,setLogAcao:this.setLogAcao,setLogQ:this.setLogQ,
       confirmDel:s.confirmDel,pedirExcluir:this.pedirExcluir,cancelExcluir:this.cancelExcluir,confirmarExcluir:this.confirmarExcluir,
-      loginVisible:s.screen==='login',appVisible:s.screen!=='login',
+      loginVisible:s.screen==='login',appVisible:s.screen!=='login',recuperandoOn:!!s.recuperando,loginNormalOn:!s.recuperando,salvarSenhaRecuperada:this.salvarSenhaRecuperada,esqueciSenha:this.esqueciSenha,loginInfo:s.loginInfo||'',loginInfoOn:!!s.loginInfo,
       loginEmail:s.loginEmail,loginSenha:s.loginSenha,setLoginEmail:this.setLoginEmail,setLoginSenha:this.setLoginSenha,
       doLogin:this.doLogin,loginErro:s.loginErro||'',loginErroOn:!!s.loginErro,loginCarregando:s.loginCarregando,loginBtnTexto:s.loginCarregando?'Entrando…':'Entrar',
       isSuper:s.role==='super',userName,userRole:s.user.perfil,userInitials:userName.split(' ').filter(Boolean).map(w=>w[0]).slice(0,2).join(''),
@@ -1191,4 +1251,3 @@ class Component extends DCLogic {
 </script>
 </body>
 </html>
-
