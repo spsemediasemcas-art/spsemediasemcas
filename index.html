@@ -69,9 +69,33 @@
     </div>
     <div style="display:flex;align-items:center;gap:14px;flex-shrink:0">
       <span style="font-size:13px;color:#DCE4EC;white-space:nowrap">{{ userName }} <span style="color:#AFC0D2">· {{ userRole }}</span></span>
+      <button onClick="{{ abrirSenha }}" style="height:28px;padding:0 10px;background:transparent;border:1px solid #3B5A7C;color:#fff;border-radius:2px;cursor:pointer;font-size:12.5px" style-hover="background:#1C4570">Senha</button>
       <button onClick="{{ logout }}" style="height:28px;padding:0 10px;background:transparent;border:1px solid #3B5A7C;color:#fff;border-radius:2px;cursor:pointer;font-size:12.5px" style-hover="background:#1C4570">Sair</button>
     </div>
   </div>
+
+  <sc-if value="{{ senhaVisible }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;inset:0;background:rgba(20,30,40,.45);z-index:60;display:flex;align-items:center;justify-content:center;padding:20px">
+    <div style="background:#fff;border-radius:2px;max-width:420px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.2)">
+      <div style="padding:20px 22px 8px">
+        <h3 style="font-weight:600;font-size:17px;margin:0 0 6px">Trocar senha</h3>
+        <p style="font-size:13px;line-height:1.5;color:#5B636B;margin:0 0 14px">Vale para a sua própria conta, seja Superintendente ou Administrativo.</p>
+        <label style="display:block;font-size:13px;font-weight:500;color:#3D454D;margin-bottom:6px">Senha atual</label>
+        <input type="password" value="{{ senhaAtual }}" onInput="{{ setSenhaAtual }}" style="width:100%;height:38px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:14px;background:#fff;color:#1F2328;margin-bottom:12px">
+        <label style="display:block;font-size:13px;font-weight:500;color:#3D454D;margin-bottom:6px">Nova senha</label>
+        <input type="password" value="{{ senhaNova }}" onInput="{{ setSenhaNova }}" placeholder="Mínimo de 8 caracteres" style="width:100%;height:38px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:14px;background:#fff;color:#1F2328;margin-bottom:12px">
+        <label style="display:block;font-size:13px;font-weight:500;color:#3D454D;margin-bottom:6px">Confirmar nova senha</label>
+        <input type="password" value="{{ senhaConfirma }}" onInput="{{ setSenhaConfirma }}" style="width:100%;height:38px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:14px;background:#fff;color:#1F2328">
+        <sc-if value="{{ senhaErroOn }}" hint-placeholder-val="{{ false }}"><div role="alert" style="margin-top:12px;padding:10px 12px;background:#FCEDEB;border:1px solid #E8C2BE;color:#8E1D16;font-size:13px">{{ senhaErro }}</div></sc-if>
+        <sc-if value="{{ senhaOkOn }}" hint-placeholder-val="{{ false }}"><div style="margin-top:12px;padding:10px 12px;background:#EAF5EE;border:1px solid #C8E3D2;color:#23613B;font-size:13px">{{ senhaOk }}</div></sc-if>
+      </div>
+      <div style="padding:12px 22px;background:#FAFBFB;border-top:1px solid #DADDE1;display:flex;justify-content:flex-end;gap:8px">
+        <button onClick="{{ fecharSenha }}" style="height:36px;padding:0 14px;background:#fff;color:#1F2328;border:1px solid #C9CED3;border-radius:2px;font-weight:500;font-size:13.5px;cursor:pointer">Fechar</button>
+        <button onClick="{{ trocarSenha }}" disabled="{{ senhaCarregando }}" style="height:36px;padding:0 16px;background:#12355B;color:#fff;border:1px solid #12355B;border-radius:2px;font-weight:600;font-size:13.5px;cursor:pointer">{{ senhaBtnTexto }}</button>
+      </div>
+    </div>
+  </div>
+  </sc-if>
 
   <div style="flex:1;min-height:0;display:grid;grid-template-columns:{{ shellCols }};position:relative">
   <sc-if value="{{ backdrop }}" hint-placeholder-val="{{ false }}"><div onClick="{{ toggleMenu }}" style="position:fixed;inset:0;background:rgba(20,30,40,.4);z-index:39"></div></sc-if>
@@ -87,6 +111,7 @@
       <sc-if value="{{ isSuper }}" hint-placeholder-val="{{ true }}">
         <div style="font-size:12px;font-weight:600;color:#7A828A;padding:12px 12px 6px">Superintendência</div>
         <button onClick="{{ goPainel }}" style="{{ navPainelStyle }}"><span style="flex:1;text-align:left">Painel geral</span></button>
+        <div style="font-size:12px;font-weight:600;color:#7A828A;padding:16px 12px 6px">Gestão</div>
         <button onClick="{{ goLog }}" style="{{ navLogStyle }}"><span style="flex:1;text-align:left">Registro de atividades</span><span style="font-size:12.5px;color:#7A828A">{{ logCount }}</span></button>
         <button onClick="{{ goUsuarios }}" style="{{ navUsuariosStyle }}"><span style="flex:1;text-align:left">Usuários</span><span style="font-size:12.5px;color:#7A828A">{{ usuariosCount }}</span></button>
       </sc-if>
@@ -714,6 +739,7 @@ class Component extends DCLogic {
     form:{servico:'PAEFI',encaminhamento:'',numero:'',recebido:'',orgao:'',usuario:'',link:'',demanda:''},
     servicos:[], processos:[], log:[], user:{nome:'',perfil:''}, confirmDel:false, logUser:'', logAcao:'', logQ:'',
     usuarios:[],usuarioForm:{nome:'',email:'',senha:''},usuariosErro:'',usuariosSucesso:'',usuariosCarregando:false,
+    senhaAberta:false,senhaAtual:'',senhaNova:'',senhaConfirma:'',senhaErro:'',senhaOk:'',senhaCarregando:false,
   };
   touched = new Set(); deleted = new Set();
   CAMPO = {recebido:'Data do recebimento na Média Complexidade',memo:'Data do memo enviado para o setor',situacao:'Situação',respSetor:'Data de resposta do setor',respGabinete:'Data de resposta do Gabinete',conclusao:'Conclusão'};
@@ -837,7 +863,13 @@ class Component extends DCLogic {
   setLoginEmail=e=>this.setState({loginEmail:e.target.value});
   setLoginSenha=e=>this.setState({loginSenha:e.target.value});
   doLogin=async()=>{const email=this.state.loginEmail.trim(),password=this.state.loginSenha;if(!email||!password){this.setState({loginErro:'Informe o e-mail e a senha.',loginCarregando:false});return;}this.setState({loginCarregando:true,loginErro:''});try{const sessao=await this.supa('/auth/v1/token?grant_type=password',{method:'POST',body:{email,password}});localStorage.setItem('semcas_supabase_session',JSON.stringify(sessao));await this.entrarComSessao(sessao);}catch(e){this.session=null;localStorage.removeItem('semcas_supabase_session');this.setState({screen:'login',role:null,dbOnline:false,loginCarregando:false,loginErro:/invalid login credentials|invalid_credentials/i.test(e.message)?'E-mail ou senha inválidos.':(/email not confirmed/i.test(e.message)?'Confirme o e-mail desse usuário no Supabase antes de entrar.':e.message)});}};
-  logout=async()=>{const sessao=this.session;this.registrar('Acesso',null,'Saiu do sistema');try{if(sessao)await this.supa('/auth/v1/logout',{method:'POST',token:sessao.access_token});}catch(e){}this.session=null;localStorage.removeItem('semcas_supabase_session');this.setState({screen:'login',role:null,loginSenha:'',dbOnline:false});};
+  logout=async()=>{const sessao=this.session;this.registrar('Acesso',null,'Saiu do sistema');try{if(sessao)await this.supa('/auth/v1/logout',{method:'POST',token:sessao.access_token});}catch(e){}this.session=null;localStorage.removeItem('semcas_supabase_session');this.setState({screen:'login',role:null,loginSenha:'',dbOnline:false,senhaAberta:false});};
+  abrirSenha=()=>this.setState({senhaAberta:true,senhaAtual:'',senhaNova:'',senhaConfirma:'',senhaErro:'',senhaOk:'',menuOpen:false});
+  fecharSenha=()=>this.setState({senhaAberta:false,senhaErro:'',senhaOk:''});
+  setSenhaAtual=e=>this.setState({senhaAtual:e.target.value,senhaErro:'',senhaOk:''});
+  setSenhaNova=e=>this.setState({senhaNova:e.target.value,senhaErro:'',senhaOk:''});
+  setSenhaConfirma=e=>this.setState({senhaConfirma:e.target.value,senhaErro:'',senhaOk:''});
+  trocarSenha=async()=>{if(!this.session)return;const atual=this.state.senhaAtual,nova=this.state.senhaNova,conf=this.state.senhaConfirma,email=(this.session.user&&this.session.user.email)||'';if(!atual||nova.length<8){this.setState({senhaErro:'Informe a senha atual e uma nova senha com no mínimo 8 caracteres.',senhaOk:''});return;}if(nova!==conf){this.setState({senhaErro:'A confirmação não confere com a nova senha.',senhaOk:''});return;}if(nova===atual){this.setState({senhaErro:'A nova senha precisa ser diferente da atual.',senhaOk:''});return;}this.setState({senhaCarregando:true,senhaErro:'',senhaOk:''});try{const sessao=await this.supa('/auth/v1/token?grant_type=password',{method:'POST',token:this.SUPA_KEY,body:{email,password:atual}});await this.supa('/auth/v1/user',{method:'PUT',token:sessao.access_token,body:{password:nova}});if(sessao&&sessao.access_token){this.session=sessao;localStorage.setItem('semcas_supabase_session',JSON.stringify(sessao));}this.setState({senhaCarregando:false,senhaAtual:'',senhaNova:'',senhaConfirma:'',senhaOk:'Senha alterada. Use a nova senha no próximo acesso.',senhaErro:''});}catch(e){this.setState({senhaCarregando:false,senhaOk:'',senhaErro:/invalid login credentials|invalid_credentials/i.test(e.message)?'A senha atual está incorreta.':e.message});}};
   goPainel=()=>this.setState({screen:'painel',menuOpen:false});
   goLog=()=>{ if(this.state.role==='super') this.setState({screen:'log',menuOpen:false}); };
   goUsuarios=()=>{if(this.state.role==='super')this.setState({screen:'usuarios',menuOpen:false,usuariosErro:'',usuariosSucesso:''});};
@@ -1113,6 +1145,7 @@ class Component extends DCLogic {
       avancarEtapa:this.avancarEtapa,voltarEtapa:this.voltarEtapa,setUnidade:this.setUnidade,oficioTexto:s.oficioTexto,setOficioTexto:this.setOficioTexto,salvarOficio:this.salvarOficio,limparOficio:this.limparOficio,
       logVisible:s.screen==='log',navLogStyle,goLog:this.goLog,logCount:String(s.log.length),
       usuariosVisible:s.screen==='usuarios',navUsuariosStyle,goUsuarios:this.goUsuarios,usuariosCount:String(s.usuarios.length),usuarios:s.usuarios,usuarioForm:s.usuarioForm,setUsuarioNome:this.setUsuarioNome,setUsuarioEmail:this.setUsuarioEmail,setUsuarioSenha:this.setUsuarioSenha,cadastrarUsuario:this.cadastrarUsuario,usuariosErro:s.usuariosErro,usuariosErroOn:!!s.usuariosErro,usuariosSucesso:s.usuariosSucesso,usuariosSucessoOn:!!s.usuariosSucesso,usuariosCarregando:s.usuariosCarregando,usuariosBtnTexto:s.usuariosCarregando?'Cadastrando…':'Cadastrar usuário',
+      abrirSenha:this.abrirSenha,fecharSenha:this.fecharSenha,trocarSenha:this.trocarSenha,senhaVisible:s.senhaAberta,senhaAtual:s.senhaAtual,senhaNova:s.senhaNova,senhaConfirma:s.senhaConfirma,setSenhaAtual:this.setSenhaAtual,setSenhaNova:this.setSenhaNova,setSenhaConfirma:this.setSenhaConfirma,senhaErro:s.senhaErro,senhaErroOn:!!s.senhaErro,senhaOk:s.senhaOk,senhaOkOn:!!s.senhaOk,senhaCarregando:s.senhaCarregando,senhaBtnTexto:s.senhaCarregando?'Salvando…':'Salvar senha',
       logRows,logVazio:logRows.length===0,logInfo:fmt(logF.length)+' registro(s)',
       logUsers:[...new Set(s.log.map(l=>l.autor))],logAcoes:[...new Set(s.log.map(l=>l.acao))],
       logUser:s.logUser,logAcao:s.logAcao,logQ:s.logQ,setLogUser:this.setLogUser,setLogAcao:this.setLogAcao,setLogQ:this.setLogQ,
@@ -1123,7 +1156,7 @@ class Component extends DCLogic {
       isSuper:s.role==='super',userName,userRole:s.user.perfil,userInitials:userName.split(' ').filter(Boolean).map(w=>w[0]).slice(0,2).join(''),
       navGrupos:grupos,navPainelStyle,goPainel:this.goPainel,openNovo:this.openNovo,logout:this.logout,
       painelVisible:s.screen==='painel',servicoVisible:s.screen==='servico',processoVisible:s.screen==='processo',novoVisible:s.screen==='novo',novoBtnOn:!['novo','log','usuarios'].includes(s.screen),
-      crumb:s.screen==='usuarios'?'Superintendência / Controle de acesso':s.screen==='log'?'Auditoria · somente Superintendente':s.screen==='painel'?'Visão geral da Superintendência':(s.screen==='novo'?'Cadastro':(s.screen==='processo'?('Serviços / '+cur.label):'Serviços')),
+      crumb:s.screen==='usuarios'?'Gestão / Usuários':s.screen==='log'?'Gestão / Registro de atividades':s.screen==='painel'?'Visão geral da Superintendência':(s.screen==='novo'?'Cadastro':(s.screen==='processo'?('Serviços / '+cur.label):'Serviços')),
       pageTitle:s.screen==='usuarios'?'Usuários':s.screen==='log'?'Registro de atividades':s.screen==='painel'?'Painel geral':(s.screen==='novo'?'Novo processo':(s.screen==='processo'?'Detalhe do processo':cur.label)),
       hoje:new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'short',year:'numeric'}).format(new Date()).replace('.',''),
       kpiTotal:fmt(total),kpiPend:fmt(total-resp),kpiResp:fmt(resp),kpiVelhos:fmt(velhos),kpiSemResponsavel:fmt(semResponsavel),kpiTaxa:(total?Math.round(resp/total*100):0)+'%',
