@@ -1,15 +1,6 @@
 const SUPABASE_URL = "https://cqcvbrgrstdrcqhakcvc.supabase.co";
 const PUBLISHABLE_KEY = "sb_publishable_fR6nS5GOjrISTwNQjTuhUQ_e9zThR05";
 
-const json = (statusCode, body) => ({
-  statusCode,
-  headers: {
-    "Content-Type": "application/json; charset=utf-8",
-    "Cache-Control": "no-store",
-  },
-  body: JSON.stringify(body),
-});
-
 async function request(path, { method = "GET", token, key, body } = {}) {
   const apiKey = key || PUBLISHABLE_KEY;
   const response = await fetch(`${SUPABASE_URL}${path}`, {
@@ -18,7 +9,7 @@ async function request(path, { method = "GET", token, key, body } = {}) {
       apikey: apiKey,
       Authorization: `Bearer ${token || apiKey}`,
       "Content-Type": "application/json",
-      "User-Agent": "semcas-netlify-function/1.0",
+      "User-Agent": "spsemc-vercel-function/1.0",
       Prefer: "return=representation",
     },
     body: body === undefined ? undefined : JSON.stringify(body),
@@ -39,16 +30,25 @@ async function request(path, { method = "GET", token, key, body } = {}) {
   return data;
 }
 
-export async function handler(event) {
-  if (event.httpMethod === "OPTIONS") return json(204, {});
-  if (event.httpMethod !== "POST") return json(405, { message: "Método não permitido" });
+function send(res, status, body) {
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  res.setHeader("Cache-Control", "no-store");
+  return res.status(status).json(body);
+}
+
+export default async function handler(req, res) {
+  if (req.method === "OPTIONS") {
+    res.setHeader("Cache-Control", "no-store");
+    return res.status(204).end();
+  }
+  if (req.method !== "POST") return send(res, 405, { message: "Método não permitido" });
 
   const secret = process.env.SUPABASE_SECRET_KEY;
-  if (!secret) return json(500, { message: "A variável SUPABASE_SECRET_KEY não foi configurada no Netlify." });
+  if (!secret) return send(res, 500, { message: "A variável SUPABASE_SECRET_KEY não foi configurada no Vercel." });
 
-  const authorization = event.headers.authorization || event.headers.Authorization || "";
+  const authorization = req.headers.authorization || "";
   const callerToken = authorization.replace(/^Bearer\s+/i, "").trim();
-  if (!callerToken) return json(401, { message: "Sessão não informada." });
+  if (!callerToken) return send(res, 401, { message: "Sessão não informada." });
 
   let createdUserId = null;
   try {
@@ -59,18 +59,18 @@ export async function handler(event) {
     );
     const profile = profiles?.[0];
     if (!profile?.active || profile.role !== "superintendente") {
-      return json(403, { message: "Somente a Superintendente pode cadastrar usuários." });
+      return send(res, 403, { message: "Somente a Superintendente pode cadastrar usuários." });
     }
 
-    const payload = JSON.parse(event.body || "{}");
-    const email = String(payload.email || "").trim().toLowerCase();
-    const displayName = String(payload.display_name || "").trim();
-    const password = String(payload.password || "");
+    const rawBody = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
+    const email = String(rawBody.email || "").trim().toLowerCase();
+    const displayName = String(rawBody.display_name || "").trim();
+    const password = String(rawBody.password || "");
     if (!displayName || !email || !/^\S+@\S+\.\S+$/.test(email)) {
-      return json(400, { message: "Informe o nome e um e-mail válido." });
+      return send(res, 400, { message: "Informe o nome e um e-mail válido." });
     }
     if (password.length < 8) {
-      return json(400, { message: "A senha inicial deve ter pelo menos 8 caracteres." });
+      return send(res, 400, { message: "A senha inicial deve ter pelo menos 8 caracteres." });
     }
 
     const created = await request("/auth/v1/admin/users", {
@@ -97,7 +97,7 @@ export async function handler(event) {
       }],
     });
 
-    return json(201, {
+    return send(res, 201, {
       user_id: created.id,
       email,
       display_name: displayName,
@@ -110,8 +110,9 @@ export async function handler(event) {
       } catch {}
     }
     const duplicate = /already|registered|exists/i.test(error.message || "");
-    return json(duplicate ? 409 : (error.status || 500), {
+    return send(res, duplicate ? 409 : (error.status || 500), {
       message: duplicate ? "Já existe um usuário com esse e-mail." : error.message,
     });
   }
 }
+

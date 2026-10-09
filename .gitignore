@@ -1,7 +1,7 @@
 .env
 .env.*
 !.env.example
-.netlify/
+.vercel/
 node_modules/
 *.log
 *.zip
