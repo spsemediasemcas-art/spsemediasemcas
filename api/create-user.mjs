@@ -66,6 +66,9 @@ export default async function handler(req, res) {
     const email = String(rawBody.email || "").trim().toLowerCase();
     const displayName = String(rawBody.display_name || "").trim();
     const password = String(rawBody.password || "");
+    if (rawBody.role && String(rawBody.role) !== "administrativo") {
+      return send(res, 400, { message: "Este cadastro só adiciona o perfil Administrativo." });
+    }
     if (!displayName || !email || !/^\S+@\S+\.\S+$/.test(email)) {
       return send(res, 400, { message: "Informe o nome e um e-mail válido." });
     }
