@@ -13,7 +13,7 @@ Sistema interno para acompanhamento de processos do SEI, com autenticação, con
 ## Implantação no Vercel
 
 1. No Vercel, escolha **Add New > Project** e importe este repositório do GitHub.
-2. Mantenha o projeto como **Other**, sem comando de build e com a pasta raiz como diretório de saída.
+2. Selecione o preset **Other**, mantenha **Root Directory** como `.` e deixe **Build Command** e **Output Directory** em branco.
 3. Em **Settings > Environment Variables**, crie `SUPABASE_SECRET_KEY` com a chave secreta do projeto Supabase.
 4. Disponibilize a variável nos ambientes Production, Preview e Development e faça um novo deploy.
 
