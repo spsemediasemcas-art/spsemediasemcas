@@ -720,13 +720,11 @@ class Component extends DCLogic {
   agora(){ const d=new Date(),p=n=>String(n).padStart(2,'0'); return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes()); }
   nomeDoEmail(e){ return (e||'').split('@')[0].split(/[._-]+/).filter(Boolean).map(w=>w[0].toUpperCase()+w.slice(1).toLowerCase()).join(' ')||'Usuário'; }
   async supa(path,{method='GET',body=null,token=null,prefer=''}={}){
-    const headers={apikey:this.SUPA_KEY,'Content-Type':'application/json'};
-    const access=token||(this.session&&this.session.access_token);
-    if(access) headers.Authorization='Bearer '+access;
+    const headers={apikey:this.SUPA_KEY,'Content-Type':'application/json',Authorization:'Bearer '+(token||(this.session&&this.session.access_token)||this.SUPA_KEY)};
     if(prefer) headers.Prefer=prefer;
     const res=await fetch(this.SUPA_ROOT+path,{method,headers,body:body==null?undefined:JSON.stringify(body)});
     const raw=await res.text(); let data=null; try{data=raw?JSON.parse(raw):null;}catch(e){data=raw;}
-    if(!res.ok){const msg=data&&typeof data==='object'?(data.message||data.error_description||data.error||'Falha na comunicação com o banco'):'Falha na comunicação com o banco';throw new Error(msg);}
+    if(!res.ok){const detalhe=data&&typeof data==='object'?(data.message||data.error_description||data.msg||(typeof data.error==='string'?data.error:'')||data.error_code):'';throw new Error(detalhe||'Falha na comunicação com o banco');}
     return data;
   }
   comentarioDb(c,i,pid){
@@ -837,7 +835,7 @@ class Component extends DCLogic {
 
   setLoginEmail=e=>this.setState({loginEmail:e.target.value});
   setLoginSenha=e=>this.setState({loginSenha:e.target.value});
-  doLogin=async()=>{const email=this.state.loginEmail.trim(),password=this.state.loginSenha;if(!email||!password){this.setState({loginErro:'Informe o e-mail e a senha.',loginCarregando:false});return;}this.setState({loginCarregando:true,loginErro:''});try{const sessao=await this.supa('/auth/v1/token?grant_type=password',{method:'POST',body:{email,password}});localStorage.setItem('semcas_supabase_session',JSON.stringify(sessao));await this.entrarComSessao(sessao);}catch(e){this.session=null;localStorage.removeItem('semcas_supabase_session');this.setState({screen:'login',role:null,dbOnline:false,loginCarregando:false,loginErro:e.message==='Invalid login credentials'?'E-mail ou senha inválidos.':e.message});}};
+  doLogin=async()=>{const email=this.state.loginEmail.trim(),password=this.state.loginSenha;if(!email||!password){this.setState({loginErro:'Informe o e-mail e a senha.',loginCarregando:false});return;}this.setState({loginCarregando:true,loginErro:''});try{const sessao=await this.supa('/auth/v1/token?grant_type=password',{method:'POST',body:{email,password}});localStorage.setItem('semcas_supabase_session',JSON.stringify(sessao));await this.entrarComSessao(sessao);}catch(e){this.session=null;localStorage.removeItem('semcas_supabase_session');this.setState({screen:'login',role:null,dbOnline:false,loginCarregando:false,loginErro:/invalid login credentials|invalid_credentials/i.test(e.message)?'E-mail ou senha inválidos.':(/email not confirmed/i.test(e.message)?'Confirme o e-mail desse usuário no Supabase antes de entrar.':e.message)});}};
   logout=async()=>{const sessao=this.session;this.registrar('Acesso',null,'Saiu do sistema');try{if(sessao)await this.supa('/auth/v1/logout',{method:'POST',token:sessao.access_token});}catch(e){}this.session=null;localStorage.removeItem('semcas_supabase_session');this.setState({screen:'login',role:null,loginSenha:'',dbOnline:false});};
   goPainel=()=>this.setState({screen:'painel',menuOpen:false});
   goLog=()=>{ if(this.state.role==='super') this.setState({screen:'log',menuOpen:false}); };
