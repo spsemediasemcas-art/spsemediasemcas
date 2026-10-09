@@ -13,7 +13,8 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0}
+  html,body{margin:0;padding:0;height:auto;min-height:100%;overflow-y:visible}
+  #dc-root,#dc-root>.sc-host{height:auto;min-height:100%;overflow:visible}
   body{font-family:'IBM Plex Sans',system-ui,sans-serif;color:#1F2328;background:#F4F5F6;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
   a{color:#1F5F9E;text-decoration:underline;text-underline-offset:2px}
   a:hover{color:#12355B}
@@ -67,7 +68,7 @@
 </sc-if>
 
 <sc-if value="{{ appVisible }}" hint-placeholder-val="{{ false }}">
-<div style="height:100vh;display:flex;flex-direction:column">
+<div style="min-height:100vh;display:flex;flex-direction:column">
   <div style="background:#12355B;color:#fff;height:44px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 16px 0 18px">
     <div style="display:flex;align-items:center;gap:12px;min-width:0">
       <sc-if value="{{ narrow }}" hint-placeholder-val="{{ false }}"><button onClick="{{ toggleMenu }}" style="height:30px;padding:0 10px;border:1px solid #3B5A7C;background:transparent;color:#fff;border-radius:2px;cursor:pointer;font-size:13px">Menu</button></sc-if>
@@ -104,7 +105,7 @@
   </div>
   </sc-if>
 
-  <div style="flex:1;min-height:0;display:grid;grid-template-columns:{{ shellCols }};position:relative">
+  <div style="flex:1 0 auto;display:grid;grid-template-columns:{{ shellCols }};position:relative;align-items:start">
   <sc-if value="{{ backdrop }}" hint-placeholder-val="{{ false }}"><div onClick="{{ toggleMenu }}" style="position:fixed;inset:0;background:rgba(20,30,40,.4);z-index:39"></div></sc-if>
 
   <aside style="{{ asideStyle }}">
@@ -114,7 +115,7 @@
         <button onClick="{{ toggleMenu }}" style="height:28px;padding:0 10px;border:1px solid #C9CED3;background:#fff;border-radius:2px;cursor:pointer;font-size:12.5px">Fechar</button>
       </div>
     </sc-if>
-    <nav style="flex:1;overflow-y:auto;padding:8px 10px 16px">
+    <nav style="padding:8px 10px 16px">
       <div style="font-size:12px;font-weight:600;color:#7A828A;padding:12px 12px 6px">Acompanhamento</div>
       <button onClick="{{ goPendencias }}" style="{{ navPendStyle }}"><span style="flex:1;text-align:left">Pendências</span><span style="font-size:12.5px;font-weight:600;color:#A3281F">{{ pendBadge }}</span></button>
       <sc-if value="{{ isSuper }}" hint-placeholder-val="{{ true }}">
@@ -136,7 +137,7 @@
     </nav>
   </aside>
 
-  <main style="height:100%;overflow-y:auto;display:flex;flex-direction:column;background:#F4F5F6">
+  <main style="display:flex;flex-direction:column;background:#F4F5F6">
     <header style="flex-shrink:0;position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid #DADDE1">
       <div style="{{ headPad }}">
         <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-bottom:14px">
@@ -333,7 +334,7 @@
       <sc-for list="{{ pendGrupos }}" as="g" hint-placeholder-count="4">
         <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px;overflow:hidden">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:12px 18px;border-bottom:1px solid #DADDE1"><div><h2 style="font-size:14.5px;font-weight:600;margin:0;color:#1F2328">{{ g.titulo }}</h2><div style="font-size:12px;color:#7A828A;margin-top:3px">{{ g.subtitulo }}</div></div><span style="font-size:13px;font-weight:600;color:#3D454D;white-space:nowrap">{{ g.qtdTxt }}</span></div>
-          <div style="max-height:480px;overflow:auto">
+          <div>
           <sc-for list="{{ g.itens }}" as="r" hint-placeholder-count="3">
             <button onClick="{{ r.abrir }}" style="display:block;width:100%;text-align:left;border:0;border-bottom:1px solid #ECEEF0;background:#fff;padding:11px 18px;cursor:pointer" style-hover="background:#F7F8F9">
               <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span style="font-family:'IBM Plex Mono';font-size:13px;color:#1F5F9E;font-weight:600">{{ r.principal }}</span><span style="font-size:12.5px;color:#5B636B">{{ r.servicoLabel }}</span></div>
@@ -434,7 +435,7 @@
       </sc-if>
 
       <sc-if value="{{ tableOn }}" hint-placeholder-val="{{ true }}">
-      <div style="overflow:auto;max-height:calc(100vh - 330px)">
+      <div style="overflow-x:auto">
         <div style="min-width:{{ minW }}">
           <div style="display:grid;grid-template-columns:{{ gridCols }};position:sticky;top:0;z-index:2;background:#F2F4F6;border-bottom:1px solid #C9CED3">
             <button onClick="{{ sortH.numero }}" style="align-self:stretch;background:#F2F4F6;border:none;border-right:1px solid #E3E6E9;text-align:left;cursor:pointer;padding:9px 10px;font-size:12.5px;font-weight:600;color:#3D454D;line-height:1.3;display:flex;align-items:flex-start;gap:5px;position:sticky;left:0;z-index:1;border-right:1px solid #DADDE1" style-hover="background:#E8EBEE">Nº processo SEI<span style="font-size:9px;color:#12355B;flex-shrink:0;padding-top:2px">{{ arrows.numero }}</span></button>
@@ -611,7 +612,7 @@
         <aside style="flex:1 1 300px;max-width:100%;display:flex;flex-direction:column;gap:16px">
           <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px">
             <div style="padding:12px 18px;border-bottom:1px solid #DADDE1"><h2 style="font-size:14.5px;font-weight:600;margin:0">Histórico deste processo</h2><div style="font-size:12px;color:#7A828A;margin-top:3px">Edições e comentários registrados no sistema</div></div>
-            <div style="max-height:360px;overflow:auto">
+            <div>
               <sc-for list="{{ proc.atividades }}" as="a"><div style="padding:12px 18px;border-bottom:1px solid #ECEEF0"><div style="font-size:13px;font-weight:600;color:#1F2328">{{ a.acao }} · {{ a.autor }}</div><div style="font-size:12px;color:#7A828A;margin-top:3px">{{ a.quando }}</div><div style="font-size:13px;line-height:1.55;color:#3D454D;margin-top:5px;white-space:pre-wrap;overflow-wrap:anywhere">{{ a.detalhe }}</div></div></sc-for>
               <sc-if value="{{ proc.semAtividades }}"><div style="padding:18px;font-size:13px;line-height:1.6;color:#7A828A">Ainda não há alterações registradas neste processo. Os dados e as observações originais vieram da planilha.</div></sc-if>
             </div>
@@ -1368,7 +1369,7 @@ class Component extends DCLogic {
     return {
       narrow, backdrop:narrow&&s.menuOpen, toggleMenu:this.toggleMenu,
       shellCols: narrow?'minmax(0,1fr)':'232px minmax(0,1fr)',
-      asideStyle:'background:#FFFFFF;border-right:1px solid #DADDE1;display:flex;flex-direction:column;height:100%;overflow:hidden;'+(narrow?('position:fixed;left:0;top:0;bottom:0;width:280px;z-index:40;box-shadow:0 0 40px rgba(0,0,0,.3);transition:transform .2s;transform:translateX('+(s.menuOpen?'0':'-100%')+')'):''),
+      asideStyle:'background:#FFFFFF;border-right:1px solid #DADDE1;display:flex;flex-direction:column;align-self:start;position:sticky;top:0;'+(narrow?('position:fixed;left:0;top:0;bottom:0;width:280px;height:100vh;overflow:auto;z-index:40;box-shadow:0 0 40px rgba(0,0,0,.3);transition:transform .2s;transform:translateX('+(s.menuOpen?'0':'-100%')+')'):''),
       headPad: s.vw<700?'padding:14px 14px 0':'padding:18px 32px 0',
       contentPad: 'flex:1;'+(s.vw<700?'padding:14px 12px 32px':'padding:24px 32px 48px'),
       cardsOn: s.vw<760, tableOn: s.vw>=760,
