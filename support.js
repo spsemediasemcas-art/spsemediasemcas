@@ -129,7 +129,7 @@
       }
     }
   `;
-  var FULL_PAGE_CSS = "html,body{height:100%;margin:0}#dc-root,#dc-root>.sc-host{height:100%}";
+  var FULL_PAGE_CSS = "html,body{min-height:100%;height:auto;margin:0;overflow-y:visible}#dc-root,#dc-root>.sc-host{min-height:100%;height:auto;overflow:visible}";
   function rootNameForDocument(doc, loc) {
     let bootPath = loc.pathname || "";
     if (!/\.dc\.html?$/i.test(safeDecode(bootPath))) {
@@ -1909,4 +1909,3 @@
     throw err;
   });
 })();
-
