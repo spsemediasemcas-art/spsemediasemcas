@@ -72,11 +72,11 @@
   <div style="background:#12355B;color:#fff;height:44px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 16px 0 18px">
     <div style="display:flex;align-items:center;gap:12px;min-width:0">
       <sc-if value="{{ narrow }}" hint-placeholder-val="{{ false }}"><button onClick="{{ toggleMenu }}" style="height:30px;padding:0 10px;border:1px solid #3B5A7C;background:transparent;color:#fff;border-radius:2px;cursor:pointer;font-size:13px">Menu</button></sc-if>
-      <span style="font-weight:600;font-size:14px;white-space:nowrap">Acompanhamento de Processos SEI</span>
-      <span style="font-size:13px;color:#AFC0D2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Média Complexidade</span>
+      <span style="font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">Acompanhamento de Processos SEI</span>
+      <sc-if value="{{ largo }}" hint-placeholder-val="{{ true }}"><span style="font-size:13px;color:#AFC0D2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Média Complexidade</span></sc-if>
     </div>
-    <div style="display:flex;align-items:center;gap:14px;flex-shrink:0">
-      <span style="font-size:13px;color:#DCE4EC;white-space:nowrap">{{ userName }} <span style="color:#AFC0D2">· {{ userRole }}</span></span>
+    <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+      <sc-if value="{{ largo }}" hint-placeholder-val="{{ true }}"><span style="font-size:13px;color:#DCE4EC;white-space:nowrap">{{ userName }} <span style="color:#AFC0D2">· {{ userRole }}</span></span></sc-if>
       <button onClick="{{ abrirSenha }}" style="height:28px;padding:0 10px;background:transparent;border:1px solid #3B5A7C;color:#fff;border-radius:2px;cursor:pointer;font-size:12.5px" style-hover="background:#1C4570">Senha</button>
       <button onClick="{{ logout }}" style="height:28px;padding:0 10px;background:transparent;border:1px solid #3B5A7C;color:#fff;border-radius:2px;cursor:pointer;font-size:12.5px" style-hover="background:#1C4570">Sair</button>
     </div>
@@ -118,6 +118,7 @@
     <nav style="padding:8px 10px 16px">
       <div style="font-size:12px;font-weight:600;color:#7A828A;padding:12px 12px 6px">Acompanhamento</div>
       <button onClick="{{ goPendencias }}" style="{{ navPendStyle }}"><span style="flex:1;text-align:left">Pendências</span><span style="font-size:12.5px;font-weight:600;color:#A3281F">{{ pendBadge }}</span></button>
+      <button onClick="{{ irTodos }}" style="{{ navTodosStyle }}"><span style="flex:1;text-align:left">Todos os Processos</span><span style="font-size:12.5px;color:#7A828A">{{ todosCountNav }}</span></button>
       <sc-if value="{{ isSuper }}" hint-placeholder-val="{{ true }}">
         <div style="font-size:12px;font-weight:600;color:#7A828A;padding:12px 12px 6px">Superintendência</div>
         <button onClick="{{ goPainel }}" style="{{ navPainelStyle }}"><span style="flex:1;text-align:left">Painel geral</span></button>
@@ -169,162 +170,280 @@
 
     <sc-if value="{{ painelVisible }}" hint-placeholder-val="{{ false }}">
     <div style="max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:20px">
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1px;background:#DADDE1;border:1px solid #DADDE1;border-radius:2px;overflow:hidden">
-        <div style="background:#fff;padding:14px 18px"><div style="font-size:13px;color:#5B636B">Processos registrados</div><div style="font-size:28px;font-weight:600;margin-top:4px;color:#1F2328">{{ kpiTotal }}</div></div>
-        <div style="background:#fff;padding:14px 18px"><div style="font-size:13px;color:#5B636B">Pendentes</div><div style="font-size:28px;font-weight:600;margin-top:4px;color:#8A5A00">{{ kpiPend }}</div></div>
-        <div style="background:#fff;padding:14px 18px"><div style="font-size:13px;color:#5B636B">Respondidos</div><div style="font-size:28px;font-weight:600;margin-top:4px;color:#2F7A4B">{{ kpiResp }}</div></div>
-        <div style="background:#fff;padding:14px 18px"><div style="font-size:13px;color:#5B636B">Pendentes há mais de 30 dias</div><div style="font-size:28px;font-weight:600;margin-top:4px;color:#A3281F">{{ kpiVelhos }}</div></div>
-        <div style="background:#fff;padding:14px 18px"><div style="font-size:13px;color:#5B636B">Prazos vencidos</div><div style="font-size:28px;font-weight:600;margin-top:4px;color:#A3281F">{{ kpiPrazosVencidos }}</div></div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:14px">
+        <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="5">
+          <div onClick="{{ k.abrir }}" title="{{ k.dica }}" role="button" style="background:#fff;border:1px solid #DDE2E8;border-radius:6px;box-shadow:0 1px 2px rgba(16,24,40,.04);flex:1 1 auto;display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer" style-hover="border-color:#9DB3CB;box-shadow:0 3px 10px rgba(16,24,40,.10)">
+            <span style="{{ k.icone }}"></span>
+            <div style="min-width:0"><div style="font-size:13px;color:#3D454D;line-height:1.3;white-space:nowrap">{{ k.label }}</div><div style="font-size:28px;font-weight:600;line-height:1.15;margin-top:3px;color:{{ k.cor }}">{{ k.valor }}</div></div>
+          </div>
+        </sc-for>
       </div>
 
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(440px,100%),1fr));gap:20px;align-items:start">
-        <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px;overflow:hidden">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:12px 18px;border-bottom:1px solid #DADDE1"><div><h2 style="font-size:14.5px;font-weight:600;margin:0;color:#1F2328">Prazos vencidos ou vencendo</h2><div style="font-size:12px;color:#7A828A;margin-top:3px">Os 10 mais urgentes, de todos os serviços</div></div><button onClick="{{ goPendencias }}" style="background:transparent;border:none;color:#1F5F9E;font-size:13px;cursor:pointer;padding:0;text-decoration:underline">Ver pendências</button></div>
-          <sc-for list="{{ painelPrazos }}" as="r" hint-placeholder-count="4">
-            <button onClick="{{ r.abrir }}" style="display:block;width:100%;text-align:left;border:0;border-bottom:1px solid #ECEEF0;background:#fff;padding:11px 18px;cursor:pointer" style-hover="background:#F7F8F9">
-              <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span style="font-family:'IBM Plex Mono';font-size:13px;color:#1F5F9E;font-weight:600">{{ r.principal }}</span><span style="font-size:12.5px;color:#5B636B">{{ r.servicoLabel }}</span></div>
-              <div style="font-size:13px;color:#2E353B;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.orgao }}</div>
-              <div style="font-size:13px;font-weight:600;color:{{ r.infoCor }};margin-top:4px">{{ r.info }}</div>
-              <div style="font-size:12px;color:#7A828A;margin-top:3px">{{ r.ultima }}</div>
-            </button>
-          </sc-for>
-          <sc-if value="{{ painelPrazosVazio }}"><div style="padding:22px 18px;font-size:13px;color:#7A828A">Nenhum prazo vencido ou vencendo nos próximos 7 dias.</div></sc-if>
-        </section>
-        <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px;overflow:hidden">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:12px 18px;border-bottom:1px solid #DADDE1"><div><h2 style="font-size:14.5px;font-weight:600;margin:0;color:#1F2328">Aguardando relatório por unidade</h2><div style="font-size:12px;color:#7A828A;margin-top:3px">Pendentes cuja Situação indica que se aguarda relatório</div></div></div>
-          <div style="display:grid;grid-template-columns:minmax(140px,1fr) 80px 80px 110px;background:#F2F4F6;border-bottom:1px solid #DADDE1"><div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D;padding-left:18px">Unidade</div><div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D;text-align:right">Processos</div><div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D;text-align:right">+30 dias</div><div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D;text-align:right;padding-right:18px">Maior espera</div></div>
-          <sc-for list="{{ porUnidade }}" as="u" hint-placeholder-count="5">
-            <div style="display:grid;grid-template-columns:minmax(140px,1fr) 80px 80px 110px;border-bottom:1px solid #ECEEF0;font-size:13.5px;align-items:center"><div style="padding:9px 12px 9px 18px">{{ u.nome }}</div><div style="padding:9px 12px;text-align:right;font-weight:600">{{ u.qtd }}</div><div style="padding:9px 12px;text-align:right;color:#A3281F">{{ u.velhos }}</div><div style="padding:9px 18px 9px 12px;text-align:right;color:#5B636B">{{ u.max }}</div></div>
-          </sc-for>
-          <sc-if value="{{ porUnidadeVazio }}"><div style="padding:22px 18px;font-size:13px;color:#7A828A">Nenhum processo aguardando relatório.</div></sc-if>
-        </section>
-      </div>
-
-      <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px;overflow:hidden">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:12px 18px;border-bottom:1px solid #DADDE1"><div><h2 style="font-size:14.5px;font-weight:600;margin:0;color:#1F2328">Atividade da equipe</h2><div style="font-size:12px;color:#7A828A;margin-top:3px">Últimos 7 / 30 dias. Clique no nome para ver tudo o que a pessoa registrou.</div></div></div>
-        <div style="overflow-x:auto"><div style="min-width:720px">
-          <div style="display:grid;grid-template-columns:minmax(160px,1.4fr) 100px 110px 100px 140px 140px;background:#F2F4F6;border-bottom:1px solid #DADDE1"><div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D;padding-left:18px">Pessoa</div><div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D;text-align:right">Edições</div><div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D;text-align:right">Comentários</div><div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D;text-align:right">Cadastros</div><div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D">Última atividade</div><div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D">Último acesso</div></div>
-          <sc-for list="{{ equipe }}" as="e" hint-placeholder-count="4">
-            <div onClick="{{ e.abrir }}" style="display:grid;grid-template-columns:minmax(160px,1.4fr) 100px 110px 100px 140px 140px;border-bottom:1px solid #ECEEF0;font-size:13.5px;align-items:center;cursor:pointer" style-hover="background:#F7F8F9"><div style="padding:9px 12px 9px 18px"><div style="color:#1F5F9E;font-weight:500">{{ e.nome }}</div><div style="font-size:12px;color:#7A828A">{{ e.perfil }}</div></div><div style="padding:9px 12px;text-align:right">{{ e.edicoes }}</div><div style="padding:9px 12px;text-align:right">{{ e.comentarios }}</div><div style="padding:9px 12px;text-align:right">{{ e.cadastros }}</div><div style="padding:9px 12px;color:#3D454D">{{ e.ultima }}</div><div style="padding:9px 12px;color:#7A828A">{{ e.acesso }}</div></div>
-          </sc-for>
-          <sc-if value="{{ equipeVazia }}"><div style="padding:22px 18px;font-size:13px;color:#7A828A">Nenhuma atividade registrada nos últimos 180 dias.</div></sc-if>
-        </div></div>
+      <section style="background:#fff;border:1px solid #DDE2E8;border-radius:6px;box-shadow:0 1px 2px rgba(16,24,40,.04)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:16px 18px 12px"><div><h2 style="font-size:15.5px;font-weight:600;margin:0;color:#1F2328">Prazos vencidos ou vencendo</h2><div style="font-size:12.5px;color:#6B737B;margin-top:3px">Os 5 mais urgentes, de todos os serviços</div></div><button onClick="{{ goPendencias }}" style="background:transparent;border:none;color:#1F5F9E;font-size:13px;cursor:pointer;padding:0;text-decoration:underline">Ver pendências</button></div>
+        <div style="padding:0 18px 18px"><div style="overflow-x:auto"><div style="border:1px solid #E1E5EA;border-radius:4px;overflow:hidden;min-width:700px">
+            <div style="display:grid;grid-template-columns:170px 180px minmax(220px,1fr) 190px"><div style="padding:10px 12px;font-size:12.5px;font-weight:600;color:#3D454D;background:#F5F7F9;border-right:1px solid #E6E9ED">Nº do processo</div><div style="padding:10px 12px;font-size:12.5px;font-weight:600;color:#3D454D;background:#F5F7F9;border-right:1px solid #E6E9ED">Serviço</div><div style="padding:10px 12px;font-size:12.5px;font-weight:600;color:#3D454D;background:#F5F7F9;border-right:1px solid #E6E9ED">Assunto</div><div style="padding:10px 12px;font-size:12.5px;font-weight:600;color:#3D454D;background:#F5F7F9;border-right:1px solid #E6E9ED;border-right:none">Prazo</div></div>
+            <sc-for list="{{ painelPrazos }}" as="r" hint-placeholder-count="5">
+              <div onClick="{{ r.abrir }}" style="display:grid;grid-template-columns:170px 180px minmax(220px,1fr) 190px;border-top:1px solid #E6E9ED;align-items:stretch;cursor:pointer" style-hover="background:#F7F9FB"><div style="padding:10px 12px;font-size:13px;border-right:1px solid #E6E9ED;min-width:0;"><span style="font-family:'IBM Plex Mono';font-size:12.5px;font-weight:600;color:#1F5F9E;text-decoration:underline;text-underline-offset:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block">{{ r.principal }}</span></div><div style="padding:10px 12px;font-size:13px;border-right:1px solid #E6E9ED;min-width:0;"><span style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.servicoLabel }}</span></div><div style="padding:10px 12px;font-size:13px;border-right:1px solid #E6E9ED;min-width:0;"><span style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ r.orgao }}">{{ r.orgao }}</span></div><div style="padding:10px 12px;font-size:13px;border-right:1px solid #E6E9ED;min-width:0;border-right:none;"><span style="font-weight:600;color:{{ r.prazoCor }};white-space:nowrap">{{ r.prazoTxt }}</span><sc-if value="{{ r.estimado }}" hint-placeholder-val="{{ false }}"><span style="font-size:11.5px;color:#7A828A;margin-left:6px" title="Calculado a partir da data de recebimento e do prazo escrito">estimado</span></sc-if></div></div>
+            </sc-for>
+            <sc-if value="{{ painelPrazosVazio }}" hint-placeholder-val="{{ false }}"><div style="padding:18px 14px;font-size:13px;color:#7A828A;border-top:1px solid #E6E9ED">Nenhum prazo vencido ou vencendo nos próximos 7 dias.</div></sc-if>
+          </div></div></div>
       </section>
 
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(440px,100%),1fr));gap:20px;align-items:start">
-        <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px">
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #DADDE1"><h2 style="font-size:14.5px;font-weight:600;margin:0;color:#1F2328">Situação por serviço</h2><span style="font-size:12.5px;color:#7A828A">Clique para abrir</span></div>
-          <div style="overflow-x:auto">
-            <div style="min-width:440px">
-              <div style="display:grid;grid-template-columns:minmax(120px,1fr) 60px 70px 80px 120px;background:#F2F4F6;border-bottom:1px solid #DADDE1">
-                <div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D;padding-left:18px">Serviço</div><div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D;text-align:right">Total</div><div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D;text-align:right">Pendentes</div><div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D;text-align:right">Respondidos</div><div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D">% respondido</div>
-              </div>
-              <sc-for list="{{ servResumo }}" as="r" hint-placeholder-count="10">
-                <div onClick="{{ r.onClick }}" style="display:grid;grid-template-columns:minmax(120px,1fr) 60px 70px 80px 120px;border-bottom:1px solid #ECEEF0;font-size:13.5px;align-items:center;cursor:pointer" style-hover="background:#F7F8F9">
-                  <div style="padding:9px 12px 9px 18px;color:#1F5F9E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.label }}</div>
-                  <div style="padding:9px 12px;text-align:right">{{ r.total }}</div>
-                  <div style="padding:9px 12px;text-align:right;color:#8A5A00;font-weight:600">{{ r.pend }}</div>
-                  <div style="padding:9px 12px;text-align:right;color:#2F7A4B">{{ r.resp }}</div>
-                  <div style="padding:9px 12px;display:flex;align-items:center;gap:8px">
-                    <div style="flex:1;height:6px;background:#ECEEF0;overflow:hidden"><div style="height:100%;background:#2F7A4B;width:{{ r.barW }}"></div></div>
-                    <span style="font-size:12.5px;color:#5B636B;width:34px;text-align:right">{{ r.barW }}</span>
-                  </div>
-                </div>
-              </sc-for>
-            </div>
-          </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(460px,100%),1fr));gap:20px;align-items:start">
+        <section style="background:#fff;border:1px solid #DDE2E8;border-radius:6px;box-shadow:0 1px 2px rgba(16,24,40,.04)">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:16px 18px 12px"><div><h2 style="font-size:15.5px;font-weight:600;margin:0;color:#1F2328">Situação por serviço</h2></div></div>
+          <div style="padding:0 18px 18px"><div style="overflow-x:auto"><div style="border:1px solid #E1E5EA;border-radius:4px;overflow:hidden;min-width:470px">
+            <div style="display:grid;grid-template-columns:minmax(130px,1fr) 56px 78px 94px 120px"><div style="padding:10px 12px;font-size:12.5px;font-weight:600;color:#3D454D;background:#F5F7F9;border-right:1px solid #E6E9ED">Serviço</div><div style="padding:10px 12px;font-size:12.5px;font-weight:600;color:#3D454D;background:#F5F7F9;border-right:1px solid #E6E9ED;text-align:right">Total</div><div style="padding:10px 12px;font-size:12.5px;font-weight:600;color:#3D454D;background:#F5F7F9;border-right:1px solid #E6E9ED;text-align:right">Pendentes</div><div style="padding:10px 12px;font-size:12.5px;font-weight:600;color:#3D454D;background:#F5F7F9;border-right:1px solid #E6E9ED;text-align:right">Respondidos</div><div style="padding:10px 12px;font-size:12.5px;font-weight:600;color:#3D454D;background:#F5F7F9;border-right:1px solid #E6E9ED;border-right:none">% respondido</div></div>
+            <sc-for list="{{ servResumo }}" as="r" hint-placeholder-count="5">
+              <div onClick="{{ r.onClick }}" style="display:grid;grid-template-columns:minmax(130px,1fr) 56px 78px 94px 120px;border-top:1px solid #E6E9ED;align-items:stretch;cursor:pointer" style-hover="background:#F7F9FB"><div style="padding:10px 12px;font-size:13px;border-right:1px solid #E6E9ED;min-width:0;"><span style="display:block;color:#1F5F9E;line-height:1.35">{{ r.label }}</span></div><div style="padding:10px 12px;font-size:13px;border-right:1px solid #E6E9ED;min-width:0;text-align:right;font-weight:500">{{ r.total }}</div><div style="padding:10px 12px;font-size:13px;border-right:1px solid #E6E9ED;min-width:0;text-align:right;font-weight:600;color:#E08A00">{{ r.pend }}</div><div style="padding:10px 12px;font-size:13px;border-right:1px solid #E6E9ED;min-width:0;text-align:right;font-weight:600;color:#2F9E57">{{ r.resp }}</div><div style="padding:10px 12px;font-size:13px;border-right:1px solid #E6E9ED;min-width:0;border-right:none;"><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:7px;background:#ECEEF0;border-radius:2px;overflow:hidden"><div style="height:100%;background:#2F9E57;width:{{ r.barW }}"></div></div><span style="font-size:12.5px;color:#5B636B;width:34px;text-align:right">{{ r.barW }}</span></div></div></div>
+            </sc-for>
+            
+          </div></div></div>
         </section>
 
         <div style="display:flex;flex-direction:column;gap:20px">
-          <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #DADDE1"><h2 style="font-size:14.5px;font-weight:600;margin:0;color:#1F2328">Pendentes por classificação</h2></div>
+          <section style="background:#fff;border:1px solid #DDE2E8;border-radius:6px;box-shadow:0 1px 2px rgba(16,24,40,.04)">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:16px 18px 12px"><div><h2 style="font-size:15.5px;font-weight:600;margin:0;color:#1F2328">Pendentes por classificação</h2></div></div>
+            <div style="padding:0 18px 12px">
             <sc-for list="{{ porMarc }}" as="m" hint-placeholder-count="4">
-              <div style="display:flex;align-items:center;gap:10px;padding:9px 18px;border-bottom:1px solid #ECEEF0;font-size:13.5px">
-                <span style="width:14px;height:14px;flex-shrink:0;background:{{ m.bg }};border:1px solid {{ m.bar }}"></span>
+              <div onClick="{{ m.abrir }}" title="Ver estes processos em Todos os Processos" style="display:flex;align-items:center;gap:12px;padding:9px 6px;margin:0 -6px;border-top:1px solid #ECEEF0;font-size:13.5px;cursor:pointer" style-hover="background:#F7F9FB">
+                <span style="width:15px;height:15px;flex-shrink:0;background:#fff;border:2px solid {{ m.bar }};border-radius:2px"></span>
                 <span style="flex:1;color:#2E353B">{{ m.label }}</span>
-                <span style="font-weight:600">{{ m.qtd }}</span>
+                <span style="font-weight:600;color:#1F2328">{{ m.qtd }}</span>
               </div>
             </sc-for>
+            </div>
           </section>
-          <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #DADDE1"><h2 style="font-size:14.5px;font-weight:600;margin:0;color:#1F2328">Entradas por mês</h2></div>
-            <div style="padding:18px 18px 14px">
-              <div style="display:flex;align-items:flex-end;gap:12px;height:180px;border-bottom:1px solid #C9CED3">
+          <section style="background:#fff;border:1px solid #DDE2E8;border-radius:6px;box-shadow:0 1px 2px rgba(16,24,40,.04)">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:16px 18px 12px"><div><h2 style="font-size:15.5px;font-weight:600;margin:0;color:#1F2328">Entradas por mês</h2></div></div>
+            <div style="padding:6px 18px 16px">
+              <div style="display:flex;align-items:flex-end;gap:14px;height:180px;border-bottom:1px solid #C9CED3">
                 <sc-for list="{{ meses }}" as="m" hint-placeholder-count="6">
-                  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:5px">
-                    <div style="font-size:12px;color:#5B636B">{{ m.total }}</div>
-                    <div style="width:100%;max-width:40px;display:flex;flex-direction:column;justify-content:flex-end;height:{{ m.totalH }}">
-                      <div style="background:#C9D3DE;flex:{{ m.pendFlex }}"></div>
+                  <div onClick="{{ m.abrir }}" title="Ver processos recebidos neste mês" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:5px;cursor:pointer" style-hover="opacity:.8">
+                    <div style="font-size:12px;font-weight:500;color:#3D454D">{{ m.total }}</div>
+                    <div style="width:100%;max-width:42px;display:flex;flex-direction:column;justify-content:flex-end;height:{{ m.totalH }}">
+                      <div style="background:#C5D3E3;flex:{{ m.pendFlex }}"></div>
                       <div style="background:#12355B;flex:{{ m.respFlex }}"></div>
                     </div>
                   </div>
                 </sc-for>
               </div>
-              <div style="display:flex;gap:12px;margin-top:6px">
+              <div style="display:flex;gap:14px;margin-top:6px">
                 <sc-for list="{{ meses }}" as="m" hint-placeholder-count="6"><div style="flex:1;text-align:center;font-size:12px;color:#5B636B">{{ m.label }}</div></sc-for>
               </div>
-              <div style="display:flex;gap:18px;margin-top:14px;font-size:12.5px;color:#5B636B">
-                <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;background:#C9D3DE"></span>Pendentes</span>
-                <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;background:#12355B"></span>Respondidos</span>
+              <div style="display:flex;gap:18px;margin-top:12px;font-size:12.5px;color:#5B636B">
+                <span style="display:flex;align-items:center;gap:6px"><span style="width:11px;height:11px;background:#C5D3E3"></span>Pendentes</span>
+                <span style="display:flex;align-items:center;gap:6px"><span style="width:11px;height:11px;background:#12355B"></span>Respondidos</span>
               </div>
             </div>
           </section>
         </div>
       </div>
 
-      <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px;overflow:hidden">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:12px 18px;border-bottom:1px solid #DADDE1;flex-wrap:wrap">
-          <div><h2 style="font-size:14.5px;font-weight:600;margin:0;color:#1F2328">Órgãos com mais solicitações</h2><div style="font-size:12px;color:#7A828A;margin-top:3px">10 órgãos com maior número de processos registrados</div></div>
-          <span style="font-size:12.5px;color:#5B636B">Todos os serviços</span>
-        </div>
-        <div style="padding:8px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr));gap:0 18px">
-          <sc-for list="{{ orgaosRanking }}" as="o" hint-placeholder-count="10">
-            <div style="display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px;border-bottom:1px solid #ECEEF0;min-width:0">
-              <span style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;background:#EEF2F7;color:#12355B;font-size:12px;font-weight:600;border-radius:2px">{{ o.pos }}</span>
-              <div style="min-width:0">
-                <div title="{{ o.nome }}" style="font-size:13.5px;font-weight:500;color:#2E353B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ o.nome }}</div>
-                <div style="height:5px;background:#ECEEF0;margin-top:7px;overflow:hidden"><div style="height:100%;width:{{ o.barW }};background:#12355B"></div></div>
-              </div>
-              <div style="text-align:right;white-space:nowrap"><div style="font-size:15px;font-weight:600;color:#1F2328">{{ o.qtd }}</div><div style="font-size:11.5px;color:#7A828A">{{ o.percentual }} do total</div></div>
+      <section style="background:#fff;border:1px solid #DDE2E8;border-radius:6px;box-shadow:0 1px 2px rgba(16,24,40,.04)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:16px 18px 12px"><div><h2 style="font-size:15.5px;font-weight:600;margin:0;color:#1F2328">Atividade da equipe</h2><div style="font-size:12.5px;color:#6B737B;margin-top:3px">Últimos 7 / 30 dias. Clique no nome para ver tudo o que a pessoa registrou.</div></div></div>
+        <div style="padding:0 18px 18px"><div style="overflow-x:auto"><div style="border:1px solid #E1E5EA;border-radius:4px;overflow:hidden;min-width:760px">
+            <div style="display:grid;grid-template-columns:minmax(180px,1.6fr) 1fr 1fr 1fr 1.2fr 1.2fr"><div style="padding:10px 12px;font-size:12.5px;font-weight:600;color:#3D454D;background:#F5F7F9;border-right:1px solid #E6E9ED">Pessoa</div><div style="padding:10px 12px;font-size:12.5px;font-weight:600;color:#3D454D;background:#F5F7F9;border-right:1px solid #E6E9ED;text-align:right">Edições</div><div style="padding:10px 12px;font-size:12.5px;font-weight:600;color:#3D454D;background:#F5F7F9;border-right:1px solid #E6E9ED;text-align:right">Comentários</div><div style="padding:10px 12px;font-size:12.5px;font-weight:600;color:#3D454D;background:#F5F7F9;border-right:1px solid #E6E9ED;text-align:right">Cadastros</div><div style="padding:10px 12px;font-size:12.5px;font-weight:600;color:#3D454D;background:#F5F7F9;border-right:1px solid #E6E9ED">Última atividade</div><div style="padding:10px 12px;font-size:12.5px;font-weight:600;color:#3D454D;background:#F5F7F9;border-right:1px solid #E6E9ED;border-right:none">Último acesso</div></div>
+            <sc-for list="{{ equipe }}" as="e" hint-placeholder-count="5">
+              <div onClick="{{ e.abrir }}" style="display:grid;grid-template-columns:minmax(180px,1.6fr) 1fr 1fr 1fr 1.2fr 1.2fr;border-top:1px solid #E6E9ED;align-items:stretch;cursor:pointer" style-hover="background:#F7F9FB"><div style="padding:10px 12px;font-size:13px;border-right:1px solid #E6E9ED;min-width:0;"><div style="color:#1F5F9E;font-weight:600;font-size:13.5px">{{ e.nome }}</div><div style="font-size:12px;color:#7A828A">{{ e.perfil }}</div></div><div style="padding:10px 12px;font-size:13px;border-right:1px solid #E6E9ED;min-width:0;text-align:right;font-weight:500">{{ e.edicoes }}</div><div style="padding:10px 12px;font-size:13px;border-right:1px solid #E6E9ED;min-width:0;text-align:right;font-weight:500">{{ e.comentarios }}</div><div style="padding:10px 12px;font-size:13px;border-right:1px solid #E6E9ED;min-width:0;text-align:right;font-weight:500">{{ e.cadastros }}</div><div style="padding:10px 12px;font-size:13px;border-right:1px solid #E6E9ED;min-width:0;color:#3D454D">{{ e.ultima }}</div><div style="padding:10px 12px;font-size:13px;border-right:1px solid #E6E9ED;min-width:0;border-right:none;color:#3D454D">{{ e.acesso }}</div></div>
+            </sc-for>
+            <sc-if value="{{ equipeVazia }}" hint-placeholder-val="{{ false }}"><div style="padding:18px 14px;font-size:13px;color:#7A828A;border-top:1px solid #E6E9ED">Nenhuma atividade registrada nos últimos 180 dias.</div></sc-if>
+          </div></div></div>
+      </section>
+
+      <section style="background:#fff;border:1px solid #DDE2E8;border-radius:6px;box-shadow:0 1px 2px rgba(16,24,40,.04)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:16px 18px 12px"><div><h2 style="font-size:15.5px;font-weight:600;margin:0;color:#1F2328">Órgãos com mais solicitações</h2><div style="font-size:12.5px;color:#6B737B;margin-top:3px">10 órgãos com maior número de processos registrados</div></div></div>
+        <div style="padding:0 18px 18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr));gap:14px">
+          <sc-for list="{{ orgaosColunas }}" as="c" hint-placeholder-count="2">
+            <div style="border:1px solid #E1E5EA;border-radius:4px;overflow:hidden">
+              <sc-for list="{{ c.itens }}" as="o" hint-placeholder-count="5">
+                <div onClick="{{ o.abrir }}" title="Ver processos deste órgão" style="display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:stretch;border-top:{{ o.borda }};cursor:pointer" style-hover="background:#F7F9FB">
+                  <div style="display:flex;align-items:center;justify-content:center;background:#F5F7F9;border-right:1px solid #E6E9ED;color:#12355B;font-size:13px;font-weight:600">{{ o.pos }}</div>
+                  <div style="padding:10px 12px;min-width:0"><div title="{{ o.nome }}" style="font-size:13.5px;color:#2E353B;line-height:1.35">{{ o.nome }}</div><div style="height:6px;background:#ECEEF0;margin-top:7px;border-radius:2px;overflow:hidden"><div style="height:100%;width:{{ o.barW }};background:#1F5F9E"></div></div></div>
+                  <div style="padding:10px 12px;text-align:right;white-space:nowrap"><div style="font-size:15px;font-weight:600;color:#1F2328">{{ o.qtd }}</div><div style="font-size:11.5px;color:#7A828A">{{ o.percentual }} do total</div></div>
+                </div>
+              </sc-for>
             </div>
           </sc-for>
         </div>
       </section>
 
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(380px,100%),1fr));gap:20px">
-        <sc-for list="{{ recentesGrupos }}" as="g">
-          <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px;overflow:hidden">
-            <div style="padding:12px 18px;border-bottom:1px solid #DADDE1"><h2 style="font-size:14.5px;font-weight:600;margin:0">{{ g.titulo }}</h2><div style="font-size:12px;color:#7A828A;margin-top:3px">{{ g.subtitulo }}</div></div>
-            <sc-for list="{{ g.itens }}" as="r">
-              <button onClick="{{ r.abrir }}" style="display:block;width:100%;text-align:left;border:0;border-bottom:1px solid #ECEEF0;background:#fff;padding:12px 18px;cursor:pointer" style-hover="background:#F7F8F9">
-                <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span style="font-family:'IBM Plex Mono';font-size:13px;color:#1F5F9E;font-weight:600">{{ r.numero }}</span><span style="font-size:12px;color:#5B636B">{{ r.quando }}</span></div>
-                <div style="font-size:13px;color:#2E353B;margin-top:5px">{{ r.acao }} · {{ r.autor }} · {{ r.servicoLabel }}</div>
-                <div style="font-size:13px;color:#5B636B;margin-top:4px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ r.detalhe }}</div>
-              </button>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(460px,100%),1fr));gap:20px;align-items:start">
+        <section style="background:#fff;border:1px solid #DDE2E8;border-radius:6px;box-shadow:0 1px 2px rgba(16,24,40,.04)">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:16px 18px 12px"><div><h2 style="font-size:15.5px;font-weight:600;margin:0;color:#1F2328">Processos atualizados recentemente</h2><div style="font-size:12.5px;color:#6B737B;margin-top:3px">Últimos 5 processos alterados neste sistema</div></div></div>
+          <div style="padding:0 18px 18px"><div style="overflow-x:auto"><div style="border:1px solid #E1E5EA;border-radius:4px;overflow:hidden;min-width:470px">
+            <div style="display:grid;grid-template-columns:150px 96px minmax(130px,1fr) 88px"><div style="padding:10px 12px;font-size:12.5px;font-weight:600;color:#3D454D;background:#F5F7F9;border-right:1px solid #E6E9ED">Nº do processo</div><div style="padding:10px 12px;font-size:12.5px;font-weight:600;color:#3D454D;background:#F5F7F9;border-right:1px solid #E6E9ED">Serviço</div><div style="padding:10px 12px;font-size:12.5px;font-weight:600;color:#3D454D;background:#F5F7F9;border-right:1px solid #E6E9ED">Órgão solicitante</div><div style="padding:10px 12px;font-size:12.5px;font-weight:600;color:#3D454D;background:#F5F7F9;border-right:1px solid #E6E9ED;border-right:none">Data</div></div>
+            <sc-for list="{{ painelRecentes }}" as="r" hint-placeholder-count="5">
+              <div onClick="{{ r.abrir }}" style="display:grid;grid-template-columns:150px 96px minmax(130px,1fr) 88px;border-top:1px solid #E6E9ED;align-items:stretch;cursor:pointer" style-hover="background:#F7F9FB"><div style="padding:10px 12px;font-size:13px;border-right:1px solid #E6E9ED;min-width:0;"><span style="font-family:'IBM Plex Mono';font-size:12.5px;font-weight:600;color:#1F5F9E;text-decoration:underline;text-underline-offset:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;text-decoration:none;font-size:12px;overflow:visible" title="{{ r.porQuem }}">{{ r.numero }}</span></div><div style="padding:10px 12px;font-size:13px;border-right:1px solid #E6E9ED;min-width:0;"><span style="display:block;font-size:12.5px;line-height:1.35">{{ r.servicoLabel }}</span></div><div style="padding:10px 12px;font-size:13px;border-right:1px solid #E6E9ED;min-width:0;"><span style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.35;font-size:12.5px" title="{{ r.orgao }}">{{ r.orgao }}</span></div><div style="padding:10px 12px;font-size:13px;border-right:1px solid #E6E9ED;min-width:0;border-right:none;color:#3D454D">{{ r.data }}</div></div>
             </sc-for>
-            <sc-if value="{{ g.vazio }}"><div style="padding:24px 18px;font-size:13px;line-height:1.6;color:#7A828A">{{ g.mensagem }}</div></sc-if>
-          </section>
-        </sc-for>
+            <sc-if value="{{ painelRecentesVazio }}" hint-placeholder-val="{{ false }}"><div style="padding:18px 14px;font-size:13px;color:#7A828A;border-top:1px solid #E6E9ED">As edições e os comentários aparecerão aqui assim que forem registrados.</div></sc-if>
+          </div></div></div>
+        </section>
+        <section style="background:#fff;border:1px solid #DDE2E8;border-radius:6px;box-shadow:0 1px 2px rgba(16,24,40,.04)">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:16px 18px 12px"><div><h2 style="font-size:15.5px;font-weight:600;margin:0;color:#1F2328">Pendências há mais tempo</h2><div style="font-size:12.5px;color:#6B737B;margin-top:3px">5 processos com maior tempo de pendência</div></div></div>
+          <div style="padding:0 18px 18px"><div style="overflow-x:auto"><div style="border:1px solid #E1E5EA;border-radius:4px;overflow:hidden;min-width:440px">
+            <div style="display:grid;grid-template-columns:150px 96px minmax(130px,1fr) 56px"><div style="padding:10px 12px;font-size:12.5px;font-weight:600;color:#3D454D;background:#F5F7F9;border-right:1px solid #E6E9ED">Nº do processo</div><div style="padding:10px 12px;font-size:12.5px;font-weight:600;color:#3D454D;background:#F5F7F9;border-right:1px solid #E6E9ED">Serviço</div><div style="padding:10px 12px;font-size:12.5px;font-weight:600;color:#3D454D;background:#F5F7F9;border-right:1px solid #E6E9ED">Órgão solicitante</div><div style="padding:10px 12px;font-size:12.5px;font-weight:600;color:#3D454D;background:#F5F7F9;border-right:1px solid #E6E9ED;border-right:none;text-align:right">Dias</div></div>
+            <sc-for list="{{ painelAntigos }}" as="r" hint-placeholder-count="5">
+              <div onClick="{{ r.abrir }}" style="display:grid;grid-template-columns:150px 96px minmax(130px,1fr) 56px;border-top:1px solid #E6E9ED;align-items:stretch;cursor:pointer" style-hover="background:#F7F9FB"><div style="padding:10px 12px;font-size:13px;border-right:1px solid #E6E9ED;min-width:0;"><span style="font-family:'IBM Plex Mono';font-size:12.5px;font-weight:600;color:#1F5F9E;text-decoration:underline;text-underline-offset:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;text-decoration:none;font-size:12px;overflow:visible">{{ r.principal }}</span></div><div style="padding:10px 12px;font-size:13px;border-right:1px solid #E6E9ED;min-width:0;"><span style="display:block;font-size:12.5px;line-height:1.35">{{ r.servicoLabel }}</span></div><div style="padding:10px 12px;font-size:13px;border-right:1px solid #E6E9ED;min-width:0;"><span style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.35;font-size:12.5px" title="{{ r.orgao }}">{{ r.orgao }}</span></div><div style="padding:10px 12px;font-size:13px;border-right:1px solid #E6E9ED;min-width:0;border-right:none;text-align:right;font-weight:600">{{ r.diasTxt }}</div></div>
+            </sc-for>
+            
+          </div></div></div>
+        </section>
       </div>
+    </div>
+    </sc-if>
 
-      <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #DADDE1"><h2 style="font-size:14.5px;font-weight:600;margin:0;color:#1F2328">Pendências há mais tempo</h2></div>
-        <div style="overflow-x:auto">
-          <div style="min-width:760px">
-            <div style="display:grid;grid-template-columns:200px 170px minmax(120px,1fr) 100px 70px;background:#F2F4F6;border-bottom:1px solid #DADDE1">
-              <div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D;padding-left:18px">Nº processo SEI</div><div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D">Serviço</div><div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D">Órgão solicitante</div><div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D">Recebido</div><div style="padding:9px 12px;font-size:12.5px;font-weight:600;color:#3D454D;text-align:right;padding-right:18px">Dias</div>
-            </div>
-            <sc-for list="{{ antigos }}" as="p" hint-placeholder-count="8">
-              <div onClick="{{ p.onClick }}" style="display:grid;grid-template-columns:200px 170px minmax(120px,1fr) 100px 70px;border-bottom:1px solid #ECEEF0;font-size:13.5px;align-items:center;cursor:pointer" style-hover="background:#F7F8F9">
-                <div style="padding:9px 12px 9px 18px;font-family:'IBM Plex Mono';font-size:13px;color:#1F5F9E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.principal }}</div>
-                <div style="padding:9px 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.servicoLabel }}</div>
-                <div style="padding:9px 12px;color:#2E353B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.orgao }}</div>
-                <div style="padding:9px 12px;color:#5B636B">{{ p.recebido }}</div>
-                <div style="padding:9px 18px 9px 12px;text-align:right;font-weight:600">{{ p.diasTxt }}</div>
-              </div>
-            </sc-for>
+    <sc-if value="{{ todosVisible }}" hint-placeholder-val="{{ false }}">
+    <div style="max-width:1400px;margin:0 auto;display:flex;flex-direction:column;gap:16px">
+      <section style="background:#fff;border:1px solid #DDE2E8;border-radius:6px;box-shadow:0 1px 2px rgba(16,24,40,.04)">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 18px;flex-wrap:wrap">
+          <div><h2 style="font-size:15.5px;font-weight:600;margin:0;color:#1F2328">Filtrar processos</h2><div style="font-size:12.5px;color:#6B737B;margin-top:3px">Combine os filtros. Os resultados atualizam na hora.</div></div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <sc-if value="{{ todosTemFiltro }}" hint-placeholder-val="{{ false }}"><button onClick="{{ limparTodos }}" style="background:transparent;border:none;color:#1F5F9E;font-size:13px;cursor:pointer;text-decoration:underline;padding:0 4px">Limpar todos os filtros</button></sc-if>
+            <sc-if value="{{ narrow }}" hint-placeholder-val="{{ false }}"><button onClick="{{ toggleTodosFiltros }}" style="height:36px;padding:0 14px;background:#fff;color:#1F2328;border:1px solid #C9CED3;border-radius:4px;font-weight:500;font-size:13.5px;cursor:pointer;white-space:nowrap">{{ todosFiltrosBtn }}</button></sc-if>
           </div>
         </div>
+        <sc-if value="{{ todosFiltrosVisiveis }}" hint-placeholder-val="{{ true }}">
+        <div style="padding:0 18px 16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(190px,100%),1fr));gap:12px 14px">
+          <div style="grid-column:1/-1"><label style="display:block;font-size:12.5px;font-weight:600;color:#3D454D;margin-bottom:5px">Buscar</label><input value="{{ todosF.q }}" onInput="{{ tf.q }}" placeholder="Nº SEI, órgão, pessoa, demanda, situação ou comentário" style="{{ tSel.q }}"></div>
+          <div><label style="display:block;font-size:12.5px;font-weight:600;color:#3D454D;margin-bottom:5px">Serviço</label><select value="{{ todosF.servico }}" onChange="{{ tf.servico }}" style="{{ tSel.servico }}"><option value="">Todos os serviços</option><sc-for list="{{ servicoOptions }}" as="o" hint-placeholder-count="8"><option value="{{ o.key }}">{{ o.label }}</option></sc-for></select></div>
+          <div><label style="display:block;font-size:12.5px;font-weight:600;color:#3D454D;margin-bottom:5px">Status</label><select value="{{ todosF.status }}" onChange="{{ tf.status }}" style="{{ tSel.status }}"><option value="">Todos</option><option value="pendente">Pendentes</option><option value="respondido">Respondidos</option></select></div>
+          <div><label style="display:block;font-size:12.5px;font-weight:600;color:#3D454D;margin-bottom:5px">Cor (marcação)</label><select value="{{ todosF.marc }}" onChange="{{ tf.marc }}" style="{{ tSel.marc }}"><option value="">Todas</option><sc-for list="{{ marcFiltroOpts }}" as="o" hint-placeholder-count="5"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select></div>
+          <div><label style="display:block;font-size:12.5px;font-weight:600;color:#3D454D;margin-bottom:5px">Prazo</label><select value="{{ todosF.prazo }}" onChange="{{ tf.prazo }}" style="{{ tSel.prazo }}"><option value="">Todos</option><option value="venc">Vencido</option><option value="7">Vence em até 7 dias</option><option value="com">Com prazo informado</option></select></div>
+          <div><label style="display:block;font-size:12.5px;font-weight:600;color:#3D454D;margin-bottom:5px">Dias em aberto</label><select value="{{ todosF.dias }}" onChange="{{ tf.dias }}" style="{{ tSel.dias }}"><option value="">Todos</option><option value="a">Até 15 dias</option><option value="b">16 a 30 dias</option><option value="c">Mais de 30 dias</option></select></div>
+          <div><label style="display:block;font-size:12.5px;font-weight:600;color:#3D454D;margin-bottom:5px">Sem atualização</label><select value="{{ todosF.parado }}" onChange="{{ tf.parado }}" style="{{ tSel.parado }}"><option value="">Todos</option><option value="15">Há mais de 15 dias</option><option value="30">Há mais de 30 dias</option><option value="60">Há mais de 60 dias</option></select></div>
+          <div><label style="display:block;font-size:12.5px;font-weight:600;color:#3D454D;margin-bottom:5px">Ano do processo</label><select value="{{ todosF.ano }}" onChange="{{ tf.ano }}" style="{{ tSel.ano }}"><option value="">Todos</option><sc-for list="{{ todosAnoOpts }}" as="a" hint-placeholder-count="2"><option value="{{ a }}">{{ a }}</option></sc-for></select></div>
+          <div><label style="display:block;font-size:12.5px;font-weight:600;color:#3D454D;margin-bottom:5px">Mês de recebimento</label><select value="{{ todosF.mes }}" onChange="{{ tf.mes }}" style="{{ tSel.mes }}"><option value="">Todos</option><sc-for list="{{ todosMesOpts }}" as="m" hint-placeholder-count="6"><option value="{{ m.v }}">{{ m.l }}</option></sc-for></select></div>
+          <div><label style="display:block;font-size:12.5px;font-weight:600;color:#3D454D;margin-bottom:5px">Órgão solicitante</label><input value="{{ todosF.orgao }}" onInput="{{ tf.orgao }}" placeholder="Ex.: Promotoria, Defensoria" style="{{ tSel.orgao }}"></div>
+        </div>
+        </sc-if>
+        <sc-if value="{{ todosTemFiltro }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:12px 18px;border-top:1px solid #ECEEF0;display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:#FAFBFC;border-radius:0 0 6px 6px">
+            <span style="font-size:12.5px;font-weight:600;color:#3D454D">Filtros aplicados:</span>
+            <sc-for list="{{ todosChips }}" as="c" hint-placeholder-count="2"><button onClick="{{ c.remover }}" title="Remover este filtro" style="display:inline-flex;align-items:center;gap:7px;height:28px;padding:0 10px;border:1px solid #BFD0E2;background:#EEF4FA;color:#12355B;border-radius:14px;font-size:12.5px;cursor:pointer" style-hover="background:#E0EBF6">{{ c.label }}<span style="font-size:15px;line-height:1">×</span></button></sc-for>
+          </div>
+        </sc-if>
+      </section>
+
+      <section style="background:#fff;border:1px solid #DDE2E8;border-radius:6px;box-shadow:0 1px 2px rgba(16,24,40,.04)">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px 16px;padding:12px 18px;border-bottom:1px solid #E6E9ED;flex-wrap:wrap">
+          <div style="font-size:13.5px;color:#3D454D"><strong style="color:#1F2328">{{ todosTotalTxt }}</strong> {{ todosFaixaTxt }}</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <label style="font-size:12.5px;color:#5B636B">Ordenar por</label>
+            <select value="{{ todosSort }}" onChange="{{ setTodosSort }}" aria-label="Ordenar por" style="height:36px;padding:0 8px;border:1px solid #C9CED3;border-radius:4px;font-size:13px;background:#fff;color:#1F2328"><sc-for list="{{ todosSortOpts }}" as="o" hint-placeholder-count="8"><option value="{{ o.k }}">{{ o.l }}</option></sc-for></select>
+            <button onClick="{{ toggleTodosDir }}" title="Inverter a ordem" style="height:36px;padding:0 14px;background:#fff;color:#1F2328;border:1px solid #C9CED3;border-radius:4px;font-weight:500;font-size:13.5px;cursor:pointer;white-space:nowrap">{{ todosDirLabel }}</button>
+            <sc-if value="{{ todosTableOn }}" hint-placeholder-val="{{ true }}">
+            <div style="position:relative">
+              <button onClick="{{ toggleTodosCols }}" style="height:36px;padding:0 14px;background:#fff;color:#1F2328;border:1px solid #C9CED3;border-radius:4px;font-weight:500;font-size:13.5px;cursor:pointer;white-space:nowrap">Colunas ({{ todosColsN }})</button>
+              <sc-if value="{{ todosColsOpen }}" hint-placeholder-val="{{ false }}">
+                <div style="position:absolute;top:42px;right:0;z-index:30;width:280px;background:#fff;border:1px solid #C9CED3;border-radius:6px;box-shadow:0 8px 24px rgba(20,30,40,.16)">
+                  <div style="padding:10px 14px;border-bottom:1px solid #E6E9ED;font-size:13px;font-weight:600">Cabeçalhos visíveis</div>
+                  <div style="padding:6px 0;max-height:360px;overflow-y:auto">
+                    <div style="display:flex;align-items:center;gap:10px;padding:7px 14px;font-size:13px;color:#7A828A"><span style="width:15px;height:15px;background:#C9CED3;flex-shrink:0;border-radius:2px"></span>Nº do processo SEI (fixo)</div>
+                    <sc-for list="{{ todosColOpts }}" as="c" hint-placeholder-count="10">
+                      <button onClick="{{ c.onClick }}" style="width:100%;display:flex;align-items:center;gap:10px;padding:7px 14px;background:transparent;border:none;cursor:pointer;font-size:13px;color:#1F2328;text-align:left" style-hover="background:#F2F4F6"><span style="{{ c.box }}">{{ c.tick }}</span>{{ c.label }}</button>
+                    </sc-for>
+                  </div>
+                  <div style="padding:8px 14px;border-top:1px solid #E6E9ED;display:flex;justify-content:space-between;align-items:center;gap:8px">
+                    <span style="display:flex;gap:12px"><button onClick="{{ todosColsPadrao }}" style="background:transparent;border:none;color:#1F5F9E;font-size:13px;cursor:pointer;padding:0;text-decoration:underline">Padrão</button><button onClick="{{ todosColsTodas }}" style="background:transparent;border:none;color:#1F5F9E;font-size:13px;cursor:pointer;padding:0;text-decoration:underline">Todas</button></span>
+                    <button onClick="{{ toggleTodosCols }}" style="height:34px;padding:0 14px;background:#12355B;color:#fff;border:1px solid #12355B;border-radius:4px;font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap;height:30px">Fechar</button>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+            </sc-if>
+          </div>
+        </div>
+
+        <sc-if value="{{ todosTableOn }}" hint-placeholder-val="{{ true }}">
+        <div style="overflow:auto;max-height:calc(100vh - 250px)">
+          <div style="min-width:{{ todosMinW }}">
+            <div style="display:grid;grid-template-columns:{{ todosGrid }};position:sticky;top:0;z-index:3;background:#F5F7F9;border-bottom:1px solid #C9CED3">
+              <button onClick="{{ tsH.numero }}" style="align-self:stretch;background:#F5F7F9;border:none;border-right:1px solid #E6E9ED;text-align:left;cursor:pointer;padding:10px 10px;font-size:12.5px;font-weight:600;color:#3D454D;line-height:1.3;display:flex;align-items:flex-start;gap:5px;position:sticky;left:0;z-index:1;border-right:1px solid #DADDE1" style-hover="background:#ECEFF3">Nº do processo<span style="font-size:9px;color:#12355B;flex-shrink:0;padding-top:2px">{{ tArr.numero }}</span></button>
+              <sc-if value="{{ tv.servico }}" hint-placeholder-val="{{ true }}"><button onClick="{{ tsH.servico }}" style="align-self:stretch;background:#F5F7F9;border:none;border-right:1px solid #E6E9ED;text-align:left;cursor:pointer;padding:10px 10px;font-size:12.5px;font-weight:600;color:#3D454D;line-height:1.3;display:flex;align-items:flex-start;gap:5px" style-hover="background:#ECEFF3">Serviço<span style="font-size:9px;color:#12355B;flex-shrink:0;padding-top:2px">{{ tArr.servico }}</span></button></sc-if>
+              <sc-if value="{{ tv.status }}" hint-placeholder-val="{{ true }}"><button onClick="{{ tsH.status }}" style="align-self:stretch;background:#F5F7F9;border:none;border-right:1px solid #E6E9ED;text-align:left;cursor:pointer;padding:10px 10px;font-size:12.5px;font-weight:600;color:#3D454D;line-height:1.3;display:flex;align-items:flex-start;gap:5px" style-hover="background:#ECEFF3">Status<span style="font-size:9px;color:#12355B;flex-shrink:0;padding-top:2px">{{ tArr.status }}</span></button></sc-if>
+              <sc-if value="{{ tv.marcacao }}" hint-placeholder-val="{{ true }}"><button onClick="{{ tsH.marcacao }}" style="align-self:stretch;background:#F5F7F9;border:none;border-right:1px solid #E6E9ED;text-align:left;cursor:pointer;padding:10px 10px;font-size:12.5px;font-weight:600;color:#3D454D;line-height:1.3;display:flex;align-items:flex-start;gap:5px" style-hover="background:#ECEFF3">Cor<span style="font-size:9px;color:#12355B;flex-shrink:0;padding-top:2px">{{ tArr.marcacao }}</span></button></sc-if>
+              <sc-if value="{{ tv.recebido }}" hint-placeholder-val="{{ true }}"><button onClick="{{ tsH.recebido }}" style="align-self:stretch;background:#F5F7F9;border:none;border-right:1px solid #E6E9ED;text-align:left;cursor:pointer;padding:10px 10px;font-size:12.5px;font-weight:600;color:#3D454D;line-height:1.3;display:flex;align-items:flex-start;gap:5px" style-hover="background:#ECEFF3">Recebido<span style="font-size:9px;color:#12355B;flex-shrink:0;padding-top:2px">{{ tArr.recebido }}</span></button></sc-if>
+              <sc-if value="{{ tv.memo }}" hint-placeholder-val="{{ true }}"><button onClick="{{ tsH.memo }}" style="align-self:stretch;background:#F5F7F9;border:none;border-right:1px solid #E6E9ED;text-align:left;cursor:pointer;padding:10px 10px;font-size:12.5px;font-weight:600;color:#3D454D;line-height:1.3;display:flex;align-items:flex-start;gap:5px" style-hover="background:#ECEFF3">Memo enviado<span style="font-size:9px;color:#12355B;flex-shrink:0;padding-top:2px">{{ tArr.memo }}</span></button></sc-if>
+              <sc-if value="{{ tv.orgao }}" hint-placeholder-val="{{ true }}"><button onClick="{{ tsH.orgao }}" style="align-self:stretch;background:#F5F7F9;border:none;border-right:1px solid #E6E9ED;text-align:left;cursor:pointer;padding:10px 10px;font-size:12.5px;font-weight:600;color:#3D454D;line-height:1.3;display:flex;align-items:flex-start;gap:5px" style-hover="background:#ECEFF3">Órgão solicitante<span style="font-size:9px;color:#12355B;flex-shrink:0;padding-top:2px">{{ tArr.orgao }}</span></button></sc-if>
+              <sc-if value="{{ tv.demanda }}" hint-placeholder-val="{{ true }}"><button onClick="{{ tsH.demanda }}" style="align-self:stretch;background:#F5F7F9;border:none;border-right:1px solid #E6E9ED;text-align:left;cursor:pointer;padding:10px 10px;font-size:12.5px;font-weight:600;color:#3D454D;line-height:1.3;display:flex;align-items:flex-start;gap:5px" style-hover="background:#ECEFF3">Demanda<span style="font-size:9px;color:#12355B;flex-shrink:0;padding-top:2px">{{ tArr.demanda }}</span></button></sc-if>
+              <sc-if value="{{ tv.usuario }}" hint-placeholder-val="{{ true }}"><button onClick="{{ tsH.usuario }}" style="align-self:stretch;background:#F5F7F9;border:none;border-right:1px solid #E6E9ED;text-align:left;cursor:pointer;padding:10px 10px;font-size:12.5px;font-weight:600;color:#3D454D;line-height:1.3;display:flex;align-items:flex-start;gap:5px" style-hover="background:#ECEFF3">Pessoa/família<span style="font-size:9px;color:#12355B;flex-shrink:0;padding-top:2px">{{ tArr.usuario }}</span></button></sc-if>
+              <sc-if value="{{ tv.situacao }}" hint-placeholder-val="{{ true }}"><button onClick="{{ tsH.situacao }}" style="align-self:stretch;background:#F5F7F9;border:none;border-right:1px solid #E6E9ED;text-align:left;cursor:pointer;padding:10px 10px;font-size:12.5px;font-weight:600;color:#3D454D;line-height:1.3;display:flex;align-items:flex-start;gap:5px" style-hover="background:#ECEFF3">Situação<span style="font-size:9px;color:#12355B;flex-shrink:0;padding-top:2px">{{ tArr.situacao }}</span></button></sc-if>
+              <sc-if value="{{ tv.respSetor }}" hint-placeholder-val="{{ true }}"><button onClick="{{ tsH.respSetor }}" style="align-self:stretch;background:#F5F7F9;border:none;border-right:1px solid #E6E9ED;text-align:left;cursor:pointer;padding:10px 10px;font-size:12.5px;font-weight:600;color:#3D454D;line-height:1.3;display:flex;align-items:flex-start;gap:5px" style-hover="background:#ECEFF3">Resposta do setor<span style="font-size:9px;color:#12355B;flex-shrink:0;padding-top:2px">{{ tArr.respSetor }}</span></button></sc-if>
+              <sc-if value="{{ tv.respGabinete }}" hint-placeholder-val="{{ true }}"><button onClick="{{ tsH.respGabinete }}" style="align-self:stretch;background:#F5F7F9;border:none;border-right:1px solid #E6E9ED;text-align:left;cursor:pointer;padding:10px 10px;font-size:12.5px;font-weight:600;color:#3D454D;line-height:1.3;display:flex;align-items:flex-start;gap:5px" style-hover="background:#ECEFF3">Resposta do Gabinete<span style="font-size:9px;color:#12355B;flex-shrink:0;padding-top:2px">{{ tArr.respGabinete }}</span></button></sc-if>
+              <sc-if value="{{ tv.conclusao }}" hint-placeholder-val="{{ true }}"><button onClick="{{ tsH.conclusao }}" style="align-self:stretch;background:#F5F7F9;border:none;border-right:1px solid #E6E9ED;text-align:left;cursor:pointer;padding:10px 10px;font-size:12.5px;font-weight:600;color:#3D454D;line-height:1.3;display:flex;align-items:flex-start;gap:5px" style-hover="background:#ECEFF3">Conclusão<span style="font-size:9px;color:#12355B;flex-shrink:0;padding-top:2px">{{ tArr.conclusao }}</span></button></sc-if>
+              <sc-if value="{{ tv.obs }}" hint-placeholder-val="{{ true }}"><button onClick="{{ tsH.obs }}" style="align-self:stretch;background:#F5F7F9;border:none;border-right:1px solid #E6E9ED;text-align:left;cursor:pointer;padding:10px 10px;font-size:12.5px;font-weight:600;color:#3D454D;line-height:1.3;display:flex;align-items:flex-start;gap:5px" style-hover="background:#ECEFF3">Comentário recente<span style="font-size:9px;color:#12355B;flex-shrink:0;padding-top:2px">{{ tArr.obs }}</span></button></sc-if>
+              <sc-if value="{{ tv.prazo }}" hint-placeholder-val="{{ true }}"><button onClick="{{ tsH.prazo }}" style="align-self:stretch;background:#F5F7F9;border:none;border-right:1px solid #E6E9ED;text-align:left;cursor:pointer;padding:10px 10px;font-size:12.5px;font-weight:600;color:#3D454D;line-height:1.3;display:flex;align-items:flex-start;gap:5px" style-hover="background:#ECEFF3">Prazo<span style="font-size:9px;color:#12355B;flex-shrink:0;padding-top:2px">{{ tArr.prazo }}</span></button></sc-if>
+              <sc-if value="{{ tv.dias }}" hint-placeholder-val="{{ true }}"><button onClick="{{ tsH.dias }}" style="align-self:stretch;background:#F5F7F9;border:none;border-right:1px solid #E6E9ED;text-align:left;cursor:pointer;padding:10px 10px;font-size:12.5px;font-weight:600;color:#3D454D;line-height:1.3;display:flex;align-items:flex-start;gap:5px" style-hover="background:#ECEFF3">Dias em aberto<span style="font-size:9px;color:#12355B;flex-shrink:0;padding-top:2px">{{ tArr.dias }}</span></button></sc-if>
+              <sc-if value="{{ tv.ultima }}" hint-placeholder-val="{{ true }}"><button onClick="{{ tsH.ultima }}" style="align-self:stretch;background:#F5F7F9;border:none;border-right:1px solid #E6E9ED;text-align:left;cursor:pointer;padding:10px 10px;font-size:12.5px;font-weight:600;color:#3D454D;line-height:1.3;display:flex;align-items:flex-start;gap:5px" style-hover="background:#ECEFF3">Última atualização<span style="font-size:9px;color:#12355B;flex-shrink:0;padding-top:2px">{{ tArr.ultima }}</span></button></sc-if>
+              <sc-if value="{{ tv.parado }}" hint-placeholder-val="{{ true }}"><button onClick="{{ tsH.parado }}" style="align-self:stretch;background:#F5F7F9;border:none;border-right:1px solid #E6E9ED;text-align:left;cursor:pointer;padding:10px 10px;font-size:12.5px;font-weight:600;color:#3D454D;line-height:1.3;display:flex;align-items:flex-start;gap:5px" style-hover="background:#ECEFF3">Sem atualização há<span style="font-size:9px;color:#12355B;flex-shrink:0;padding-top:2px">{{ tArr.parado }}</span></button></sc-if>
+              <div style="align-self:stretch;background:#F5F7F9;border:none;border-right:1px solid #E6E9ED;text-align:left;cursor:pointer;padding:10px 10px;font-size:12.5px;font-weight:600;color:#3D454D;line-height:1.3;display:flex;align-items:flex-start;gap:5px;cursor:default;border-right:none;justify-content:center">Ações</div>
+            </div>
+            <sc-for list="{{ todosLinhas }}" as="r" hint-placeholder-count="10">
+              <div onClick="{{ r.abrir }}" style="display:grid;grid-template-columns:{{ todosGrid }};border-bottom:1px solid #ECEEF0;cursor:pointer;align-items:start" style-hover="background:#F7F9FB">
+                <div style="padding:10px 12px;position:sticky;left:0;align-self:stretch;background:#fff;border-right:1px solid #DADDE1;border-left:4px solid {{ r.marcBar }}">
+                  <div style="font-family:'IBM Plex Mono';font-weight:600;font-size:12.5px;color:#1F5F9E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ r.numero }}">{{ r.principal }}</div>
+                  <sc-if value="{{ r.temVinc }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:#5B636B;margin-top:3px">{{ r.vincTxt }}</div></sc-if>
+                </div>
+                <sc-if value="{{ tv.servico }}" hint-placeholder-val="{{ true }}"><div style="padding:10px 10px;border-right:1px solid #EEF0F2;align-self:stretch;font-size:13px;line-height:1.45;min-width:0"><div style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ r.servicoLabel }}</div></div></sc-if>
+                <sc-if value="{{ tv.status }}" hint-placeholder-val="{{ true }}"><div style="padding:10px 10px;border-right:1px solid #EEF0F2;align-self:stretch;font-size:13px;line-height:1.45;min-width:0"><span style="display:inline-block;padding:2px 9px;border-radius:10px;font-size:12px;font-weight:600;white-space:nowrap;background:{{ r.stBg }};color:{{ r.stCor }};border:1px solid {{ r.stBorda }}">{{ r.statusTxt }}</span></div></sc-if>
+                <sc-if value="{{ tv.marcacao }}" hint-placeholder-val="{{ true }}"><div style="padding:10px 10px;border-right:1px solid #EEF0F2;align-self:stretch;font-size:13px;line-height:1.45;min-width:0"><select value="{{ r.marcacaoVal }}" onClick="{{ r.pararClique }}" onChange="{{ r.mudarMarc }}" aria-label="Cor (marcação)" style="height:28px;max-width:100%;padding:0 4px;font-size:12.5px;border:1px solid {{ r.marcBar }};border-left:6px solid {{ r.marcBar }};border-radius:3px;background:#fff;color:{{ r.marcFg }};cursor:pointer"><sc-for list="{{ marcOptsLista }}" as="o" hint-placeholder-count="5"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select></div></sc-if>
+                <sc-if value="{{ tv.recebido }}" hint-placeholder-val="{{ true }}"><div style="padding:10px 10px;border-right:1px solid #EEF0F2;align-self:stretch;font-size:13px;line-height:1.45;min-width:0"><div style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden" title="{{ r.recebido }}">{{ r.recebido }}</div></div></sc-if>
+                <sc-if value="{{ tv.memo }}" hint-placeholder-val="{{ true }}"><div style="padding:10px 10px;border-right:1px solid #EEF0F2;align-self:stretch;font-size:13px;line-height:1.45;min-width:0"><div style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ r.memo }}</div></div></sc-if>
+                <sc-if value="{{ tv.orgao }}" hint-placeholder-val="{{ true }}"><div style="padding:10px 10px;border-right:1px solid #EEF0F2;align-self:stretch;font-size:13px;line-height:1.45;min-width:0"><div style="display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-weight:500" title="{{ r.orgao }}">{{ r.orgao }}</div></div></sc-if>
+                <sc-if value="{{ tv.demanda }}" hint-placeholder-val="{{ true }}"><div style="padding:10px 10px;border-right:1px solid #EEF0F2;align-self:stretch;font-size:13px;line-height:1.45;min-width:0"><div style="display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;color:#2E353B" title="{{ r.demanda }}">{{ r.demanda }}</div></div></sc-if>
+                <sc-if value="{{ tv.usuario }}" hint-placeholder-val="{{ true }}"><div style="padding:10px 10px;border-right:1px solid #EEF0F2;align-self:stretch;font-size:13px;line-height:1.45;min-width:0"><div style="display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">{{ r.usuario }}</div></div></sc-if>
+                <sc-if value="{{ tv.situacao }}" hint-placeholder-val="{{ true }}"><div style="padding:10px 10px;border-right:1px solid #EEF0F2;align-self:stretch;font-size:13px;line-height:1.45;min-width:0"><div style="display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">{{ r.situacao }}</div></div></sc-if>
+                <sc-if value="{{ tv.respSetor }}" hint-placeholder-val="{{ true }}"><div style="padding:10px 10px;border-right:1px solid #EEF0F2;align-self:stretch;font-size:13px;line-height:1.45;min-width:0"><div style="display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;color:{{ r.setorCor }}">{{ r.respSetor }}</div></div></sc-if>
+                <sc-if value="{{ tv.respGabinete }}" hint-placeholder-val="{{ true }}"><div style="padding:10px 10px;border-right:1px solid #EEF0F2;align-self:stretch;font-size:13px;line-height:1.45;min-width:0"><div style="display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;color:{{ r.gabCor }}">{{ r.respGabinete }}</div></div></sc-if>
+                <sc-if value="{{ tv.conclusao }}" hint-placeholder-val="{{ true }}"><div style="padding:10px 10px;border-right:1px solid #EEF0F2;align-self:stretch;font-size:13px;line-height:1.45;min-width:0"><div style="display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">{{ r.conclusao }}</div></div></sc-if>
+                <sc-if value="{{ tv.obs }}" hint-placeholder-val="{{ true }}"><div style="padding:10px 10px;border-right:1px solid #EEF0F2;align-self:stretch;font-size:13px;line-height:1.45;min-width:0"><div style="display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;color:#2E353B">{{ r.obsTxt }}</div></div></sc-if>
+                <sc-if value="{{ tv.prazo }}" hint-placeholder-val="{{ true }}"><div style="padding:10px 10px;border-right:1px solid #EEF0F2;align-self:stretch;font-size:13px;line-height:1.45;min-width:0"><span style="font-weight:600;color:{{ r.prazoCor }}">{{ r.prazoTxt }}</span></div></sc-if>
+                <sc-if value="{{ tv.dias }}" hint-placeholder-val="{{ true }}"><div style="padding:10px 10px;border-right:1px solid #EEF0F2;align-self:stretch;font-size:13px;line-height:1.45;min-width:0"><div style="text-align:right;font-weight:600;color:{{ r.diasCor }}">{{ r.diasTxt }}</div></div></sc-if>
+                <sc-if value="{{ tv.ultima }}" hint-placeholder-val="{{ true }}"><div style="padding:10px 10px;border-right:1px solid #EEF0F2;align-self:stretch;font-size:13px;line-height:1.45;min-width:0"><div style="font-weight:500;color:#2E353B">{{ r.ultAutor }}</div><div style="font-size:12px;color:#7A828A">{{ r.ultQuando }}</div></div></sc-if>
+                <sc-if value="{{ tv.parado }}" hint-placeholder-val="{{ true }}"><div style="padding:10px 10px;border-right:1px solid #EEF0F2;align-self:stretch;font-size:13px;line-height:1.45;min-width:0"><span style="font-weight:600;color:{{ r.paradoCor }}">{{ r.paradoTxt }}</span></div></sc-if>
+                <div style="padding:8px 10px;display:flex;justify-content:center;align-self:stretch;align-items:flex-start"><button onClick="{{ r.abrir }}" style="height:34px;padding:0 14px;background:#12355B;color:#fff;border:1px solid #12355B;border-radius:4px;font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap;height:30px;padding:0 12px">Abrir</button></div>
+              </div>
+            </sc-for>
+            <sc-if value="{{ todosVazio }}" hint-placeholder-val="{{ false }}"><div style="padding:48px 18px;text-align:center;color:#5B636B;font-size:14px">Nenhum processo corresponde aos filtros. <button onClick="{{ limparTodos }}" style="background:transparent;border:none;color:#1F5F9E;font-size:14px;cursor:pointer;text-decoration:underline">Limpar filtros</button></div></sc-if>
+          </div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ todosCardsOn }}" hint-placeholder-val="{{ false }}">
+        <div>
+          <sc-for list="{{ todosLinhas }}" as="r" hint-placeholder-count="6">
+            <div onClick="{{ r.abrir }}" style="padding:14px 16px;border-bottom:1px solid #ECEEF0;border-left:4px solid {{ r.marcBar }};cursor:pointer" style-hover="background:#F7F9FB">
+              <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+                <span style="font-family:'IBM Plex Mono';font-weight:600;font-size:13px;color:#1F5F9E">{{ r.principal }}</span><span style="display:inline-block;padding:2px 9px;border-radius:10px;font-size:12px;font-weight:600;white-space:nowrap;background:{{ r.stBg }};color:{{ r.stCor }};border:1px solid {{ r.stBorda }}">{{ r.statusTxt }}</span>
+              </div>
+              <div style="font-size:12.5px;color:#5B636B;margin-top:4px">{{ r.servicoLabel }} · Recebido em {{ r.recebido }}</div>
+              <div style="font-size:14px;font-weight:500;line-height:1.4;margin-top:6px">{{ r.orgao }}</div>
+              <div style="font-size:13px;color:#2E353B;line-height:1.45;margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ r.demanda }}</div>
+              <div style="display:flex;gap:6px 14px;flex-wrap:wrap;margin-top:8px;font-size:12.5px">
+                <span style="font-weight:600;color:{{ r.prazoCor }}">{{ r.prazoTxt }}</span>
+                <sc-if value="{{ r.temDias }}" hint-placeholder-val="{{ true }}"><span style="color:{{ r.diasCor }};font-weight:600">{{ r.diasTxt }} dias em aberto</span></sc-if>
+                <span style="color:#7A828A">Atualizado: {{ r.ultAutor }} · {{ r.ultQuando }}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px"><select value="{{ r.marcacaoVal }}" onClick="{{ r.pararClique }}" onChange="{{ r.mudarMarc }}" aria-label="Cor (marcação)" style="height:28px;max-width:100%;padding:0 4px;font-size:12.5px;border:1px solid {{ r.marcBar }};border-left:6px solid {{ r.marcBar }};border-radius:3px;background:#fff;color:{{ r.marcFg }};cursor:pointer"><sc-for list="{{ marcOptsLista }}" as="o" hint-placeholder-count="5"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select><button onClick="{{ r.abrir }}" style="height:34px;padding:0 14px;background:#12355B;color:#fff;border:1px solid #12355B;border-radius:4px;font-weight:600;font-size:13px;cursor:pointer;white-space:nowrap;height:32px">Abrir</button></div>
+            </div>
+          </sc-for>
+          <sc-if value="{{ todosVazio }}" hint-placeholder-val="{{ false }}"><div style="padding:40px 16px;text-align:center;color:#5B636B;font-size:14px">Nenhum processo corresponde aos filtros.</div></sc-if>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ todosPaginacaoOn }}" hint-placeholder-val="{{ true }}">
+          <div style="padding:11px 18px;border-top:1px solid #E6E9ED;background:#FAFBFC;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-radius:0 0 6px 6px">
+            <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#5B636B"><span>Itens por página</span><select value="{{ todosPorPagTxt }}" onChange="{{ setTodosPorPag }}" style="height:32px;padding:0 8px;border:1px solid #C9CED3;background:#fff;border-radius:4px;font-size:13px"><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <button onClick="{{ todosPagAnt }}" disabled="{{ todosPrimeira }}" style="height:36px;padding:0 14px;background:#fff;color:#1F2328;border:1px solid #C9CED3;border-radius:4px;font-weight:500;font-size:13.5px;cursor:pointer;white-space:nowrap;height:32px">Anterior</button>
+              <span style="min-width:120px;text-align:center;font-size:13px;color:#3D454D">Página {{ todosPagTxt }} de {{ todosPagsTxt }}</span>
+              <button onClick="{{ todosPagProx }}" disabled="{{ todosUltima }}" style="height:36px;padding:0 14px;background:#fff;color:#1F2328;border:1px solid #C9CED3;border-radius:4px;font-weight:500;font-size:13.5px;cursor:pointer;white-space:nowrap;height:32px">Próxima</button>
+            </div>
+          </div>
+        </sc-if>
       </section>
     </div>
     </sc-if>
@@ -500,7 +619,7 @@
 
     <sc-if value="{{ processoVisible }}" hint-placeholder-val="{{ false }}">
     <div style="max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:16px">
-      <div><button onClick="{{ backToServico }}" style="background:transparent;border:none;color:#1F5F9E;font-size:13.5px;cursor:pointer;padding:0;text-decoration:underline">← Voltar para {{ proc.servicoLabel }}</button></div>
+      <div><button onClick="{{ backToServico }}" style="background:transparent;border:none;color:#1F5F9E;font-size:13.5px;cursor:pointer;padding:0;text-decoration:underline">← Voltar para {{ voltarLabel }}</button></div>
 
       <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px;padding:18px 22px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:flex-start">
         <div style="min-width:0">
@@ -834,7 +953,7 @@ class Component extends DCLogic {
     screen:'login', role:null,
     loginEmail:'spsmediasemcas@gmail.com', loginSenha:'', loginErro:'', loginCarregando:false, dbOnline:false,
     activeServico:'PAEFI', activeTab:'pendentes', comentarioBusca:'', comentarioOrdem:'recentes',
-    selectedId:null, linkTexto:'', obsNumeroReit:'', formDup:[], formDupOk:false, obsTitulo:'', obsCategoria:'comentario', obsTexto:'', obsDataEvento:'', obsMensagemSei:'', obsAnexos:[], anexosCarregando:false, obsErro:false, obsErroTexto:'', comentarioEditando:null, storageErro:'', responsavelTexto:'', proximaAcaoTexto:'', proximaDataTexto:'', acompanhamentoSalvo:false, editKey:null, editValue:'',
+    selectedId:null, linkTexto:'', todosF:{q:'',servico:'',status:'',marc:'',prazo:'',dias:'',parado:'',ano:'',orgao:'',orgaoGrupo:'',mes:''}, todosSort:'recebido', todosDir:'desc', todosPag:1, todosPorPag:25, todosColsSel:null, todosColsOpen:false, todosFiltrosAbertos:false, voltarPara:'servico', obsNumeroReit:'', formDup:[], formDupOk:false, obsTitulo:'', obsCategoria:'comentario', obsTexto:'', obsDataEvento:'', obsMensagemSei:'', obsAnexos:[], anexosCarregando:false, obsErro:false, obsErroTexto:'', comentarioEditando:null, storageErro:'', responsavelTexto:'', proximaAcaoTexto:'', proximaDataTexto:'', acompanhamentoSalvo:false, editKey:null, editValue:'',
     sortKey:'recebido', sortDir:'asc', vincTexto:'', vincNota:'', pagina:1, porPagina:25, filtros:{q:'',campo:'',setor:'',gabinete:'',obs:'',dias:'',etapa:'',unidade:'',reit:'',marc:'',ano:'',prazo:''}, oficioTexto:'', vw:(typeof window!=='undefined'?window.innerWidth:1400), menuOpen:false, colsOpen:false, colsSel:null,
     form:{servico:'PAEFI',encaminhamento:'',numero:'',recebido:'',orgao:'',usuario:'',link:'',demanda:'',setorReceber:'',dataEvento:'',memo:'',situacao:'',prazoDias:'',prazoData:'',marcacao:''},
     servicos:[], processos:[], log:[], user:{nome:'',perfil:''}, confirmDel:false, logUser:'', logAcao:'', logQ:'',
@@ -1065,6 +1184,28 @@ class Component extends DCLogic {
   trocarSenha=async()=>{if(!this.session)return;const atual=this.state.senhaAtual,nova=this.state.senhaNova,conf=this.state.senhaConfirma,email=(this.session.user&&this.session.user.email)||'';if(!atual||nova.length<8){this.setState({senhaErro:'Informe a senha atual e uma nova senha com no mínimo 8 caracteres.',senhaOk:''});return;}if(nova!==conf){this.setState({senhaErro:'A confirmação não confere com a nova senha.',senhaOk:''});return;}if(nova===atual){this.setState({senhaErro:'A nova senha precisa ser diferente da atual.',senhaOk:''});return;}this.setState({senhaCarregando:true,senhaErro:'',senhaOk:''});try{const sessao=await this.supa('/auth/v1/token?grant_type=password',{method:'POST',token:this.SUPA_KEY,body:{email,password:atual}});await this.supa('/auth/v1/user',{method:'PUT',token:sessao.access_token,body:{password:nova}});if(sessao&&sessao.access_token){this.session=sessao;localStorage.setItem('semcas_supabase_session',JSON.stringify(sessao));}this.setState({senhaCarregando:false,senhaAtual:'',senhaNova:'',senhaConfirma:'',senhaOk:'Senha alterada. Use a nova senha no próximo acesso.',senhaErro:''});}catch(e){this.setState({senhaCarregando:false,senhaOk:'',senhaErro:/invalid login credentials|invalid_credentials/i.test(e.message)?'A senha atual está incorreta.':e.message});}};
   goPainel=()=>this.setState({screen:'painel',menuOpen:false});
   goPendencias=()=>this.setState({screen:'pendencias',menuOpen:false});
+  // ===== Todos os Processos =====
+  TODOS0={q:'',servico:'',status:'',marc:'',prazo:'',dias:'',parado:'',ano:'',orgao:'',orgaoGrupo:'',mes:''};
+  TCOLS=[['servico','Serviço','150px'],['status','Status','112px'],['marcacao','Cor','140px'],['recebido','Recebido','100px'],['memo','Memo enviado','120px'],['orgao','Órgão solicitante','minmax(170px,1fr)'],['demanda','Demanda','minmax(220px,1.6fr)'],['usuario','Pessoa/família','minmax(150px,1fr)'],['situacao','Situação','minmax(190px,1.3fr)'],['respSetor','Resposta do setor','minmax(150px,1fr)'],['respGabinete','Resposta do Gabinete','minmax(150px,1fr)'],['conclusao','Conclusão','minmax(150px,1fr)'],['obs','Comentário recente','minmax(180px,1.2fr)'],['prazo','Prazo','170px'],['dias','Dias em aberto','96px'],['ultima','Última atualização','160px'],['parado','Sem atualização há','112px']];
+  TCOLS_PADRAO=['servico','status','marcacao','recebido','orgao','demanda','situacao','prazo','dias'];
+  todosColsAtuais(){ if(this.state.todosColsSel) return this.state.todosColsSel; try{ const v=JSON.parse(localStorage.getItem('semcas_todos_cols_v1')||'null'); if(Array.isArray(v)) return v; }catch(e){} return this.TCOLS_PADRAO; }
+  salvarTodosCols(v){ try{ localStorage.setItem('semcas_todos_cols_v1',JSON.stringify(v)); }catch(e){} this.setState({todosColsSel:v}); }
+  toggleTodosCol(k){ const c=this.todosColsAtuais(); this.salvarTodosCols(c.includes(k)?c.filter(x=>x!==k):[...c,k]); }
+  todosColsPadrao=()=>this.salvarTodosCols([...this.TCOLS_PADRAO]);
+  todosColsTodas=()=>this.salvarTodosCols(this.TCOLS.map(c=>c[0]));
+  toggleTodosCols=()=>this.setState(s=>({todosColsOpen:!s.todosColsOpen}));
+  goTodos=(f)=>{ const {_sort,_dir,...flt}=f||{}; this.setState({screen:'todos',menuOpen:false,todosColsOpen:false,todosF:{...this.TODOS0,...flt},todosPag:1,...(_sort?{todosSort:_sort,todosDir:_dir||'desc'}:{})}); };
+  irTodos=()=>this.goTodos({});
+  tfCache={};
+  tf(k){ return this.tfCache[k]||(this.tfCache[k]=e=>{ const v=e.target.value; this.setState(s=>({todosF:{...s.todosF,[k]:v},todosPag:1})); }); }
+  limparTodos=()=>this.setState({todosF:{...this.TODOS0},todosPag:1});
+  todosSortBy(k){ this.setState(s=>s.todosSort===k?{todosDir:s.todosDir==='asc'?'desc':'asc',todosPag:1}:{todosSort:k,todosDir:['recebido','dias','ultima','parado','memo'].includes(k)?'desc':'asc',todosPag:1}); }
+  setTodosSort=e=>this.setState({todosSort:e.target.value,todosPag:1});
+  toggleTodosDir=()=>this.setState(s=>({todosDir:s.todosDir==='asc'?'desc':'asc',todosPag:1}));
+  todosPagAnt=()=>this.setState(s=>({todosPag:Math.max(1,s.todosPag-1)}));
+  todosPagProx=()=>this.setState(s=>({todosPag:s.todosPag+1}));
+  setTodosPorPag=e=>this.setState({todosPorPag:+e.target.value||25,todosPag:1});
+  toggleTodosFiltros=()=>this.setState(s=>({todosFiltrosAbertos:!s.todosFiltrosAbertos}));
   goLog=()=>{ if(this.state.role==='super') this.setState({screen:'log',menuOpen:false}); };
   goUsuarios=()=>{if(this.state.role==='super')this.setState({screen:'usuarios',menuOpen:false,usuariosErro:'',usuariosSucesso:''});};
   setUsuarioNome=e=>this.setState(s=>({usuarioForm:{...s.usuarioForm,nome:e.target.value},usuariosErro:'',usuariosSucesso:''}));
@@ -1126,8 +1267,8 @@ class Component extends DCLogic {
   setPorPagina=e=>this.setState({porPagina:+e.target.value||25,pagina:1});
   ff=(k)=>e=>{ const v=e.target.value; this.setState(s=>({filtros:{...s.filtros,[k]:v},pagina:1})); };
   limparFiltros=()=>this.setState({filtros:{...this.FILTROS0},pagina:1});
-  openProcesso=(p)=>this.setState({screen:'processo',selectedId:p.id,obsNumeroReit:'',activeServico:p.servico,comentarioBusca:'',comentarioOrdem:'recentes',linkTexto:'',obsTitulo:'',obsCategoria:'comentario',obsTexto:'',obsDataEvento:'',obsMensagemSei:'',obsAnexos:[],anexosCarregando:false,obsErro:false,comentarioEditando:null,responsavelTexto:p.responsavelInterno||'',proximaAcaoTexto:p.proximaAcao||'',proximaDataTexto:p.proximaData||'',acompanhamentoSalvo:false,editKey:null,confirmDel:false});
-  backToServico=()=>this.setState({screen:'servico',editKey:null});
+  openProcesso=(p)=>this.setState({voltarPara:['todos','pendencias','painel'].includes(this.state.screen)?this.state.screen:(this.state.screen==='processo'?this.state.voltarPara:'servico'),todosColsOpen:false,screen:'processo',selectedId:p.id,obsNumeroReit:'',activeServico:p.servico,comentarioBusca:'',comentarioOrdem:'recentes',linkTexto:'',obsTitulo:'',obsCategoria:'comentario',obsTexto:'',obsDataEvento:'',obsMensagemSei:'',obsAnexos:[],anexosCarregando:false,obsErro:false,comentarioEditando:null,responsavelTexto:p.responsavelInterno||'',proximaAcaoTexto:p.proximaAcao||'',proximaDataTexto:p.proximaData||'',acompanhamentoSalvo:false,editKey:null,confirmDel:false});
+  backToServico=()=>this.setState({screen:this.state.voltarPara||'servico',editKey:null});
   setLink=e=>this.setState({linkTexto:e.target.value});
   salvarLink=()=>{ const l=this.state.linkTexto.trim(); if(!l) return; if(!this.linkSeguro(l)){this.setState({storageErro:"Informe um link completo começando com https://"});return;} const st=this.stamp(); this.mut(this.state.selectedId,p=>({...p,link:l,hist:{...(p.hist||{}),link:st}}),'Link SEI','Adicionou o link do processo no SEI'); this.setState({linkTexto:''}); };
   setObsTitulo=e=>this.setState({obsTitulo:e.target.value,obsErro:false});
@@ -1224,16 +1365,16 @@ class Component extends DCLogic {
     const velhos=pendL.filter(p=>{const d=this.dias(p);return d!=null&&d>30;}).length;
     const semResponsavel=pendL.filter(p=>!String(p.responsavelInterno||'').trim()).length;
     const servResumo=s.servicos.map(sv=>{const t=procs.filter(p=>p.servico===sv.key);const r=t.filter(p=>p.aba==='respondido').length;
-      return {label:sv.label,total:t.length,pend:t.length-r,resp:r,barW:(t.length?Math.round(r/t.length*100):0)+'%',onClick:()=>this.goServico(sv.key)};}).filter(x=>x.total>0).sort((a,b)=>b.pend-a.pend);
+      return {label:sv.label,total:t.length,pend:t.length-r,resp:r,barW:(t.length?Math.round(r/t.length*100):0)+'%',onClick:()=>this.goTodos({servico:sv.key})};}).filter(x=>x.total>0).sort((a,b)=>b.pend-a.pend);
     const orgaosMap=new Map();
     procs.forEach(p=>{const nome=this.orgaoConsolidado(p.orgao);if(!nome||nome==='—')return;const k=this.norm(nome);const atual=orgaosMap.get(k);if(atual)atual.qtd++;else orgaosMap.set(k,{nome,qtd:1});});
     const orgaosBase=[...orgaosMap.values()].sort((a,b)=>b.qtd-a.qtd||a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'})).slice(0,10);
     const maxOrgao=Math.max(1,...orgaosBase.map(o=>o.qtd));
-    const orgaosRanking=orgaosBase.map((o,i)=>({...o,pos:String(i+1),qtd:fmt(o.qtd),percentual:(total?Math.round(o.qtd/total*100):0)+'%',barW:Math.max(4,Math.round(o.qtd/maxOrgao*100))+'%'}));
+    const orgaosRanking=orgaosBase.map((o,i)=>({...o,abrir:()=>this.goTodos({orgaoGrupo:o.nome}),pos:String(i+1),qtd:fmt(o.qtd),percentual:(total?Math.round(o.qtd/total*100):0)+'%',barW:Math.max(4,Math.round(o.qtd/maxOrgao*100))+'%'}));
     const hojeUTC=this.hojeUTC();
     const bk={}; procs.forEach(p=>{const t=this.ts(p.recebido); if(t==null||t>hojeUTC) return; const d=new Date(t); const k=d.getUTCFullYear()*100+d.getUTCMonth(); if(!bk[k]) bk[k]={t:0,r:0,m:d.getUTCMonth(),y:d.getUTCFullYear()}; bk[k].t++; if(p.aba==='respondido') bk[k].r++;});
     const ord=Object.keys(bk).sort().slice(-6).map(k=>bk[k]); const maxT=Math.max(1,...ord.map(v=>v.t));
-    const meses=ord.map(v=>({label:this.MES[v.m]+'/'+String(v.y).slice(2),total:v.t,totalH:Math.max(4,Math.round(v.t/maxT*160))+'px',pendFlex:String(v.t-v.r),respFlex:String(v.r)}));
+    const meses=ord.map(v=>({abrir:()=>this.goTodos({mes:v.y+'-'+String(v.m+1).padStart(2,'0')}),label:this.MES[v.m]+'/'+String(v.y).slice(2),total:v.t,totalH:Math.max(4,Math.round(v.t/maxT*160))+'px',pendFlex:String(v.t-v.r),respFlex:String(v.r)}));
     const antigos=pendL.map(p=>({p,d:this.dias(p)})).filter(x=>x.d!=null).sort((a,b)=>b.d-a.d).slice(0,10)
       .map(({p,d})=>({...p,principal:this.nums(p).principal,servicoLabel:this.sv(p.servico).label,diasTxt:fmt(d),onClick:()=>this.openProcesso(p)}));
 
@@ -1358,6 +1499,72 @@ class Component extends DCLogic {
     s.log.forEach(l=>{ if(!l.autor||l.autor==='Sistema'||l.autor==='—') return; const t=logTempo(l); if(!eq.has(l.autor)) eq.set(l.autor,{nome:l.autor,perfil:l.perfil,e7:0,e30:0,c7:0,c30:0,n7:0,n30:0,ult:0,acesso:0}); const r=eq.get(l.autor);
       if(l.acao==='Acesso'){ r.acesso=Math.max(r.acesso,t); return; } r.ult=Math.max(r.ult,t); const k=l.acao==='Comentário'?'c':(l.acao==='Cadastro'?'n':'e'); if(t>=d7) r[k+'7']++; if(t>=d30) r[k+'30']++; });
     const equipe=[...eq.values()].sort((a,b)=>b.ult-a.ult||a.nome.localeCompare(b.nome)).map(r=>({nome:r.nome,perfil:r.perfil,edicoes:fmt(r.e7)+' / '+fmt(r.e30),comentarios:fmt(r.c7)+' / '+fmt(r.c30),cadastros:fmt(r.n7)+' / '+fmt(r.n30),ultima:r.ult?this.fmtCurto(r.ult):'—',acesso:r.acesso?this.fmtCurto(r.acesso):'—',abrir:()=>this.setState({screen:'log',logUser:r.nome,logAcao:'',logQ:'',menuOpen:false})}));
+    const icone=(cor,svg)=>'width:38px;height:38px;flex-shrink:0;background:url("data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="'+cor+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+svg+'</svg>')+'") no-repeat center/30px 30px';
+    const vencidos=comPrazo.filter(x=>x.sp.dif<0).length;
+    const kpis=[
+      {label:'Processos registrados',valor:fmt(total),cor:'#1F2328',icone:icone('#12355B','<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>')},
+      {label:'Pendentes',valor:fmt(total-resp),cor:'#E08A00',icone:icone('#E08A00','<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>')},
+      {label:'Respondidos',valor:fmt(resp),cor:'#2F9E57',icone:icone('#2F9E57','<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>')},
+      {label:'Pendentes há mais de 30 dias',valor:fmt(velhos),cor:'#D93025',icone:icone('#D93025','<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>')},
+      {label:'Prazos vencidos',valor:fmt(vencidos),cor:'#D93025',icone:icone('#1F5F9E','<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>')}];
+    const kAbrir=[[{},'Ver todos os processos'],[{status:'pendente'},'Ver os processos pendentes'],[{status:'respondido'},'Ver os processos respondidos'],[{status:'pendente',dias:'c',_sort:'dias',_dir:'desc'},'Ver pendentes há mais de 30 dias'],[{status:'pendente',prazo:'venc',_sort:'prazo',_dir:'asc'},'Ver processos com prazo vencido']];
+    kpis.forEach((k,i)=>{ k.abrir=()=>this.goTodos(kAbrir[i][0]); k.dica=kAbrir[i][1]; });
+    // ===== Todos os Processos: dados =====
+    const TF={...this.TODOS0,...(s.todosF||{})}, tcs=this.todosColsAtuais(), tv={}; this.TCOLS.forEach(([k])=>{ tv[k]=tcs.includes(k); });
+    const mesDe=p=>{ const t=this.ts(p.recebido); if(t==null) return ''; const dt=new Date(t); return dt.getUTCFullYear()+'-'+String(dt.getUTCMonth()+1).padStart(2,'0'); };
+    const tHas=(v,q)=>!q||this.norm(v).includes(this.norm(q).trim());
+    const tl=procs.filter(p=>{
+      if(TF.servico&&p.servico!==TF.servico) return false;
+      if(TF.status&&p.aba!==TF.status) return false;
+      if(TF.marc&&(TF.marc==='_'?!!p.marcacao:p.marcacao!==TF.marc)) return false;
+      if(TF.ano&&this.anoProc(p)!==TF.ano) return false;
+      if(TF.mes&&mesDe(p)!==TF.mes) return false;
+      if(TF.orgaoGrupo&&this.norm(this.orgaoConsolidado(p.orgao))!==this.norm(TF.orgaoGrupo)) return false;
+      if(TF.orgao&&!tHas(p.orgao+' '+this.orgaoConsolidado(p.orgao),TF.orgao)) return false;
+      if(TF.prazo){ const sp=this.situacaoPrazo(p); if(TF.prazo==='venc'?!(sp&&sp.dif<0):TF.prazo==='7'?!(sp&&sp.dif>=0&&sp.dif<=7):!sp) return false; }
+      if(TF.dias){ const d=this.dias(p); if(d==null||!(TF.dias==='a'?d<=15:TF.dias==='b'?(d>15&&d<=30):d>30)) return false; }
+      if(TF.parado){ const d=this.diasSem(p,ult); if(p.aba!=='pendente'||d==null||d<=+TF.parado) return false; }
+      if(TF.q){ const obsAll=(p.obs||[]).map(o=>[o.titulo,o.texto,o.autor].filter(Boolean).join(' ')).join(' '); if(!tHas([p.numero,p.orgao,p.demanda,p.usuario,p.situacao,p.respSetor,p.respGabinete,p.conclusao,p.memo,obsAll,this.sv(p.servico).label].join(' '),TF.q)) return false; }
+      return true; });
+    const tsk=s.todosSort||'recebido', tdir=s.todosDir==='asc'?1:-1;
+    const tval=p=>{ switch(tsk){ case 'numero':{ const q=this.nums(p).seq; return q[0]?q[0]*1e7+q[1]:null; } case 'servico': return this.sv(p.servico).label; case 'status': return p.aba; case 'marcacao':{ const i=this.MARC_ORD.indexOf(p.marcacao||''); return i<0?null:i; }
+      case 'recebido': return this.ts(p.recebido); case 'memo': return this.ts(p.memo); case 'prazo':{ const sp=this.situacaoPrazo(p); return sp?sp.t:null; } case 'dias': return this.dias(p); case 'ultima':{ const a=ult.get(p.id); return a?a.t:null; }
+      case 'parado': return this.diasSem(p,ult); case 'obs':{ const o=p.obs||[]; return o.length?o[o.length-1].texto:''; } default: return p[tsk]||''; } };
+    const tvz=v=>v==null||v===''||v==='—';
+    const tord=tl.map(p=>[p,tval(p)]).sort((A,B)=>{ const a=A[1],b=B[1]; if(tvz(a)&&tvz(b)) return 0; if(tvz(a)) return 1; if(tvz(b)) return -1; return (typeof a==='number'&&typeof b==='number'?a-b:String(a).localeCompare(String(b),'pt-BR',{sensitivity:'base',numeric:true}))*tdir; }).map(x=>x[0]);
+    const tpp=s.todosPorPag||25, tpags=Math.max(1,Math.ceil(tord.length/tpp)), tpag=Math.min(Math.max(1,s.todosPag||1),tpags), tini=(tpag-1)*tpp, tshown=tord.slice(tini,tini+tpp);
+    const todosLinhas=tshown.map(p=>{ const mk=this.MARC[p.marcacao||'']||this.MARC[''], sp=this.situacaoPrazo(p), d=this.dias(p), ua=ult.get(p.id), ds=this.diasSem(p,ult), ob=p.obs||[], last=ob[ob.length-1], resp=p.aba==='respondido', nn=this.nums(p);
+      return {numero:p.numero,principal:nn.principal,temVinc:nn.vinc.length>0,vincTxt:'+'+nn.vinc.length+(nn.vinc.length>1?' vinculados':' vinculado'),servicoLabel:this.sv(p.servico).label,
+        statusTxt:resp?'Respondido':'Pendente',stBg:resp?'#E8F5EC':'#FFF5E5',stCor:resp?'#1E7B45':'#9A5B00',stBorda:resp?'#BFE0CB':'#F0D3A0',
+        marcBar:mk.bar,marcFg:mk.fg,marcacaoVal:p.marcacao||'',pararClique:e=>e.stopPropagation(),mudarMarc:e=>{ e.stopPropagation(); this.setMarcacaoDe(p.id,e.target.value); },
+        recebido:p.recebido||'—',memo:p.memo||'—',orgao:p.orgao||'—',demanda:p.demanda||'—',usuario:p.usuario||'—',situacao:p.situacao||'—',
+        respSetor:p.respSetor||'Sem resposta',setorCor:p.respSetor?'#1F2328':'#9AA6B2',respGabinete:p.respGabinete||'Sem resposta',gabCor:p.respGabinete?'#1F2328':'#9AA6B2',conclusao:p.conclusao||'—',
+        obsTxt:last?((last.titulo?last.titulo+': ':'')+(last.texto||'')):'—',prazoTxt:sp?sp.txt.replace(/^Prazo v/,'V'):(this.prazoTexto(p.prazoDias)||'—'),prazoCor:sp?(sp.dif<=3?'#D93025':'#9A6508'):'#5B636B',
+        temDias:d!=null,diasTxt:d==null?'—':fmt(d),diasCor:this.diasColor(d),ultAutor:ua?ua.autor:'—',ultQuando:ua?this.fmtCurto(ua.t):'sem registro no sistema',
+        paradoTxt:ds==null?'—':fmt(ds)+' dias',paradoCor:ds==null?'#9AA6B2':ds>30?'#B8322A':ds>15?'#9A6508':'#3A4753',abrir:()=>this.openProcesso(p)}; });
+    const tW=['170px',...this.TCOLS.filter(([k])=>tv[k]).map(c=>c[2]),'96px'];
+    const todosMinW=tW.reduce((a,w)=>a+(parseInt((w.match(/d+/)||[0])[0])||0),0)+'px';
+    const tSelStyle=on=>'width:100%;height:38px;padding:0 10px;border:1px solid '+(on?'#12355B':'#C9CED3')+';border-radius:4px;font-size:13.5px;background:'+(on?'#EEF4FA':'#fff')+';color:#1F2328;font-weight:'+(on?'600':'400');
+    const MESN=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+    const TLBL={q:v=>'Busca: “'+v+'”',servico:v=>'Serviço: '+this.sv(v).label,status:v=>v==='pendente'?'Pendentes':'Respondidos',marc:v=>'Cor: '+(v==='_'?'Sem marcação':(this.MARC[v]||{l:v}).l),prazo:v=>({venc:'Prazo vencido','7':'Prazo vence em até 7 dias',com:'Com prazo informado'})[v]||v,dias:v=>({a:'Até 15 dias em aberto',b:'16 a 30 dias em aberto',c:'Mais de 30 dias em aberto'})[v]||v,parado:v=>'Sem atualização há mais de '+v+' dias',ano:v=>'Ano: '+v,orgao:v=>'Órgão contém: '+v,orgaoGrupo:v=>'Órgão: '+v,mes:v=>{ const [y,m]=v.split('-'); return 'Recebidos em '+MESN[+m-1]+'/'+y; }};
+    const todosChips=Object.keys(this.TODOS0).filter(k=>TF[k]).map(k=>({label:TLBL[k](TF[k]),remover:()=>this.setState(s2=>({todosF:{...s2.todosF,[k]:''},todosPag:1}))}));
+    const todosMesOpts=[...new Set(procs.map(mesDe).filter(Boolean))].sort().reverse().map(v=>{ const [y,m]=v.split('-'); return {v,l:MESN[+m-1]+'/'+y}; });
+    const tt=s.screen==='todos', navTodosStyle='width:100%;display:flex;align-items:center;gap:8px;height:32px;padding:0 10px 0 12px;margin-bottom:1px;border:none;border-radius:0;cursor:pointer;font-size:13.5px;text-align:left;font-weight:'+(tt?'600':'500')+';background:'+(tt?'#E6ECF3':'transparent')+';box-shadow:'+(tt?'inset 2px 0 0 #12355B':'none')+';color:'+(tt?'#12355B':'#2E353B');
+    const todosVals={todosVisible:tt,navTodosStyle,irTodos:this.irTodos,todosCountNav:fmt(procs.length),todosF:TF,tv,tSel:Object.fromEntries(Object.keys(this.TODOS0).map(k=>[k,tSelStyle(!!TF[k])])),tf:Object.fromEntries(Object.keys(this.TODOS0).map(k=>[k,this.tf(k)])),
+      tsH:Object.fromEntries(['numero',...this.TCOLS.map(c=>c[0])].map(k=>[k,()=>this.todosSortBy(k)])),tArr:Object.fromEntries(['numero',...this.TCOLS.map(c=>c[0])].map(k=>[k,tsk===k?(tdir>0?'▲':'▼'):''])),
+      todosLinhas,todosVazio:!todosLinhas.length,todosGrid:tW.join(' '),todosMinW,todosTableOn:s.vw>=760,todosCardsOn:s.vw<760,
+      todosTemFiltro:todosChips.length>0,todosChips,limparTodos:this.limparTodos,todosFiltrosVisiveis:!narrow||s.todosFiltrosAbertos,toggleTodosFiltros:this.toggleTodosFiltros,todosFiltrosBtn:(s.todosFiltrosAbertos?'Ocultar filtros':'Mostrar filtros')+(todosChips.length?' ('+todosChips.length+')':''),
+      marcFiltroOpts:this.MARC_ORD.map(k=>({v:k||'_',l:this.MARC[k].l})),todosAnoOpts:[...new Set(procs.map(p=>this.anoProc(p)).filter(Boolean))].sort().reverse(),todosMesOpts,
+      todosTotalTxt:fmt(tord.length)+(tord.length===1?' processo':' processos'),todosFaixaTxt:tord.length?('· exibindo '+fmt(tini+1)+'–'+fmt(tini+tshown.length)):'',
+      todosSort:tsk,setTodosSort:this.setTodosSort,toggleTodosDir:this.toggleTodosDir,todosDirLabel:tdir>0?'↑ Crescente':'↓ Decrescente',
+      todosSortOpts:[['recebido','Data de recebimento'],['dias','Dias em aberto'],['prazo','Prazo'],['ultima','Última atualização'],['parado','Sem atualização há'],['numero','Nº do processo'],['servico','Serviço'],['orgao','Órgão solicitante'],['status','Status'],['marcacao','Cor']].map(([k,l])=>({k,l})),
+      toggleTodosCols:this.toggleTodosCols,todosColsOpen:s.todosColsOpen,todosColsN:String(1+tcs.filter(k=>this.TCOLS.some(c=>c[0]===k)).length),todosColsPadrao:this.todosColsPadrao,todosColsTodas:this.todosColsTodas,
+      todosColOpts:this.TCOLS.map(([k,l])=>{ const on=tcs.includes(k); return {label:l,tick:on?'✓':'',onClick:()=>this.toggleTodosCol(k),box:'width:15px;height:15px;border-radius:2px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;border:1.5px solid '+(on?'#0A3D62':'#9AA6B2')+';background:'+(on?'#0A3D62':'#fff')}; }),
+      todosPaginacaoOn:tord.length>0,todosPorPagTxt:String(tpp),setTodosPorPag:this.setTodosPorPag,todosPagTxt:String(tpag),todosPagsTxt:String(tpags),todosPrimeira:tpag<=1,todosUltima:tpag>=tpags,todosPagAnt:this.todosPagAnt,todosPagProx:this.todosPagProx};
+    const painelPrazos=comPrazo.slice(0,5).map(({p,sp})=>({principal:this.nums(p).principal,servicoLabel:this.sv(p.servico).label,orgao:p.orgao||'—',prazoTxt:sp.txt.replace(/^Prazo v/,'V').replace(' (estimado)',''),estimado:/estimado/.test(sp.txt),prazoCor:sp.dif<=3?'#D93025':'#E08A00',abrir:()=>this.openProcesso(p)}));
+    const painelRecentes=atualizados.slice(0,5).map(l=>{ const p=recPorId.get(l.pid); return {numero:l.numero,servicoLabel:l.servicoLabel,orgao:(p&&p.orgao)||'—',data:String(l.quando||'').slice(0,10),porQuem:l.acao+' por '+l.autor+' em '+l.quando,abrir:l.abrir}; });
+    const painelAntigos=antigos.slice(0,5).map(p=>({...p,abrir:p.onClick}));
+    const orgaosColunas=[orgaosRanking.slice(0,5),orgaosRanking.slice(5,10)].filter(c=>c.length).map(c=>({itens:c.map((o,i)=>({...o,borda:i?'1px solid #E6E9ED':'none'}))}));
     const pe=s.screen==='pendencias', navPendStyle='width:100%;display:flex;align-items:center;gap:8px;height:32px;padding:0 10px 0 12px;margin-bottom:1px;border:none;border-radius:0;cursor:pointer;font-size:13.5px;text-align:left;font-weight:'+(pe?'600':'500')+';background:'+(pe?'#E6ECF3':'transparent')+';box-shadow:'+(pe?'inset 2px 0 0 #12355B':'none')+';color:'+(pe?'#12355B':'#2E353B');
     const fForm=s.form, formDup=(s.formDup||[]).map(id=>procs.find(p=>p.id===id)).filter(Boolean).map(p=>({principal:this.nums(p).principal,info:this.sv(p.servico).label+' · '+(p.usuario||'pessoa não informada')+' · '+(p.aba==='respondido'?'Respondido':'Pendente'),abrir:()=>this.setState({formDup:[]},()=>this.openProcesso(p)),
       reiterar:()=>{ const ok=this.aplicarReiteracao(p.id,fForm.numero,'Reiteração recebida',['Recebida em '+(fForm.recebido||this.hojeTxt()),fForm.orgao&&('Órgão: '+fForm.orgao),fForm.demanda&&('Demanda: '+fForm.demanda)].filter(Boolean).join('\n')); if(ok) this.setState({formDup:[]},()=>this.openProcesso(p)); }}));
@@ -1365,9 +1572,9 @@ class Component extends DCLogic {
     const marcChips=this.MARC_ORD.map(k=>{ const m=this.MARC[k], fk=k||'_', on=F.marc===fk; const q=inSvc.filter(p=>(p.marcacao||'')===k).length;
       return {label:m.l,bar:m.bar,qtd:String(q),onClick:()=>this.toggleMarc(fk),
         style:'display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 10px;border-radius:2px;cursor:pointer;font-size:13px;font-weight:'+(on?'600':'400')+';border:1px solid '+(on?m.bar:'#C9CED3')+';background:'+(on?m.bg:'#fff')+';color:'+(on?m.fg:'#2E353B')}; });
-    const porMarc=this.MARC_ORD.filter(k=>k!=='concluido').map(k=>{ const m=this.MARC[k]; return {label:m.l,bg:m.bg,bar:m.bar,fg:m.fg,desc:m.d,qtd:fmt(pendAll.filter(p=>(p.marcacao||'')===k).length)}; });
+    const porMarc=this.MARC_ORD.filter(k=>k!=='concluido').map(k=>{ const m=this.MARC[k]; return {abrir:()=>this.goTodos({status:'pendente',marc:k||'_'}),label:m.l,bg:m.bg,bar:m.bar,fg:m.fg,desc:m.d,qtd:fmt(pendAll.filter(p=>(p.marcacao||'')===k).length)}; });
     return {
-      narrow, backdrop:narrow&&s.menuOpen, toggleMenu:this.toggleMenu,
+      narrow, largo:!narrow, backdrop:narrow&&s.menuOpen, toggleMenu:this.toggleMenu,
       shellCols: narrow?'minmax(0,1fr)':'232px minmax(0,1fr)',
       asideStyle:'background:#FFFFFF;border-right:1px solid #DADDE1;display:flex;flex-direction:column;align-self:start;position:sticky;top:0;'+(narrow?('position:fixed;left:0;top:0;bottom:0;width:280px;height:100vh;overflow:auto;z-index:40;box-shadow:0 0 40px rgba(0,0,0,.3);transition:transform .2s;transform:translateX('+(s.menuOpen?'0':'-100%')+')'):''),
       headPad: s.vw<700?'padding:14px 14px 0':'padding:18px 32px 0',
@@ -1377,7 +1584,7 @@ class Component extends DCLogic {
       headStatsOn: s.screen==='servico' && s.vw>=1100,
       headStats:[{label:'há +30 dias',val:fmt(inS.filter(p=>p.aba==='pendente'&&(this.dias(p)||0)>30).length),cor:'#A3281F'},{label:'em reiteração',val:fmt(inS.filter(p=>p.aba==='pendente'&&p.marcacao==='reiteracao').length),cor:'#8A5A00'},{label:'urgentes',val:fmt(inS.filter(p=>p.aba==='pendente'&&p.marcacao==='urgente').length),cor:'#A3281F'}],
       marcChips,porMarc,vis,colOpts,colsVisN:String(1+Object.values(vis).filter(Boolean).length),colsOpen:s.colsOpen,toggleCols:this.toggleCols,colsPadrao:this.colsPadrao,porUnidade,etapaOpts:this.ETAPAS.map((l,i)=>({v:String(i),l:(i+1)+'. '+l})),unidadeAll:this.UNID.map(u=>u[0]),
-      fEtapa:this.ff('etapa'),fPrazo:this.ff('prazo'),goPendencias:this.goPendencias,navPendStyle,pendBadge:comPrazo.length+acoes.length?String(comPrazo.length+acoes.length):'',pendenciasVisible:s.screen==='pendencias',pendGrupos,kpiPrazosVencidos:fmt(comPrazo.filter(x=>x.sp.dif<0).length),painelPrazos:pendGrupos[0].itens.slice(0,10),painelPrazosVazio:!comPrazo.length,porUnidadeVazio:!porUnidade.length,equipe,equipeVazia:!equipe.length,exigeNumeroReit:s.obsCategoria==='reiteracao'&&!s.comentarioEditando,obsNumeroReit:s.obsNumeroReit,setObsNumeroReit:this.setObsNumeroReit,formSituacaoSugestao:this.situacaoSugerida(s.form),marcFormOpts:this.MARC_ORD.filter(k=>s.role==='super'||k!=='concluido').map(k=>({v:k,l:this.MARC[k].l})),setFormMemo:this.uf('memo'),setFormSituacao:this.uf('situacao'),setFormPrazoDias:this.uf('prazoDias'),setFormPrazoData:this.uf('prazoData'),setFormMarcacao:this.uf('marcacao'),formDup,formDupOn:formDup.length>0,cadastrarMesmoAssim:this.cadastrarMesmoAssim,fAno:this.ff('ano'),anoOpts:[...new Set(inS.map(p=>this.anoProc(p)).filter(Boolean))].sort().reverse(),marcOptsLista:this.MARC_ORD.map(k=>({v:k,l:this.MARC[k].l})),formConvite:s.form.servico==='CONVITES',setFormSetorReceber:this.uf('setorReceber'),setFormDataEvento:this.uf('dataEvento'),fUnidade:this.ff('unidade'),fReit:this.ff('reit'),
+      fEtapa:this.ff('etapa'),...todosVals,voltarLabel:({todos:'Todos os Processos',pendencias:'Pendências',painel:'Painel geral'})[s.voltarPara]||(proc?proc.servicoLabel:''),fPrazo:this.ff('prazo'),goPendencias:this.goPendencias,navPendStyle,pendBadge:comPrazo.length+acoes.length?String(comPrazo.length+acoes.length):'',pendenciasVisible:s.screen==='pendencias',pendGrupos,kpiPrazosVencidos:fmt(comPrazo.filter(x=>x.sp.dif<0).length),painelPrazos,kpis,painelRecentes,painelRecentesVazio:!painelRecentes.length,painelAntigos,orgaosColunas,painelPrazosVazio:!comPrazo.length,porUnidadeVazio:!porUnidade.length,equipe,equipeVazia:!equipe.length,exigeNumeroReit:s.obsCategoria==='reiteracao'&&!s.comentarioEditando,obsNumeroReit:s.obsNumeroReit,setObsNumeroReit:this.setObsNumeroReit,formSituacaoSugestao:this.situacaoSugerida(s.form),marcFormOpts:this.MARC_ORD.filter(k=>s.role==='super'||k!=='concluido').map(k=>({v:k,l:this.MARC[k].l})),setFormMemo:this.uf('memo'),setFormSituacao:this.uf('situacao'),setFormPrazoDias:this.uf('prazoDias'),setFormPrazoData:this.uf('prazoData'),setFormMarcacao:this.uf('marcacao'),formDup,formDupOn:formDup.length>0,cadastrarMesmoAssim:this.cadastrarMesmoAssim,fAno:this.ff('ano'),anoOpts:[...new Set(inS.map(p=>this.anoProc(p)).filter(Boolean))].sort().reverse(),marcOptsLista:this.MARC_ORD.map(k=>({v:k,l:this.MARC[k].l})),formConvite:s.form.servico==='CONVITES',setFormSetorReceber:this.uf('setorReceber'),setFormDataEvento:this.uf('dataEvento'),fUnidade:this.ff('unidade'),fReit:this.ff('reit'),
       avancarEtapa:this.avancarEtapa,voltarEtapa:this.voltarEtapa,setUnidade:this.setUnidade,oficioTexto:s.oficioTexto,setOficioTexto:this.setOficioTexto,salvarOficio:this.salvarOficio,limparOficio:this.limparOficio,
       logVisible:s.screen==='log',navLogStyle,goLog:this.goLog,logCount:String(s.log.length),
       usuariosVisible:s.screen==='usuarios',navUsuariosStyle,goUsuarios:this.goUsuarios,usuariosCount:String(s.usuarios.length),usuarios:s.usuarios,usuarioForm:s.usuarioForm,setUsuarioNome:this.setUsuarioNome,setUsuarioEmail:this.setUsuarioEmail,setUsuarioSenha:this.setUsuarioSenha,cadastrarUsuario:this.cadastrarUsuario,usuariosErro:s.usuariosErro,usuariosErroOn:!!s.usuariosErro,usuariosSucesso:s.usuariosSucesso,usuariosSucessoOn:!!s.usuariosSucesso,usuariosCarregando:s.usuariosCarregando,usuariosBtnTexto:s.usuariosCarregando?'Cadastrando…':'Cadastrar usuário',
@@ -1392,8 +1599,8 @@ class Component extends DCLogic {
       isSuper:s.role==='super',userName,userRole:s.user.perfil,userInitials:userName.split(' ').filter(Boolean).map(w=>w[0]).slice(0,2).join(''),
       navGrupos:grupos,navPainelStyle,goPainel:this.goPainel,openNovo:this.openNovo,logout:this.logout,
       painelVisible:s.screen==='painel',servicoVisible:s.screen==='servico',processoVisible:s.screen==='processo',novoVisible:s.screen==='novo',novoBtnOn:!['novo','log','usuarios'].includes(s.screen),
-      crumb:s.screen==='pendencias'?'Acompanhamento da equipe':s.screen==='usuarios'?'Gestão / Usuários':s.screen==='log'?'Gestão / Registro de atividades':s.screen==='painel'?'Visão geral da Superintendência':(s.screen==='novo'?'Cadastro':(s.screen==='processo'?('Serviços / '+cur.label):'Serviços')),
-      pageTitle:s.screen==='pendencias'?'Pendências':s.screen==='usuarios'?'Usuários':s.screen==='log'?'Registro de atividades':s.screen==='painel'?'Painel geral':(s.screen==='novo'?'Novo processo':(s.screen==='processo'?'Detalhe do processo':cur.label)),
+      crumb:s.screen==='todos'?'Acompanhamento':s.screen==='pendencias'?'Acompanhamento da equipe':s.screen==='usuarios'?'Gestão / Usuários':s.screen==='log'?'Gestão / Registro de atividades':s.screen==='painel'?'Superintendência':(s.screen==='novo'?'Cadastro':(s.screen==='processo'?('Serviços / '+cur.label):'Serviços')),
+      pageTitle:s.screen==='todos'?'Todos os Processos':s.screen==='pendencias'?'Pendências':s.screen==='usuarios'?'Usuários':s.screen==='log'?'Registro de atividades':s.screen==='painel'?'Painel geral':(s.screen==='novo'?'Novo processo':(s.screen==='processo'?'Detalhe do processo':cur.label)),
       hoje:new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'short',year:'numeric'}).format(new Date()).replace('.',''),
       kpiTotal:fmt(total),kpiPend:fmt(total-resp),kpiResp:fmt(resp),kpiVelhos:fmt(velhos),kpiSemResponsavel:fmt(semResponsavel),kpiTaxa:(total?Math.round(resp/total*100):0)+'%',
       servResumo,orgaosRanking,meses,antigos,recentesGrupos,
