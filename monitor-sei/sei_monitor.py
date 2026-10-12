@@ -43,6 +43,7 @@ semcas_ultimo_erro = None
 
 PORTA = 8765
 INTERVALO_MIN = 30          # de quanto em quanto tempo verifica (minutos)
+INTERVALO_PEDIDOS = 8       # segundos entre consultas aos pedidos "Verificar agora" do site
 PAUSA_ENTRE_PROCESSOS = 3   # segundos entre um processo e outro (não sobrecarregar o SEI)
 NOTIFICAR_WINDOWS = True    # balão de notificação no Windows
 
@@ -224,8 +225,12 @@ def buscar_conteudos(processo_id, numero_processo, limite=30):
     return {it["chave"]: it for it in pend}
 
 
-def verificar(proc):
-    """Verifica um processo. Retorna lista de novidades."""
+def verificar(proc, semcas_na_hora=False):
+    """Verifica um processo. Retorna lista de novidades.
+
+    semcas_na_hora=True envia ao Controle de Processos SEMCAS antes de voltar
+    (usado pelo "Verificar agora" do site, que precisa do resultado já gravado).
+    """
     agora = datetime.now().strftime("%d/%m/%Y %H:%M")
     try:
         cab, docs, ands = analisar(baixar(proc["url"]))
@@ -261,7 +266,9 @@ def verificar(proc):
     for categoria, it in novidades:
         if categoria == "documento" and it["chave"] in lidos:
             it["resumo"] = lidos[it["chave"]].get("resumo")
-    _enviar_nuvem(proc["id"])
+    _enviar_nuvem(proc["id"], semcas_em_segundo_plano=not semcas_na_hora)
+    if semcas_na_hora and semcas_sync is not None and semcas_sync.ativo():
+        semcas_sync.sincronizar_processo(con, proc["id"])
     return novidades
 
 
@@ -297,6 +304,54 @@ def verificar_todos():
         if i < len(procs) - 1:
             time.sleep(PAUSA_ENTRE_PROCESSOS)
     return total
+
+
+def atender_pedido(ped):
+    """Executa um pedido "Verificar agora" vindo do site."""
+    if not semcas_sync.pegar_pedido(ped["id"]):
+        return
+    alvo = semcas_sync.so_digitos(ped.get("sei_number"))
+    with lock:
+        procs = [dict(p) for p in con.execute("SELECT * FROM processos")]
+    proc = next((p for p in procs if alvo and semcas_sync.so_digitos(p.get("numero")) == alvo), None)
+    if not proc:
+        semcas_sync.concluir_pedido(
+            ped["id"], "nao_monitorado",
+            f"O processo {ped.get('sei_number') or ''} ainda não está cadastrado no monitor SEI (PC 1). "
+            "Cadastre-o no painel do monitor para poder verificar.")
+        return
+    print(f"[pedido] verificando {proc.get('numero')} a pedido do site")
+    try:
+        nov = verificar(proc, semcas_na_hora=True)
+        with lock:
+            erro = con.execute("SELECT erro FROM processos WHERE id=?", (proc["id"],)).fetchone()[0]
+        if erro:
+            semcas_sync.concluir_pedido(ped["id"], "erro", f"O SEI não respondeu como esperado: {erro}")
+        else:
+            semcas_sync.concluir_pedido(ped["id"], "concluido", novidades=len(nov))
+    except Exception as e:  # noqa: BLE001
+        semcas_sync.concluir_pedido(ped["id"], "erro", f"Falha na verificação: {e}")
+
+
+def laco_pedidos():
+    """Olha a fila do site a cada poucos segundos e manda sinal de vida."""
+    ultimo_sinal = 0
+    while True:
+        try:
+            if semcas_sync is not None and semcas_sync.ativo():
+                if time.time() - ultimo_sinal > 60:
+                    with lock:
+                        n = con.execute("SELECT COUNT(*) FROM processos").fetchone()[0]
+                    semcas_sync.sinal_de_vida(n)
+                    ultimo_sinal = time.time()
+                for ped in semcas_sync.pedidos_pendentes():
+                    try:
+                        atender_pedido(ped)
+                    except Exception as e:  # noqa: BLE001
+                        print(f"[pedido] {ped.get('sei_number')}: {e}")
+        except Exception as e:  # noqa: BLE001
+            print(f"[pedido] aviso: {str(e)[:200]}")
+        time.sleep(INTERVALO_PEDIDOS)
 
 
 def laco():
@@ -428,7 +483,7 @@ carregar();setInterval(carregar,30000);
 verificando = threading.Event()
 
 
-def _enviar_nuvem(processo_id):
+def _enviar_nuvem(processo_id, semcas_em_segundo_plano=True):
     """Manda o processo pro Supabase em segundo plano.
 
     Nunca levanta erro pro monitor: se o Supabase estiver desconfigurado ou
@@ -442,7 +497,7 @@ def _enviar_nuvem(processo_id):
             daemon=True).start()
 
     # envia tambem para o Controle de Processos SEMCAS (submenu de acompanhamento)
-    if semcas_sync is not None and semcas_sync.ativo():
+    if semcas_em_segundo_plano and semcas_sync is not None and semcas_sync.ativo():
         threading.Thread(
             target=lambda: _enviar_semcas(processo_id),
             daemon=True).start()
@@ -642,6 +697,7 @@ def main():
     elif supabase_sync is not None:
         print("[supabase] desativado (sem supabase_config.txt). Só local.")
     threading.Thread(target=laco, daemon=True).start()
+    threading.Thread(target=laco_pedidos, daemon=True).start()
     srv = ThreadingHTTPServer(("127.0.0.1", PORTA), Painel)
     print(f"Painel em http://localhost:{PORTA}  (Ctrl+C para sair)")
     if "--sem-navegador" not in sys.argv:

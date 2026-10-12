@@ -148,23 +148,45 @@ def _cabecalhos(cfg, token, extra=None):
 
 
 # ---------------------------------------------------------------- requisicoes
+def _novo_token(cfg):
+    """Token venceu: renova pelo refresh_token ou entra de novo."""
+    if cfg.get("key"):
+        return cfg["key"]
+    s = _ler_sessao()
+    if s.get("refresh_token"):
+        try:
+            return _renovar(cfg, s["refresh_token"])
+        except Exception:
+            pass
+    return _entrar(cfg)
+
+
+def _requisitar(cfg, caminho, metodo="GET", corpo=None, prefer=None, timeout=45):
+    """Faz a chamada; se o token tiver vencido (401), renova e tenta uma vez mais."""
+    dados = None if corpo is None else json.dumps(corpo).encode("utf-8")
+    token = _token(cfg)
+    for tentativa in (1, 2):
+        extra = {"Prefer": prefer} if prefer else None
+        req = urllib.request.Request(cfg["url"].rstrip("/") + caminho, data=dados,
+                                     headers=_cabecalhos(cfg, token, extra), method=metodo)
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                bruto = r.read().decode("utf-8")
+                return r.status, (json.loads(bruto) if bruto.strip() else None)
+        except urllib.error.HTTPError as e:
+            if e.code == 401 and tentativa == 1:
+                token = _novo_token(cfg)
+                continue
+            raise
+
+
 def _get(cfg, caminho):
-    req = urllib.request.Request(
-        cfg["url"].rstrip("/") + caminho,
-        headers=_cabecalhos(cfg, _token(cfg)))
-    with urllib.request.urlopen(req, timeout=45) as r:
-        return json.loads(r.read().decode("utf-8"))
+    return _requisitar(cfg, caminho)[1]
 
 
 def _post(cfg, caminho, corpo):
-    req = urllib.request.Request(
-        cfg["url"].rstrip("/") + caminho,
-        data=json.dumps(corpo).encode("utf-8"),
-        headers=_cabecalhos(cfg, _token(cfg),
-                            {"Prefer": "return=minimal,resolution=merge-duplicates"}),
-        method="POST")
-    with urllib.request.urlopen(req, timeout=60) as r:
-        return r.status
+    return _requisitar(cfg, caminho, "POST", corpo,
+                       "return=minimal,resolution=merge-duplicates", timeout=60)[0]
 
 
 # ---------------------------------------------------------------- marca local
@@ -275,6 +297,52 @@ def sincronizar_processo(con, processo_id, cfg=None):
     marca[str(processo_id)] = sorted(ja)
     _salvar_marca(marca)
     return novos
+
+
+# ---------------------------------------------------------------- "Verificar agora"
+# O site grava pedidos em monitor_pedidos; o monitor pega, verifica e devolve o resultado.
+def _agora_iso():
+    return datetime.now().astimezone().isoformat(timespec="seconds")
+
+
+def so_digitos(numero):
+    return re.sub(r"\D", "", numero or "")
+
+
+def pedidos_pendentes(cfg=None, limite=10):
+    cfg = cfg or _ler_config()
+    if not cfg:
+        return []
+    return _get(cfg, "/rest/v1/monitor_pedidos?select=id,process_id,sei_number"
+                     "&status=eq.pendente&order=criado_em&limit=%d" % limite) or []
+
+
+def pegar_pedido(pedido_id, cfg=None):
+    """Marca o pedido como 'rodando'. Devolve False se outro monitor já pegou."""
+    cfg = cfg or _ler_config()
+    _, linhas = _requisitar(
+        cfg, "/rest/v1/monitor_pedidos?id=eq.%s&status=eq.pendente" % urllib.parse.quote(pedido_id),
+        "PATCH", {"status": "rodando", "iniciado_em": _agora_iso()}, "return=representation")
+    return bool(linhas)
+
+
+def concluir_pedido(pedido_id, status, mensagem="", novidades=0, cfg=None):
+    cfg = cfg or _ler_config()
+    _requisitar(cfg, "/rest/v1/monitor_pedidos?id=eq.%s" % urllib.parse.quote(pedido_id), "PATCH",
+                {"status": status, "mensagem": (mensagem or "")[:500],
+                 "novidades": int(novidades or 0), "finalizado_em": _agora_iso()},
+                "return=minimal")
+
+
+def sinal_de_vida(processos_monitorados, ultima_rodada="", cfg=None, nome="monitor-pc1"):
+    cfg = cfg or _ler_config()
+    if not cfg:
+        return
+    _requisitar(cfg, "/rest/v1/monitor_status?on_conflict=id", "POST",
+                {"id": nome, "ultimo_sinal": _agora_iso(),
+                 "processos_monitorados": int(processos_monitorados),
+                 "ultima_rodada": ultima_rodada or ""},
+                "return=minimal,resolution=merge-duplicates")
 
 
 def sincronizar_tudo(con):
