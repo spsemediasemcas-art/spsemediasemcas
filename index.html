@@ -781,6 +781,7 @@
           <div style="display:flex;gap:6px 14px;flex-wrap:wrap;margin-top:6px;font-size:12.5px;color:#5B636B"><sc-if value="{{ proc.temCadastrado }}" hint-placeholder-val="{{ true }}"><span>{{ proc.cadastradoTxt }}</span></sc-if><span>{{ proc.ultimaTxt }}</span></div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <sc-if value="{{ proc.temMonitor }}" hint-placeholder-val="{{ false }}"><button onClick="{{ abrirAcompanhamento }}" style="height:36px;padding:0 14px;background:#fff;color:#1F5F9E;border:1px solid #B8D4F0;border-radius:2px;font-weight:500;font-size:13.5px;cursor:pointer" style-hover="background:#F0F7FF">📋 Acompanhamento</button></sc-if>
           <sc-if value="{{ proc.podeConcluir }}" hint-placeholder-val="false"><button onClick="{{ toggleAba }}" style="height:36px;padding:0 16px;border-radius:2px;font-weight:600;font-size:13.5px;cursor:pointer;border:1px solid {{ proc.acaoBorder }};background:{{ proc.acaoBg }};color:{{ proc.acaoColor }}">{{ proc.acaoBtn }}</button></sc-if>
           <sc-if value="{{ proc.podeExcluir }}" hint-placeholder-val="{{ false }}"><button onClick="{{ pedirExcluir }}" style="height:36px;padding:0 14px;background:#fff;color:#1F2328;border:1px solid #C9CED3;border-radius:2px;font-weight:500;font-size:13.5px;cursor:pointer;color:#A3281F;border-color:#E2B4AF" style-hover="background:#FBF1F0">Excluir ficha</button></sc-if>
         </div>
@@ -881,15 +882,7 @@
               <sc-if value="{{ proc.semAtividades }}"><div style="padding:18px;font-size:13px;line-height:1.6;color:#7A828A">Ainda não há alterações registradas neste processo. Os dados e as observações originais vieram da planilha.</div></sc-if>
             </div>
           </section>
-          <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #DADDE1"><div><h2 style="font-size:14.5px;font-weight:600;margin:0;color:#1F2328">Acompanhamento de processo</h2><div style="font-size:12.5px;color:#7A828A;margin-top:2px">Documentos e andamentos encontrados pelo acompanhamento automatico do SEI.</div></div></div>
-            <div>
-              <sc-if value="{{ proc.temMonitor }}" hint-placeholder-val="{{ false }}">
-                <sc-for list="{{ proc.monitorItens }}" as="mi"><div style="padding:12px 18px;border-bottom:1px solid #ECEEF0"><div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline"><div style="font-size:13px;font-weight:600;color:#1F2328">{{ mi.titulo }}</div><span style="font-size:12px;color:#7A828A;white-space:nowrap">{{ mi.quando }}</span></div><sc-if value="{{ mi.temUnidade }}"><div style="font-size:12px;color:#5B636B;margin-top:3px">{{ mi.unidade }}</div></sc-if><div style="font-size:13px;line-height:1.55;color:#3D454D;margin-top:5px;white-space:pre-wrap;overflow-wrap:anywhere">{{ mi.texto }}</div><sc-if value="{{ mi.temLink }}"><div style="margin-top:6px"><a href="{{ mi.link }}" target="_blank" rel="noopener" style="font-size:12.5px;color:#1F5F9E">Abrir no SEI</a></div></sc-if></div></sc-for>
-              </sc-if>
-              <sc-if value="{{ proc.semMonitor }}" hint-placeholder-val="{{ true }}"><div style="padding:18px;font-size:13px;line-height:1.6;color:#7A828A">Ainda nao ha acompanhamento automatico deste processo. Rode a pesquisa em fila e importe para o monitor.</div></sc-if>
-            </div>
-          </section>
+          
           <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #DADDE1"><h2 style="font-size:14.5px;font-weight:600;margin:0;color:#1F2328">Dados do processo</h2></div>
             <div style="padding:2px 18px 6px">
@@ -957,7 +950,42 @@
       </div>
 
       <sc-if value="{{ confirmDel }}" hint-placeholder-val="{{ false }}">
-      <div style="position:fixed;inset:0;background:rgba(20,30,40,.45);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px">
+      <sc-if value="{{ acompanhamentoAberto }}" hint-placeholder-val="{{ false }}">
+<div onClick="{{ fecharAcompanhamento }}" style="position:fixed;inset:0;background:rgba(20,30,40,.45);z-index:60;display:flex;align-items:center;justify-content:center;padding:20px">
+  <div onClick="event.stopPropagation()" style="background:#fff;border-radius:2px;max-width:720px;width:100%;max-height:80vh;overflow:auto;box-shadow:0 12px 40px rgba(0,0,0,.2)">
+    <div style="padding:20px 22px 16px;border-bottom:1px solid #DADDE1;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <h3 style="font-weight:600;font-size:17px;margin:0 0 4px">Acompanhamento de processo</h3>
+        <div style="font-size:12.5px;color:#7A828A">Documentos e andamentos encontrados pela consulta automática do SEI</div>
+      </div>
+      <button onClick="{{ fecharAcompanhamento }}" style="background:transparent;border:none;font-size:20px;cursor:pointer;color:#7A828A;padding:4px 8px">×</button>
+    </div>
+    <div style="padding:16px 22px">
+      <sc-if value="{{ proc.temMonitor }}" hint-placeholder-val="{{ false }}">
+        <sc-for list="{{ proc.monitorItens }}" as="mi">
+          <div style="padding:12px 0;border-bottom:1px solid #ECEEF0">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13.5px;font-weight:500;color:#1F2328">{{ mi.titulo }}</div>
+                <div style="font-size:12.5px;color:#5B636B;margin-top:2px">{{ mi.data }} · {{ mi.unidade }}</div>
+                <div style="font-size:13px;color:#2E353B;margin-top:4px;line-height:1.5">{{ mi.texto }}</div>
+              </div>
+              <sc-if value="{{ mi.temLink }}" hint-placeholder-val="{{ false }}">
+                <a href="{{ mi.link }}" target="_blank" rel="noopener" style="font-size:12.5px;color:#1F5F9E;text-decoration:underline;white-space:nowrap">Abrir no SEI</a>
+              </sc-if>
+            </div>
+          </div>
+        </sc-for>
+      </sc-if>
+      <sc-if value="{{ proc.semMonitor }}" hint-placeholder-val="{{ true }}">
+        <div style="padding:24px 0;text-align:center;color:#7A828A;font-size:13.5px">Nenhum acompanhamento encontrado ainda.</div>
+      </sc-if>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<div style="position:fixed;inset:0;background:rgba(20,30,40,.45);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px">
         <div style="background:#fff;border-radius:2px;max-width:460px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.2)">
           <div style="padding:20px 22px 16px">
             <h3 style="font-weight:600;font-size:17px;margin:0 0 10px">Excluir esta ficha?</h3>
@@ -1107,7 +1135,7 @@ class Component extends DCLogic {
     screen:'login', role:null,
     loginEmail:'spsmediasemcas@gmail.com', loginSenha:'', loginErro:'', loginCarregando:false, dbOnline:false,
     activeServico:'PAEFI', activeTab:'pendentes', comentarioBusca:'', comentarioOrdem:'recentes',
-    selectedId:null, linkTexto:'', pendF:{q:'',servico:'',situacao:'',de:'',ate:''}, pendDraft:{q:'',servico:'',situacao:'',de:'',ate:''}, pendPag:1, pendPorPag:10, pendMenu:null, pendAviso:'', pendSort:'', pendDir:'asc', pendColsSel:null, pendColsOpen:false, todosF:{q:'',servico:'',status:'',marc:'',prazo:'',dias:'',parado:'',ano:'',orgao:'',orgaoGrupo:'',mes:''}, todosSort:'recebido', todosDir:'desc', todosPag:1, todosPorPag:25, todosColsSel:null, todosColsOpen:false, todosFiltrosAbertos:false, voltarPara:'servico', obsNumeroReit:'', formDup:[], formDupOk:false, obsTitulo:'', obsCategoria:'comentario', obsTexto:'', obsDataEvento:'', obsMensagemSei:'', obsAnexos:[], anexosCarregando:false, obsErro:false, obsErroTexto:'', comentarioEditando:null, storageErro:'', responsavelTexto:'', proximaAcaoTexto:'', proximaDataTexto:'', acompanhamentoSalvo:false, editKey:null, editValue:'',
+    selectedId:null, linkTexto:'', pendF:{q:'',servico:'',situacao:'',de:'',ate:''}, pendDraft:{q:'',servico:'',situacao:'',de:'',ate:''}, pendPag:1, pendPorPag:10, pendMenu:null,acompanhamentoAberto:false, pendAviso:'', pendSort:'', pendDir:'asc', pendColsSel:null, pendColsOpen:false, todosF:{q:'',servico:'',status:'',marc:'',prazo:'',dias:'',parado:'',ano:'',orgao:'',orgaoGrupo:'',mes:''}, todosSort:'recebido', todosDir:'desc', todosPag:1, todosPorPag:25, todosColsSel:null, todosColsOpen:false, todosFiltrosAbertos:false, voltarPara:'servico', obsNumeroReit:'', formDup:[], formDupOk:false, obsTitulo:'', obsCategoria:'comentario', obsTexto:'', obsDataEvento:'', obsMensagemSei:'', obsAnexos:[], anexosCarregando:false, obsErro:false, obsErroTexto:'', comentarioEditando:null, storageErro:'', responsavelTexto:'', proximaAcaoTexto:'', proximaDataTexto:'', acompanhamentoSalvo:false, editKey:null, editValue:'',
     sortKey:'recebido', sortDir:'asc', vincTexto:'', vincNota:'', pagina:1, porPagina:25, filtros:{q:'',campo:'',setor:'',gabinete:'',obs:'',dias:'',etapa:'',unidade:'',reit:'',marc:'',ano:'',prazo:''}, oficioTexto:'', vw:(typeof window!=='undefined'?window.innerWidth:1400), menuOpen:false, colsOpen:false, colsSel:null,
     form:{servico:'PAEFI',encaminhamento:'',numero:'',recebido:'',orgao:'',usuario:'',link:'',demanda:'',setorReceber:'',dataEvento:'',memo:'',situacao:'',prazoDias:'',prazoData:'',marcacao:''},
     servicos:[], processos:[], log:[], user:{nome:'',perfil:''}, confirmDel:false, logUser:'', logAcao:'', logQ:'',
@@ -1377,6 +1405,8 @@ class Component extends DCLogic {
   pendPagProx=()=>this.setState(s=>({pendPag:s.pendPag+1,pendMenu:null}));
   setPendPorPag=e=>this.setState({pendPorPag:+e.target.value||10,pendPag:1});
   fecharPendMenu=()=>this.setState({pendMenu:null});
+abrirAcompanhamento=()=>this.setState({acompanhamentoAberto:true});
+fecharAcompanhamento=()=>this.setState({acompanhamentoAberto:false});
   avisoPend(t){ this.setState({pendAviso:t}); clearTimeout(this._avisoT); this._avisoT=setTimeout(()=>this.setState({pendAviso:''}),2200); }
   abrirComFoco(p,cat){ this.setState({pendMenu:null}); this.openProcesso(p); setTimeout(()=>{ this.setState({obsCategoria:cat}); setTimeout(()=>{ const el=document.querySelector(cat==='reiteracao'?'input[placeholder="25101.000000/2026"]':'textarea[placeholder^="Descreva"]'); if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); el.focus(); } },250); },50); }
   copiarNumero(p){ this.setState({pendMenu:null}); const t=this.nums(p).principal; try{ navigator.clipboard.writeText(t).then(()=>this.avisoPend('Nº '+t+' copiado.'),()=>this.avisoPend('Não foi possível copiar.')); }catch(e){ this.avisoPend('Não foi possível copiar.'); } }
