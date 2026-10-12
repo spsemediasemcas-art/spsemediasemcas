@@ -157,7 +157,41 @@
     <div style="{{ contentPad }}">
     <sc-if value="{{ storageErroOn }}"><div role="alert" style="padding:12px 16px;margin-bottom:16px;border:1px solid #E8C2BE;background:#FCEDEB;color:#8E1D16;font-size:13px">{{ storageErro }}</div></sc-if>
 
-    <sc-if value="{{ painelVisible }}" hint-placeholder-val="{{ false }}">
+    <<sc-if value="{{ meusVisible }}" hint-placeholder-val="{{ false }}">
+    <div style="max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+        <div>
+          <h2 style="font-size:18px;font-weight:600;margin:0;color:#1F2328">Meus Processos</h2>
+          <div style="font-size:13px;color:#7A828A;margin-top:2px">Processos que você está acompanhando</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button onClick="{{ importarProcesso }}" style="height:36px;padding:0 14px;background:#fff;color:#1F5F9E;border:1px solid #B8D4F0;border-radius:2px;font-weight:500;font-size:13.5px;cursor:pointer" style-hover="background:#F0F7FF">Importar Processo</button>
+          <button onClick="{{ atualizarTodos }}" style="height:36px;padding:0 14px;background:#12355B;color:#fff;border:1px solid #12355B;border-radius:2px;font-weight:600;font-size:13.5px;cursor:pointer" style-hover="background:#0C2744">Atualizar Todos</button>
+        </div>
+      </div>
+      <sc-if value="{{ meusVazio }}" hint-placeholder-val="{{ true }}">
+        <div style="padding:40px 20px;text-align:center;color:#7A828A;font-size:14px">
+          <div style="font-size:40px;margin-bottom:12px">📋</div>
+          <div style="font-weight:500;color:#1F2328;margin-bottom:4px">Nenhum processo importado</div>
+          <div style="font-size:13px">Clique em "Importar Processo" para adicionar processos que você está acompanhando.</div>
+        </div>
+      </sc-if>
+      <sc-for list="{{ meusProcs }}" as="mp">
+        <div style="background:#fff;border:1px solid #DADDE1;border-radius:2px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+          <div style="flex:1;min-width:200px">
+            <div style="font-family:'IBM Plex Mono';font-weight:600;font-size:14px;color:#1F2328">{{ mp.numero }}</div>
+            <div style="font-size:12.5px;color:#5B636B;margin-top:2px">{{ mp.servicoLabel }}</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button onClick="{{ mp.verificar }}" style="height:32px;padding:0 12px;background:#fff;color:#1F5F9E;border:1px solid #B8D4F0;border-radius:2px;font-size:12.5px;cursor:pointer">Verificar</button>
+            <button onClick="{{ mp.remover }}" style="height:32px;padding:0 12px;background:#fff;color:#A3281F;border:1px solid #E2B4AF;border-radius:2px;font-size:12.5px;cursor:pointer">Remover</button>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+    </sc-if>
+
+    sc-if value="{{ painelVisible }}" hint-placeholder-val="{{ false }}">
     <div style="max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:20px">
 
       <div style="display:flex;flex-wrap:wrap;gap:14px">
@@ -1114,7 +1148,10 @@
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script>
+
 class Component extends DCLogic {
+  abrirAcompanhamento=()=>this.setState({acompanhamentoAberto:true,acompFiltro:'todos'});
+  fecharAcompanhamento=()=>this.setState({acompanhamentoAberto:false});
   SUPA_ROOT = 'https://cqcvbrgrstdrcqhakcvc.supabase.co';
   SUPA_KEY = 'sb_publishable_fR6nS5GOjrISTwNQjTuhUQ_e9zThR05';
   session = null;
@@ -1139,6 +1176,13 @@ class Component extends DCLogic {
     const of=/of[íi]cio\s*n?\.?\s*[º°o]?\s*(\d{3,5}(?:\/\d{4})?)/i.exec(t);
     return {...p,_e:1,etapa:p.etapa??et,unidade:p.unidade??(u?u[0]:''),reit:p.reit??nums.slice(1),oficio:p.oficio??(of?'Ofício nº '+of[1]:'')}; }
   state = {
+    acompanhamentoAberto:false,
+    meusProcs:[],
+    meusVisible:false,
+    meusVazio:true,
+    importarAberto:false,
+    atualizando:false,
+    verificandoId:null,
     screen:'login', role:null,
     loginEmail:'spsmediasemcas@gmail.com', loginSenha:'', loginErro:'', loginCarregando:false, dbOnline:false,
     activeServico:'PAEFI', activeTab:'pendentes', comentarioBusca:'', comentarioOrdem:'recentes',
@@ -1372,6 +1416,13 @@ class Component extends DCLogic {
   setSenhaConfirma=e=>this.setState({senhaConfirma:e.target.value,senhaErro:'',senhaOk:''});
   trocarSenha=async()=>{if(!this.session)return;const atual=this.state.senhaAtual,nova=this.state.senhaNova,conf=this.state.senhaConfirma,email=(this.session.user&&this.session.user.email)||'';if(!atual||nova.length<8){this.setState({senhaErro:'Informe a senha atual e uma nova senha com no mínimo 8 caracteres.',senhaOk:''});return;}if(nova!==conf){this.setState({senhaErro:'A confirmação não confere com a nova senha.',senhaOk:''});return;}if(nova===atual){this.setState({senhaErro:'A nova senha precisa ser diferente da atual.',senhaOk:''});return;}this.setState({senhaCarregando:true,senhaErro:'',senhaOk:''});try{const sessao=await this.supa('/auth/v1/token?grant_type=password',{method:'POST',token:this.SUPA_KEY,body:{email,password:atual}});await this.supa('/auth/v1/user',{method:'PUT',token:sessao.access_token,body:{password:nova}});if(sessao&&sessao.access_token){this.session=sessao;localStorage.setItem('semcas_supabase_session',JSON.stringify(sessao));}this.setState({senhaCarregando:false,senhaAtual:'',senhaNova:'',senhaConfirma:'',senhaOk:'Senha alterada. Use a nova senha no próximo acesso.',senhaErro:''});}catch(e){this.setState({senhaCarregando:false,senhaOk:'',senhaErro:/invalid login credentials|invalid_credentials/i.test(e.message)?'A senha atual está incorreta.':e.message});}};
   goPainel=()=>this.setState({screen:'painel',menuOpen:false});
+  goMeus=()=>this.setState({screen:'meus',menuOpen:false});
+  importarProcesso=()=>this.setState({importarAberto:true});
+  atualizarTodos=()=>{ this.setState({atualizando:true}); this.pedirVerificacaoTodos(); };
+  verificarMeus=(id)=>{ this.setState({verificandoId:id}); this.pedirVerificacao(id); };
+  removerMeus=(id)=>{ this.setState(s=>({meusProcs:s.meusProcs.filter(p=>p.id!==id)})); };
+  pedirVerificacao=(id)=>{ /* grava pedido no Supabase */ };
+  pedirVerificacaoTodos=()=>{ /* grava pedido para todos os meusProcs */ };
   goPendencias=()=>this.setState({screen:'pendencias',menuOpen:false,pendMenu:null});
   // Linha e valor de ordenação compartilhados por "Todos os Processos" e "Pendências".
   dadosLinha(p,ult){ const fmt=n=>n.toLocaleString('pt-BR'); const mk=this.MARC[p.marcacao||'']||this.MARC[''], sp=this.situacaoPrazo(p), d=this.dias(p), ua=ult.get(p.id), ds=this.diasSem(p,ult), ob=p.obs||[], last=ob[ob.length-1], resp=p.aba==='respondido', nn=this.nums(p);
@@ -1412,8 +1463,6 @@ class Component extends DCLogic {
   pendPagProx=()=>this.setState(s=>({pendPag:s.pendPag+1,pendMenu:null}));
   setPendPorPag=e=>this.setState({pendPorPag:+e.target.value||10,pendPag:1});
   fecharPendMenu=()=>this.setState({pendMenu:null});
-abrirAcompanhamento=()=>this.setState({acompanhamentoAberto:true,acompFiltro:'todos'});
-fecharAcompanhamento=()=>this.setState({acompanhamentoAberto:false});
   avisoPend(t){ this.setState({pendAviso:t}); clearTimeout(this._avisoT); this._avisoT=setTimeout(()=>this.setState({pendAviso:''}),2200); }
   abrirComFoco(p,cat){ this.setState({pendMenu:null}); this.openProcesso(p); setTimeout(()=>{ this.setState({obsCategoria:cat}); setTimeout(()=>{ const el=document.querySelector(cat==='reiteracao'?'input[placeholder="25101.000000/2026"]':'textarea[placeholder^="Descreva"]'); if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); el.focus(); } },250); },50); }
   copiarNumero(p){ this.setState({pendMenu:null}); const t=this.nums(p).principal; try{ navigator.clipboard.writeText(t).then(()=>this.avisoPend('Nº '+t+' copiado.'),()=>this.avisoPend('Não foi possível copiar.')); }catch(e){ this.avisoPend('Não foi possível copiar.'); } }
@@ -1690,7 +1739,8 @@ fecharAcompanhamento=()=>this.setState({acompanhamentoAberto:false});
       const opcoesDe=k=>k==='servico'?[...s.servicos.map(x=>({v:x.key,l:x.label})),...(s.servicos.some(x=>x.key===sel.servico)?[]:[{v:sel.servico,l:this.sv(sel.servico).label}])]:k==='encaminhamento'?[{v:'',l:'Não definido'},...[...new Set([...this.destinos(),...(sel.encaminhamento?[sel.encaminhamento]:[])])].map(x=>({v:x,l:x}))]:[];
       const dados=campos.map(([k,label,placeholder])=>{ const v=this.valorCampo(sel,k), hi=(sel.hist||{})[k], ehSelect=k==='servico'||k==='encaminhamento';
         return {k,label,placeholder:placeholder||'',valor:k==='servico'?this.sv(v).label:(v||'Não informado'),cor:v?'#1F2328':'#9AA6B2',lendo:ed!==k,editando:ed===k,podeEditar:podeEditar&&ed!==k,ehSelect,ehTexto:!ehSelect,opcoes:opcoesDe(k),temQuem:!!hi,quem:hi?('Alterado por '+hi.autor+' em '+hi.data):'',onEdit:()=>this.startEdit(k,k==='prazoData'?(v||this.sugestaoPrazoData(sel)):v)}; });
-      proc={...sel,dados,...this.autoriaProc(sel,ult,atividades),demandaLendo:ed!=='demanda',demandaEditando:ed==='demanda',podeEditarDemanda:podeEditar&&ed!=='demanda',editarDemanda:()=>this.startEdit('demanda',sel.demanda),servicoLabel:this.sv(sel.servico).label,usuario:sel.usuario||'Não informado',temEncaminhamento:!!sel.encaminhamento,etapas,obs,atividades:processoAtividades,semAtividades:!processoAtividades.length,
+      
+proc={...sel,dados,...this.autoriaProc(sel,ult,atividades),demandaLendo:ed!=='demanda',demandaEditando:ed==='demanda',podeEditarDemanda:podeEditar&&ed!=='demanda',editarDemanda:()=>this.startEdit('demanda',sel.demanda),servicoLabel:this.sv(sel.servico).label,usuario:sel.usuario||'Não informado',temEncaminhamento:!!sel.encaminhamento,etapas,obs,atividades:processoAtividades,semAtividades:!processoAtividades.length,
          ...(()=>{ const mon=todosObs.filter(ehMonitor); const ehDoc=o=>/documento/i.test(o.titulo||''); const chave=(d,h)=>{const m=String(d||'').match(/(\d{2})\/(\d{2})\/(\d{4})/);return m?(m[3]+m[2]+m[1]+(h||'00:00')):'';};
            const itens=mon.map(o=>{ const txt=String(o.texto||'').replace(/\s+$/,''); const linhas=txt.split('\n'); const cab=(linhas[0]||'').trim(); const corpo=linhas.slice(1).join('\n').trim(); const m=cab.match(/^(\d{2}\/\d{2}\/\d{4})(?:\s+(\d{1,2}:\d{2}))?\s*(?:\(([^)]*)\))?\s*(.*)$/); const doc=ehDoc(o); const dataSei=m?m[1]:(o.dataEvento||''); const horaSei=m&&m[2]?m[2]:''; const url=(String(o.mensagemSei||'').match(/https?:\/\/\S+/)||[''])[0]; const linkDoc=this.linkSeguro(url), linkProc=this.linkSeguro(sel.link), link=linkDoc||linkProc;
              return {tipo:doc?'Documento':'Andamento',ehDoc:doc,tipoBg:doc?'#EEEAF8':'#E8F2FA',tipoCor:doc?'#59408C':'#0F5E91',tipoBorder:doc?'#D7CDEE':'#C4DDEC',dataSei:dataSei||'—',horaSei,unidade:m&&m[3]?m[3]:'',temUnidade:!!(m&&m[3]),texto:m?(m[4]||cab):cab,corpo,temCorpo:!!corpo,link,temLink:!!link,linkTxt:linkDoc?'Abrir documento no SEI':'Abrir processo no SEI',k:chave(dataSei,horaSei)}; }).sort((a,b)=>b.k.localeCompare(a.k));
@@ -1809,7 +1859,7 @@ fecharAcompanhamento=()=>this.setState({acompanhamentoAberto:false});
     const telaAtiva=s.screen==='processo'?(['todos','pendencias','painel'].includes(s.voltarPara)?s.voltarPara:'servico'):s.screen;
     const SVICO={CONVITES:'cal',DEMANDAS_EQUIV:'file',SPSEMC:'users',AEPETI:'fileT',PCDIF:'file',CENTROS_POPS:'users',MEDIDAS:'box',PAEFI:'fileT',SEAS:'users',CREAS:'users',ADJPS:'file',JURIDICO:'file'};
     const nAlerta=comPrazo.length+acoes.length;
-    const navSecoes=[{titulo:'Acompanhamento',itens:[navIt('Pendências',telaAtiva==='pendencias',this.goPendencias,'clock',nAlerta?fmt(nAlerta):'',true),navIt('Todos os Processos',telaAtiva==='todos',this.irTodos,'layers',fmt(procs.length))]}];
+    const navSecoes=[{titulo:'Acompanhamento',itens:[navIt('Pendências',telaAtiva==='pendencias',this.goPendencias,'clock',nAlerta?fmt(nAlerta):'',true),navIt('Todos os Processos',telaAtiva==='todos',this.irTodos,'layers',fmt(procs.length),navIt('Meus Processos',telaAtiva==='meus',this.goMeus,'user',fmt(s.meusProcs.length)))]}];
     if(isSuper){ navSecoes.push({titulo:'Superintendência',itens:[navIt('Painel geral',telaAtiva==='painel',this.goPainel,'bank','')]});
       navSecoes.push({titulo:'Gestão',itens:[navIt('Registro de atividades',telaAtiva==='log',this.goLog,'user',fmt(s.log.length)),navIt('Usuários',telaAtiva==='usuarios',this.goUsuarios,'user',fmt(s.usuarios.length))]}); }
     const gNav=new Map(); s.servicos.forEach(sv=>{ const n=procs.filter(p=>p.servico===sv.key&&p.aba==='pendente').length; if(!gNav.has(sv.grupo)) gNav.set(sv.grupo,[]); gNav.get(sv.grupo).push(navIt(sv.label,telaAtiva==='servico'&&s.activeServico===sv.key,()=>this.goServico(sv.key),SVICO[sv.key]||'file',fmt(n))); });
@@ -1909,7 +1959,7 @@ fecharAcompanhamento=()=>this.setState({acompanhamentoAberto:false});
       doLogin:this.doLogin,loginErro:s.loginErro||'',loginErroOn:!!s.loginErro,loginCarregando:s.loginCarregando,loginBtnTexto:s.loginCarregando?'Entrando…':'Entrar',
       isSuper:s.role==='super',userName,userRole:s.user.perfil,userInitials:userName.split(' ').filter(Boolean).map(w=>w[0]).slice(0,2).join(''),
       navGrupos:grupos,navPainelStyle,goPainel:this.goPainel,openNovo:this.openNovo,logout:this.logout,
-      painelVisible:s.screen==='painel',servicoVisible:s.screen==='servico',processoVisible:s.screen==='processo',novoVisible:s.screen==='novo',novoBtnOn:!['novo','log','usuarios'].includes(s.screen),
+      painelVisible:s.screen==='painel',meusVisible:s.screen==='meus',meusVazio:s.meusProcs.length===0,servicoVisible:s.screen==='servico',processoVisible:s.screen==='processo',novoVisible:s.screen==='novo',novoBtnOn:!['novo','log','usuarios'].includes(s.screen),
       crumb:s.screen==='todos'?'Acompanhamento':s.screen==='pendencias'?'Acompanhamento > Pendências':s.screen==='usuarios'?'Gestão / Usuários':s.screen==='log'?'Gestão / Registro de atividades':s.screen==='painel'?'Superintendência':(s.screen==='novo'?'Cadastro':(s.screen==='processo'?('Serviços / '+cur.label):'Serviços')),
       pageTitle:s.screen==='todos'?'Todos os Processos':s.screen==='pendencias'?'Pendências':s.screen==='usuarios'?'Usuários':s.screen==='log'?'Registro de atividades':s.screen==='painel'?'Painel geral':(s.screen==='novo'?'Novo processo':(s.screen==='processo'?'Detalhe do processo':cur.label)),
       hoje:s.screen==='pendencias'?this.agora():new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'short',year:'numeric'}).format(new Date()).replace('.',''),
