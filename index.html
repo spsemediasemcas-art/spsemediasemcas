@@ -157,41 +157,77 @@
     <div style="{{ contentPad }}">
     <sc-if value="{{ storageErroOn }}"><div role="alert" style="padding:12px 16px;margin-bottom:16px;border:1px solid #E8C2BE;background:#FCEDEB;color:#8E1D16;font-size:13px">{{ storageErro }}</div></sc-if>
 
-    <<sc-if value="{{ meusVisible }}" hint-placeholder-val="{{ false }}">
+    <sc-if value="{{ meusVisible }}" hint-placeholder-val="{{ false }}">
     <div style="max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:16px">
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
-        <div>
-          <h2 style="font-size:18px;font-weight:600;margin:0;color:#1F2328">Meus Processos</h2>
-          <div style="font-size:13px;color:#7A828A;margin-top:2px">Processos que você está acompanhando</div>
+      <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:12px 18px;border-bottom:1px solid #DADDE1">
+          <div>
+            <h2 style="font-size:14.5px;font-weight:600;margin:0;color:#1F2328">Processos acompanhados por mim</h2>
+            <div style="font-size:12.5px;color:#7A828A;margin-top:4px">{{ meusInfo }}</div>
+            <div style="font-size:12px;margin-top:2px;color:{{ monitorStatusCor }}">{{ monitorStatusTxt }}</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button onClick="{{ importarProcesso }}" style="height:36px;padding:0 14px;background:#fff;color:#1F5F9E;border:1px solid #B8D4F0;border-radius:2px;font-weight:500;font-size:13.5px;cursor:pointer" style-hover="background:#F0F7FF">Importar processo</button>
+            <button onClick="{{ atualizarTodos }}" style="height:36px;padding:0 14px;background:#12355B;color:#fff;border:1px solid #12355B;border-radius:2px;font-weight:600;font-size:13.5px;cursor:pointer" style-hover="background:#0C2744">{{ atualizarTxt }}</button>
+          </div>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button onClick="{{ importarProcesso }}" style="height:36px;padding:0 14px;background:#fff;color:#1F5F9E;border:1px solid #B8D4F0;border-radius:2px;font-weight:500;font-size:13.5px;cursor:pointer" style-hover="background:#F0F7FF">Importar Processo</button>
-          <button onClick="{{ atualizarTodos }}" style="height:36px;padding:0 14px;background:#12355B;color:#fff;border:1px solid #12355B;border-radius:2px;font-weight:600;font-size:13.5px;cursor:pointer" style-hover="background:#0C2744">Atualizar Todos</button>
+        <sc-if value="{{ meusVazio }}" hint-placeholder-val="{{ true }}">
+          <div style="padding:28px 18px;font-size:13px;color:#7A828A">Nenhum processo importado. Use “Importar processo” para escolher os processos que você quer acompanhar.</div>
+        </sc-if>
+        <sc-for list="{{ meusLista }}" as="mp">
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:12px 18px;border-bottom:1px solid #ECEEF0;align-items:center">
+            <div style="min-width:0">
+              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                <span style="font-family:'IBM Plex Mono';font-weight:600;font-size:14px;color:#1F2328">{{ mp.numero }}</span>
+                <span style="display:inline-block;padding:1px 7px;font-size:11.5px;font-weight:600;border:1px solid {{ mp.stBorder }};background:{{ mp.stBg }};color:{{ mp.stColor }};border-radius:2px">{{ mp.status }}</span>
+              </div>
+              <div style="font-size:12.5px;color:#5B636B;margin-top:3px">{{ mp.servicoLabel }} · {{ mp.orgao }}</div>
+              <div style="font-size:12px;color:#7A828A;margin-top:2px">{{ mp.monitorTxt }}</div>
+              <sc-if value="{{ mp.temVerif }}"><div role="status" style="font-size:12px;margin-top:3px;color:{{ mp.verifCor }}">{{ mp.verifTxt }}</div></sc-if>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button onClick="{{ mp.verificar }}" style="height:32px;padding:0 12px;background:#fff;color:#12355B;border:1px solid #C9CED3;border-radius:2px;font-size:12.5px;cursor:pointer" style-hover="background:#F5F7FA">{{ mp.verifBtn }}</button>
+              <button onClick="{{ mp.abrir }}" style="height:32px;padding:0 12px;background:#fff;color:#1F5F9E;border:1px solid #B8D4F0;border-radius:2px;font-size:12.5px;cursor:pointer" style-hover="background:#F0F7FF">Abrir</button>
+              <button onClick="{{ mp.remover }}" style="height:32px;padding:0 12px;background:#fff;color:#A3281F;border:1px solid #E2B4AF;border-radius:2px;font-size:12.5px;cursor:pointer" style-hover="background:#FBF1F0">Remover</button>
+            </div>
+          </div>
+        </sc-for>
+      </section>
+    </div>
+
+    <sc-if value="{{ importarAberto }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ fecharImportar }}" style="position:fixed;inset:0;background:rgba(20,30,40,.45);z-index:60;display:flex;align-items:center;justify-content:center;padding:20px">
+      <div onClick="{{ pararClique }}" role="dialog" aria-label="Importar processo" style="background:#fff;border:1px solid #DADDE1;border-radius:2px;max-width:680px;width:100%;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,.2)">
+        <div style="padding:16px 20px 14px;border-bottom:1px solid #DADDE1;display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+          <div>
+            <h3 style="font-weight:600;font-size:16px;margin:0;color:#1F2328">Importar processo</h3>
+            <div style="font-size:12.5px;color:#7A828A;margin-top:4px">Busque pelo nº SEI, serviço, órgão ou pessoa e adicione à sua lista.</div>
+          </div>
+          <button onClick="{{ fecharImportar }}" style="height:32px;padding:0 12px;background:#fff;color:#1F2328;border:1px solid #C9CED3;border-radius:2px;font-weight:500;font-size:13px;cursor:pointer">Fechar</button>
         </div>
+        <div style="padding:10px 20px;border-bottom:1px solid #ECEEF0">
+          <input value="{{ importarBusca }}" onInput="{{ setImportarBusca }}" placeholder="Ex.: 25101.011170/2025" aria-label="Buscar processo" style="width:100%;height:36px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:13.5px">
+        </div>
+        <div style="overflow:auto;flex:1">
+          <sc-if value="{{ importarVazio }}"><div style="padding:20px;font-size:13px;color:#7A828A">{{ importarVazioTxt }}</div></sc-if>
+          <sc-for list="{{ importarLista }}" as="ip">
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:10px 20px;border-bottom:1px solid #ECEEF0;align-items:center">
+              <div style="min-width:0">
+                <div style="font-family:'IBM Plex Mono';font-weight:600;font-size:13.5px;color:#1F2328">{{ ip.numero }}</div>
+                <div style="font-size:12.5px;color:#5B636B;margin-top:2px">{{ ip.servicoLabel }} · {{ ip.orgao }}</div>
+              </div>
+              <sc-if value="{{ ip.podeAdd }}"><button onClick="{{ ip.add }}" style="height:32px;padding:0 12px;background:#12355B;color:#fff;border:1px solid #12355B;border-radius:2px;font-weight:600;font-size:12.5px;cursor:pointer">Adicionar</button></sc-if>
+              <sc-if value="{{ ip.jaAdd }}"><span style="font-size:12.5px;color:#1E8E4E;font-weight:500">Na sua lista</span></sc-if>
+            </div>
+          </sc-for>
+        </div>
+        <div style="padding:10px 20px;background:#FAFBFB;border-top:1px solid #DADDE1;font-size:12px;color:#7A828A">{{ importarRodape }}</div>
       </div>
-      <sc-if value="{{ meusVazio }}" hint-placeholder-val="{{ true }}">
-        <div style="padding:40px 20px;text-align:center;color:#7A828A;font-size:14px">
-          <div style="font-size:40px;margin-bottom:12px">📋</div>
-          <div style="font-weight:500;color:#1F2328;margin-bottom:4px">Nenhum processo importado</div>
-          <div style="font-size:13px">Clique em "Importar Processo" para adicionar processos que você está acompanhando.</div>
-        </div>
-      </sc-if>
-      <sc-for list="{{ meusProcs }}" as="mp">
-        <div style="background:#fff;border:1px solid #DADDE1;border-radius:2px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-          <div style="flex:1;min-width:200px">
-            <div style="font-family:'IBM Plex Mono';font-weight:600;font-size:14px;color:#1F2328">{{ mp.numero }}</div>
-            <div style="font-size:12.5px;color:#5B636B;margin-top:2px">{{ mp.servicoLabel }}</div>
-          </div>
-          <div style="display:flex;gap:8px">
-            <button onClick="{{ mp.verificar }}" style="height:32px;padding:0 12px;background:#fff;color:#1F5F9E;border:1px solid #B8D4F0;border-radius:2px;font-size:12.5px;cursor:pointer">Verificar</button>
-            <button onClick="{{ mp.remover }}" style="height:32px;padding:0 12px;background:#fff;color:#A3281F;border:1px solid #E2B4AF;border-radius:2px;font-size:12.5px;cursor:pointer">Remover</button>
-          </div>
-        </div>
-      </sc-for>
     </div>
     </sc-if>
+    </sc-if>
 
-    sc-if value="{{ painelVisible }}" hint-placeholder-val="{{ false }}">
+    <sc-if value="{{ painelVisible }}" hint-placeholder-val="{{ false }}">
     <div style="max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:20px">
 
       <div style="display:flex;flex-wrap:wrap;gap:14px">
@@ -813,8 +849,10 @@
             <sc-if value="{{ proc.reitDetOn }}" hint-placeholder-val="{{ false }}"><span style="color:#7A4600;font-weight:500">{{ proc.reitDetTxt }}</span></sc-if>
           </div>
           <div style="display:flex;gap:6px 14px;flex-wrap:wrap;margin-top:6px;font-size:12.5px;color:#5B636B"><sc-if value="{{ proc.temCadastrado }}" hint-placeholder-val="{{ true }}"><span>{{ proc.cadastradoTxt }}</span></sc-if><span>{{ proc.ultimaTxt }}</span></div>
+          <sc-if value="{{ proc.temVerif }}" hint-placeholder-val="{{ false }}"><div role="status" style="font-size:12.5px;margin-top:6px;color:{{ proc.verifCor }}">{{ proc.verifTxt }}</div></sc-if>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button onClick="{{ proc.verificar }}" style="height:36px;padding:0 14px;background:#fff;color:#12355B;border:1px solid #C9CED3;border-radius:2px;font-weight:500;font-size:13.5px;cursor:pointer" style-hover="background:#F5F7FA">{{ proc.verifBtn }}</button>
           <sc-if value="{{ proc.temMonitor }}" hint-placeholder-val="{{ false }}"><button onClick="{{ abrirAcompanhamento }}" style="height:36px;padding:0 14px;background:#fff;color:#1F5F9E;border:1px solid #B8D4F0;border-radius:2px;font-weight:500;font-size:13.5px;cursor:pointer" style-hover="background:#F0F7FF">Acompanhamento SEI <span style="display:inline-block;min-width:18px;margin-left:4px;padding:0 5px;font-size:11.5px;font-weight:600;background:#EEF2F7;border:1px solid #D3DEE9;color:#24476B;border-radius:2px">{{ proc.monitorCount }}</span></button></sc-if>
           <sc-if value="{{ proc.podeConcluir }}" hint-placeholder-val="false"><button onClick="{{ toggleAba }}" style="height:36px;padding:0 16px;border-radius:2px;font-weight:600;font-size:13.5px;cursor:pointer;border:1px solid {{ proc.acaoBorder }};background:{{ proc.acaoBg }};color:{{ proc.acaoColor }}">{{ proc.acaoBtn }}</button></sc-if>
           <sc-if value="{{ proc.podeExcluir }}" hint-placeholder-val="{{ false }}"><button onClick="{{ pedirExcluir }}" style="height:36px;padding:0 14px;background:#fff;color:#1F2328;border:1px solid #C9CED3;border-radius:2px;font-weight:500;font-size:13.5px;cursor:pointer;color:#A3281F;border-color:#E2B4AF" style-hover="background:#FBF1F0">Excluir ficha</button></sc-if>
@@ -1014,6 +1052,7 @@
                   </div>
                   <div style="font-size:13.5px;line-height:1.5;color:#16202B;white-space:pre-wrap">{{ mi.texto }}</div>
                   <sc-if value="{{ mi.temCorpo }}"><div style="font-size:12.5px;line-height:1.5;color:#5B636B;margin-top:4px;white-space:pre-wrap">{{ mi.corpo }}</div></sc-if>
+                  <sc-if value="{{ mi.restrito }}"><div style="margin-top:6px;font-size:12px;color:#8A5A06">Documento com acesso restrito no SEI: não há link público para ele.</div></sc-if>
                   <sc-if value="{{ mi.temLink }}"><a href="{{ mi.link }}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:6px;font-size:12.5px;color:#1F5F9E;text-decoration:underline">{{ mi.linkTxt }}</a></sc-if>
                 </div>
               </div>
@@ -1177,12 +1216,7 @@ class Component extends DCLogic {
     return {...p,_e:1,etapa:p.etapa??et,unidade:p.unidade??(u?u[0]:''),reit:p.reit??nums.slice(1),oficio:p.oficio??(of?'Ofício nº '+of[1]:'')}; }
   state = {
     acompanhamentoAberto:false,
-    meusProcs:[],
-    meusVisible:false,
-    meusVazio:true,
-    importarAberto:false,
-    atualizando:false,
-    verificandoId:null,
+    meusIds:[], pedidos:{}, monitorOnline:null, monitorSinal:'', importarAberto:false, importarBusca:'', atualizando:false, meusAtualizadoEm:'',
     screen:'login', role:null,
     loginEmail:'spsmediasemcas@gmail.com', loginSenha:'', loginErro:'', loginCarregando:false, dbOnline:false,
     activeServico:'PAEFI', activeTab:'pendentes', comentarioBusca:'', comentarioOrdem:'recentes',
@@ -1257,6 +1291,41 @@ class Component extends DCLogic {
     const pid=e.acao==='Exclusão'?null:(e.pid||null);
     await this.supa('/rest/v1/process_audit_log',{method:'POST',body:[{process_id:pid,action:e.acao,details:e.detalhe||'',author_name:e.autor||'',author_role:e.perfil||'',author_user_id:this.session.user.id}],prefer:'return=minimal'});
   }
+  mapComentario(c){ return {id:c.id,sourceIndex:c.source_index,authorUserId:c.author_user_id,titulo:c.title,categoria:c.category,tipo:c.comment_type,texto:c.body,mensagemSei:c.sei_message,anexos:c.attachments||[],dataEvento:c.event_date_text,autor:c.author_name,perfil:c.author_role,data:c.display_date,editadoPor:c.edited_by_name||'',editadoEm:c.edited_at_text||''}; }
+  // ---- "Verificar agora": pedido gravado no Supabase, executado pelo monitor SEI (PC 1)
+  async checarMonitor(){ try{ const r=await this.supa('/rest/v1/monitor_status?select=ultimo_sinal&order=ultimo_sinal.desc&limit=1'); const t=r&&r[0]?new Date(r[0].ultimo_sinal).getTime():0;
+      this.setState({monitorOnline:!!t&&Date.now()-t<180000,monitorSinal:t?this.fmtCurto(t):''}); }catch(e){ this.setState({monitorOnline:null,monitorSinal:''}); } }
+  async pedirVerificacao(pids){ const s=this.state, ativos=s.pedidos||{}, uid=this.session&&this.session.user&&this.session.user.id;
+    const porId=new Map(s.processos.map(p=>[p.id,p])), alvo=[...new Set(pids)].filter(id=>porId.has(id)&&!['pendente','rodando'].includes((ativos[id]||{}).status));
+    if(!alvo.length||!uid) return;
+    const marca={}; alvo.forEach(id=>marca[id]={status:'enviando',mensagem:'',novidades:0}); this.setState(st=>({pedidos:{...st.pedidos,...marca}}));
+    try{ const rows=await this.supa('/rest/v1/monitor_pedidos',{method:'POST',prefer:'return=representation',body:alvo.map(id=>({process_id:id,sei_number:this.nums(porId.get(id)).principal,requested_by:uid,requested_by_name:s.user.nome||''}))});
+      const novo={}; (rows||[]).forEach(r=>novo[r.process_id]={id:r.id,status:r.status,mensagem:r.mensagem||'',novidades:r.novidades||0,desde:Date.now()});
+      this.setState(st=>({pedidos:{...st.pedidos,...novo}}));
+    }catch(e){ const err={}; alvo.forEach(id=>err[id]={status:'erro',mensagem:/monitor_pedidos/.test(e.message)?'A fila do monitor ainda não foi criada no banco. Rode o arquivo supabase-monitor-pedidos.sql no Supabase.':'Não foi possível enviar o pedido: '+e.message,novidades:0}); this.setState(st=>({pedidos:{...st.pedidos,...err}})); return; }
+    this.checarMonitor(); this.acompanharPedidos(); }
+  acompanharPedidos(){ if(this._pedT) return; const inicio=Date.now();
+    const passo=async()=>{ const ped=this.state.pedidos||{}, ativos=Object.entries(ped).filter(([,v])=>v.id&&['pendente','rodando'].includes(v.status));
+      if(!ativos.length||Date.now()-inicio>15*60000){ this._pedT=null; return; }
+      try{ const rows=await this.supa('/rest/v1/monitor_pedidos?select=id,process_id,status,mensagem,novidades&id=in.('+ativos.map(([,v])=>v.id).join(',')+')');
+        const prontos=[], upd={}; (rows||[]).forEach(r=>{ upd[r.process_id]={...(ped[r.process_id]||{}),status:r.status,mensagem:r.mensagem||'',novidades:r.novidades||0}; if(!['pendente','rodando'].includes(r.status)) prontos.push(r.process_id); });
+        this.setState(st=>({pedidos:{...st.pedidos,...upd}}));
+        if(prontos.length) await this.recarregarComentarios(prontos);
+      }catch(e){}
+      if(Date.now()-inicio>60000) this.checarMonitor();
+      this._pedT=setTimeout(passo,4000); };
+    this._pedT=setTimeout(passo,3000); }
+  async recarregarComentarios(pids){ if(!pids.length) return; const rows=await this.supaTodos('/rest/v1/process_comments?select=*&process_id=in.('+pids.join(',')+')&order=process_id,source_index,id');
+    const por=new Map(pids.map(id=>[id,[]])); (rows||[]).forEach(c=>{ if(por.has(c.process_id)) por.get(c.process_id).push(this.mapComentario(c)); });
+    this.setState(st=>({processos:st.processos.map(p=>por.has(p.id)?{...p,obs:por.get(p.id)}:p)})); }
+  verifInfo(p){ const v=(this.state.pedidos||{})[p.id], on=this.state.monitorOnline, ocupado=!!v&&['enviando','pendente','rodando'].includes(v.status);
+    let txt='', cor='#5B636B';
+    if(v){ if(v.status==='enviando') txt='Enviando pedido…';
+      else if(v.status==='pendente') { txt=on===false?('Na fila, mas o monitor (PC 1) está sem sinal'+(this.state.monitorSinal?' desde '+this.state.monitorSinal:'')+'. A verificação roda quando ele voltar.'):'Na fila do monitor SEI…'; cor=on===false?'#8A5A06':'#5B636B'; }
+      else if(v.status==='rodando') txt='Verificando no SEI…';
+      else if(v.status==='concluido') { txt=v.novidades?(v.novidades+' novidade(s) encontrada(s). Veja em Acompanhamento SEI.'):'Verificado agora. Nenhuma novidade no SEI.'; cor='#1E8E4E'; }
+      else { txt=v.mensagem||'Não foi possível verificar.'; cor='#A3281F'; } }
+    return {temVerif:!!txt,verifTxt:txt,verifCor:cor,verifBtn:ocupado?'Verificando…':'Verificar agora',verificar:()=>this.pedirVerificacao([p.id])}; }
   async loadDbData(){
     const [svs,rows,comments,audits,usuariosDb]=await Promise.all([
       this.supa('/rest/v1/services?select=*&order=group_name,key'),
@@ -1266,7 +1335,7 @@ class Component extends DCLogic {
       this.state.role==='super'?this.supa('/rest/v1/user_profiles?select=user_id,email,display_name,role,active&order=display_name'):Promise.resolve([])
     ]);
     const porProcesso=new Map();
-    (comments||[]).forEach(c=>{const o={id:c.id,sourceIndex:c.source_index,authorUserId:c.author_user_id,titulo:c.title,categoria:c.category,tipo:c.comment_type,texto:c.body,mensagemSei:c.sei_message,anexos:c.attachments||[],dataEvento:c.event_date_text,autor:c.author_name,perfil:c.author_role,data:c.display_date,editadoPor:c.edited_by_name||'',editadoEm:c.edited_at_text||''};if(!porProcesso.has(c.process_id))porProcesso.set(c.process_id,[]);porProcesso.get(c.process_id).push(o);});
+    (comments||[]).forEach(c=>{const o=this.mapComentario(c);if(!porProcesso.has(c.process_id))porProcesso.set(c.process_id,[]);porProcesso.get(c.process_id).push(o);});
     const processos=(rows||[]).map(r=>{const base={...(r.raw_data||{})};const p={...base,id:r.id,servico:r.service_key,aba:r.status,numero:r.sei_number,recebido:r.received_date_text,memo:r.memo_sent_text,orgao:r.requester_agency,demanda:r.demand,usuario:r.referenced_person,situacao:r.situation,respSetor:r.sector_response_text,respGabinete:r.cabinet_response_text,conclusao:r.conclusion_text,link:r.sei_link,marcacao:r.marking,marcacaoOrigem:r.marking_origin,prazoDias:r.deadline_days,etapa:r.stage,unidade:r.unit_name,encaminhamento:r.forwarding,oficio:r.response_office,responsavelInterno:r.internal_responsible,proximaAcao:r.next_action,proximaData:r.next_action_date,reit:r.reiterations||[],hist:r.history||{},createdBy:r.created_by,updatedBy:r.updated_by,obs:porProcesso.get(r.id)||[]};delete p._e;return this.enrich(p);});
     const porId=new Map(processos.map(p=>[p.id,p]));
     const log=(audits||[]).map(a=>{const p=porId.get(a.process_id);const d=new Date(a.event_at);return {id:a.id,timestamp:d.getTime(),quando:d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).replace(',',''),autor:a.author_name||'—',perfil:a.author_role||'',acao:a.action,pid:a.process_id||'',numero:p?p.numero:'—',servico:p?p.servico:'',detalhe:a.details||''};});
@@ -1282,6 +1351,7 @@ class Component extends DCLogic {
     const perfil=perfis&&perfis[0];if(!perfil||!perfil.active)throw new Error('Usuário sem perfil ativo no sistema.');
     const role=perfil.role==='superintendente'?'super':'administrativo',nome=perfil.display_name||this.nomeDoEmail(perfil.email);
     await new Promise(resolve=>this.setState({role,user:{nome,perfil:role==='super'?'Superintendente':'Administrativo'},screen:role==='super'?'painel':'pendencias',activeServico:'PAEFI',activeTab:'pendentes',pagina:1,filtros:{...this.FILTROS0},loginErro:'',loginCarregando:false},resolve));
+    this.setState({meusIds:this.lerMeus()}); this.checarMonitor();
     await this.loadDbData();this.registrar('Acesso',null,'Entrou no sistema');
   }
   persist(){ try{ const s=this.state; localStorage.setItem('semcas_spsemc_v2',JSON.stringify({recs:s.processos.filter(p=>this.touched.has(p.id)),deleted:[...this.deleted],log:s.log})); }catch(e){} }
@@ -1416,13 +1486,17 @@ class Component extends DCLogic {
   setSenhaConfirma=e=>this.setState({senhaConfirma:e.target.value,senhaErro:'',senhaOk:''});
   trocarSenha=async()=>{if(!this.session)return;const atual=this.state.senhaAtual,nova=this.state.senhaNova,conf=this.state.senhaConfirma,email=(this.session.user&&this.session.user.email)||'';if(!atual||nova.length<8){this.setState({senhaErro:'Informe a senha atual e uma nova senha com no mínimo 8 caracteres.',senhaOk:''});return;}if(nova!==conf){this.setState({senhaErro:'A confirmação não confere com a nova senha.',senhaOk:''});return;}if(nova===atual){this.setState({senhaErro:'A nova senha precisa ser diferente da atual.',senhaOk:''});return;}this.setState({senhaCarregando:true,senhaErro:'',senhaOk:''});try{const sessao=await this.supa('/auth/v1/token?grant_type=password',{method:'POST',token:this.SUPA_KEY,body:{email,password:atual}});await this.supa('/auth/v1/user',{method:'PUT',token:sessao.access_token,body:{password:nova}});if(sessao&&sessao.access_token){this.session=sessao;localStorage.setItem('semcas_supabase_session',JSON.stringify(sessao));}this.setState({senhaCarregando:false,senhaAtual:'',senhaNova:'',senhaConfirma:'',senhaOk:'Senha alterada. Use a nova senha no próximo acesso.',senhaErro:''});}catch(e){this.setState({senhaCarregando:false,senhaOk:'',senhaErro:/invalid login credentials|invalid_credentials/i.test(e.message)?'A senha atual está incorreta.':e.message});}};
   goPainel=()=>this.setState({screen:'painel',menuOpen:false});
-  goMeus=()=>this.setState({screen:'meus',menuOpen:false});
-  importarProcesso=()=>this.setState({importarAberto:true});
-  atualizarTodos=()=>{ this.setState({atualizando:true}); this.pedirVerificacaoTodos(); };
-  verificarMeus=(id)=>{ this.setState({verificandoId:id}); this.pedirVerificacao(id); };
-  removerMeus=(id)=>{ this.setState(s=>({meusProcs:s.meusProcs.filter(p=>p.id!==id)})); };
-  pedirVerificacao=(id)=>{ /* grava pedido no Supabase */ };
-  pedirVerificacaoTodos=()=>{ /* grava pedido para todos os meusProcs */ };
+  // "Meus Processos": lista pessoal guardada neste navegador, por usuário.
+  meusChave(){ return 'semcas_meus_v1_'+((this.session&&this.session.user&&this.session.user.id)||'anon'); }
+  lerMeus(){ try{ const v=JSON.parse(localStorage.getItem(this.meusChave())||'[]'); return Array.isArray(v)?v.filter(x=>typeof x==='string'):[]; }catch(e){ return []; } }
+  salvarMeus(ids){ try{ localStorage.setItem(this.meusChave(),JSON.stringify(ids)); }catch(e){} this.setState({meusIds:ids}); }
+  goMeus=()=>{ this.setState({screen:'meus',menuOpen:false,meusIds:this.lerMeus()}); this.checarMonitor(); };
+  importarProcesso=()=>this.setState({importarAberto:true,importarBusca:''});
+  fecharImportar=()=>this.setState({importarAberto:false});
+  setImportarBusca=e=>this.setState({importarBusca:e.target.value});
+  addMeus=(id)=>{ const ids=this.state.meusIds; if(!ids.includes(id)) this.salvarMeus([id,...ids]); };
+  removerMeus=(id)=>this.salvarMeus(this.state.meusIds.filter(x=>x!==id));
+  atualizarTodos=()=>this.pedirVerificacao(this.state.meusIds);
   goPendencias=()=>this.setState({screen:'pendencias',menuOpen:false,pendMenu:null});
   // Linha e valor de ordenação compartilhados por "Todos os Processos" e "Pendências".
   dadosLinha(p,ult){ const fmt=n=>n.toLocaleString('pt-BR'); const mk=this.MARC[p.marcacao||'']||this.MARC[''], sp=this.situacaoPrazo(p), d=this.dias(p), ua=ult.get(p.id), ds=this.diasSem(p,ult), ob=p.obs||[], last=ob[ob.length-1], resp=p.aba==='respondido', nn=this.nums(p);
@@ -1552,7 +1626,7 @@ class Component extends DCLogic {
   setPorPagina=e=>this.setState({porPagina:+e.target.value||25,pagina:1});
   ff=(k)=>e=>{ const v=e.target.value; this.setState(s=>({filtros:{...s.filtros,[k]:v},pagina:1})); };
   limparFiltros=()=>this.setState({filtros:{...this.FILTROS0},pagina:1});
-  openProcesso=(p)=>this.setState({voltarPara:['todos','pendencias','painel'].includes(this.state.screen)?this.state.screen:(this.state.screen==='processo'?this.state.voltarPara:'servico'),todosColsOpen:false,screen:'processo',selectedId:p.id,obsNumeroReit:'',activeServico:p.servico,comentarioBusca:'',comentarioOrdem:'recentes',linkTexto:'',obsTitulo:'',obsCategoria:'comentario',obsTexto:'',obsDataEvento:'',obsMensagemSei:'',obsAnexos:[],anexosCarregando:false,obsErro:false,comentarioEditando:null,responsavelTexto:p.responsavelInterno||'',proximaAcaoTexto:p.proximaAcao||'',proximaDataTexto:p.proximaData||'',acompanhamentoSalvo:false,editKey:null,confirmDel:false});
+  openProcesso=(p)=>this.setState({voltarPara:['todos','pendencias','painel','meus'].includes(this.state.screen)?this.state.screen:(this.state.screen==='processo'?this.state.voltarPara:'servico'),todosColsOpen:false,screen:'processo',selectedId:p.id,obsNumeroReit:'',activeServico:p.servico,comentarioBusca:'',comentarioOrdem:'recentes',linkTexto:'',obsTitulo:'',obsCategoria:'comentario',obsTexto:'',obsDataEvento:'',obsMensagemSei:'',obsAnexos:[],anexosCarregando:false,obsErro:false,comentarioEditando:null,responsavelTexto:p.responsavelInterno||'',proximaAcaoTexto:p.proximaAcao||'',proximaDataTexto:p.proximaData||'',acompanhamentoSalvo:false,editKey:null,confirmDel:false});
   backToServico=()=>this.setState({screen:this.state.voltarPara||'servico',editKey:null});
   setLink=e=>this.setState({linkTexto:e.target.value});
   salvarLink=()=>{ const l=this.state.linkTexto.trim(); if(!l) return; if(!this.linkSeguro(l)){this.setState({storageErro:"Informe um link completo começando com https://"});return;} const st=this.stamp(); this.mut(this.state.selectedId,p=>({...p,link:l,hist:{...(p.hist||{}),link:st}}),'Link SEI','Adicionou o link do processo no SEI'); this.setState({linkTexto:''}); };
@@ -1740,10 +1814,10 @@ class Component extends DCLogic {
       const dados=campos.map(([k,label,placeholder])=>{ const v=this.valorCampo(sel,k), hi=(sel.hist||{})[k], ehSelect=k==='servico'||k==='encaminhamento';
         return {k,label,placeholder:placeholder||'',valor:k==='servico'?this.sv(v).label:(v||'Não informado'),cor:v?'#1F2328':'#9AA6B2',lendo:ed!==k,editando:ed===k,podeEditar:podeEditar&&ed!==k,ehSelect,ehTexto:!ehSelect,opcoes:opcoesDe(k),temQuem:!!hi,quem:hi?('Alterado por '+hi.autor+' em '+hi.data):'',onEdit:()=>this.startEdit(k,k==='prazoData'?(v||this.sugestaoPrazoData(sel)):v)}; });
       
-proc={...sel,dados,...this.autoriaProc(sel,ult,atividades),demandaLendo:ed!=='demanda',demandaEditando:ed==='demanda',podeEditarDemanda:podeEditar&&ed!=='demanda',editarDemanda:()=>this.startEdit('demanda',sel.demanda),servicoLabel:this.sv(sel.servico).label,usuario:sel.usuario||'Não informado',temEncaminhamento:!!sel.encaminhamento,etapas,obs,atividades:processoAtividades,semAtividades:!processoAtividades.length,
+proc={...sel,dados,...this.verifInfo(sel),...this.autoriaProc(sel,ult,atividades),demandaLendo:ed!=='demanda',demandaEditando:ed==='demanda',podeEditarDemanda:podeEditar&&ed!=='demanda',editarDemanda:()=>this.startEdit('demanda',sel.demanda),servicoLabel:this.sv(sel.servico).label,usuario:sel.usuario||'Não informado',temEncaminhamento:!!sel.encaminhamento,etapas,obs,atividades:processoAtividades,semAtividades:!processoAtividades.length,
          ...(()=>{ const mon=todosObs.filter(ehMonitor); const ehDoc=o=>/documento/i.test(o.titulo||''); const chave=(d,h)=>{const m=String(d||'').match(/(\d{2})\/(\d{2})\/(\d{4})/);return m?(m[3]+m[2]+m[1]+(h||'00:00')):'';};
            const itens=mon.map(o=>{ const txt=String(o.texto||'').replace(/\s+$/,''); const linhas=txt.split('\n'); const cab=(linhas[0]||'').trim(); const corpo=linhas.slice(1).join('\n').trim(); const m=cab.match(/^(\d{2}\/\d{2}\/\d{4})(?:\s+(\d{1,2}:\d{2}))?\s*(?:\(([^)]*)\))?\s*(.*)$/); const doc=ehDoc(o); const dataSei=m?m[1]:(o.dataEvento||''); const horaSei=m&&m[2]?m[2]:''; const url=(String(o.mensagemSei||'').match(/https?:\/\/\S+/)||[''])[0]; const linkDoc=this.linkSeguro(url), linkProc=this.linkSeguro(sel.link), link=linkDoc||linkProc;
-             return {tipo:doc?'Documento':'Andamento',ehDoc:doc,tipoBg:doc?'#EEEAF8':'#E8F2FA',tipoCor:doc?'#59408C':'#0F5E91',tipoBorder:doc?'#D7CDEE':'#C4DDEC',dataSei:dataSei||'—',horaSei,unidade:m&&m[3]?m[3]:'',temUnidade:!!(m&&m[3]),texto:m?(m[4]||cab):cab,corpo,temCorpo:!!corpo,link,temLink:!!link,linkTxt:linkDoc?'Abrir documento no SEI':'Abrir processo no SEI',k:chave(dataSei,horaSei)}; }).sort((a,b)=>b.k.localeCompare(a.k));
+             return {tipo:doc?'Documento':'Andamento',ehDoc:doc,tipoBg:doc?'#EEEAF8':'#E8F2FA',tipoCor:doc?'#59408C':'#0F5E91',tipoBorder:doc?'#D7CDEE':'#C4DDEC',dataSei:dataSei||'—',horaSei,unidade:m&&m[3]?m[3]:'',temUnidade:!!(m&&m[3]),texto:m?(m[4]||cab):cab,corpo,temCorpo:!!corpo,link,temLink:!!link,linkTxt:linkDoc?'Abrir documento no SEI':'Abrir processo no SEI',restrito:doc&&!linkDoc,k:chave(dataSei,horaSei)}; }).sort((a,b)=>b.k.localeCompare(a.k));
            const filtro=s.acompFiltro||'todos', nDoc=itens.filter(x=>x.ehDoc).length; const vis=itens.filter(x=>filtro==='todos'||(filtro==='doc'?x.ehDoc:!x.ehDoc));
            const fb=(k,label,n)=>({label,n:String(n),onClick:()=>this.setState({acompFiltro:k}),style:'height:30px;padding:0 12px;border-radius:2px;cursor:pointer;font-size:12.5px;border:1px solid '+(filtro===k?'#12355B':'#C9CED3')+';background:'+(filtro===k?'#12355B':'#fff')+';color:'+(filtro===k?'#fff':'#3A4753')});
            const ult=mon.map(o=>String(o.data||'')).filter(x=>/\d{2}\/\d{2}\/\d{4}/.test(x)).sort((a,b)=>chave(a,(a.match(/\d{1,2}:\d{2}/)||[''])[0]).localeCompare(chave(b,(b.match(/\d{1,2}:\d{2}/)||[''])[0]))).pop()||'—';
@@ -1856,10 +1930,10 @@ proc={...sel,dados,...this.autoriaProc(sel,ult,atividades),demandaLendo:ed!=='de
     const navIt=(label,ativo,onClick,ic,badge,alerta)=>({label,onClick,icone:navIco(ic),temBadge:badge!==''&&badge!=null,badge:String(badge==null?'':badge),
       estilo:'width:100%;display:flex;align-items:center;gap:11px;min-height:40px;padding:0 8px 0 12px;margin:2px 0;border:none;border-radius:6px;cursor:pointer;font-size:13.5px;text-align:left;font-weight:'+(ativo?'600':'500')+';background:'+(ativo?'#DCE8F7':'transparent')+';color:'+(ativo?'#12355B':'#2E353B')+';box-shadow:'+(ativo?'inset 3px 0 0 #1F5F9E':'none'),
       badgeEstilo:'margin-left:auto;min-width:28px;height:24px;padding:0 7px;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;background:'+(alerta?'#FDECEA':'#EEF1F4')+';color:'+(alerta?'#C62828':'#1F2328')});
-    const telaAtiva=s.screen==='processo'?(['todos','pendencias','painel'].includes(s.voltarPara)?s.voltarPara:'servico'):s.screen;
+    const telaAtiva=s.screen==='processo'?(['todos','pendencias','painel','meus'].includes(s.voltarPara)?s.voltarPara:'servico'):s.screen;
     const SVICO={CONVITES:'cal',DEMANDAS_EQUIV:'file',SPSEMC:'users',AEPETI:'fileT',PCDIF:'file',CENTROS_POPS:'users',MEDIDAS:'box',PAEFI:'fileT',SEAS:'users',CREAS:'users',ADJPS:'file',JURIDICO:'file'};
     const nAlerta=comPrazo.length+acoes.length;
-    const navSecoes=[{titulo:'Acompanhamento',itens:[navIt('Pendências',telaAtiva==='pendencias',this.goPendencias,'clock',nAlerta?fmt(nAlerta):'',true),navIt('Todos os Processos',telaAtiva==='todos',this.irTodos,'layers',fmt(procs.length),navIt('Meus Processos',telaAtiva==='meus',this.goMeus,'user',fmt(s.meusProcs.length)))]}];
+    const navSecoes=[{titulo:'Acompanhamento',itens:[navIt('Pendências',telaAtiva==='pendencias',this.goPendencias,'clock',nAlerta?fmt(nAlerta):'',true),navIt('Todos os Processos',telaAtiva==='todos',this.irTodos,'layers',fmt(procs.length)),navIt('Meus Processos',telaAtiva==='meus',this.goMeus,'user',fmt(s.meusIds.length))]}];
     if(isSuper){ navSecoes.push({titulo:'Superintendência',itens:[navIt('Painel geral',telaAtiva==='painel',this.goPainel,'bank','')]});
       navSecoes.push({titulo:'Gestão',itens:[navIt('Registro de atividades',telaAtiva==='log',this.goLog,'user',fmt(s.log.length)),navIt('Usuários',telaAtiva==='usuarios',this.goUsuarios,'user',fmt(s.usuarios.length))]}); }
     const gNav=new Map(); s.servicos.forEach(sv=>{ const n=procs.filter(p=>p.servico===sv.key&&p.aba==='pendente').length; if(!gNav.has(sv.grupo)) gNav.set(sv.grupo,[]); gNav.get(sv.grupo).push(navIt(sv.label,telaAtiva==='servico'&&s.activeServico===sv.key,()=>this.goServico(sv.key),SVICO[sv.key]||'file',fmt(n))); });
@@ -1945,7 +2019,7 @@ proc={...sel,dados,...this.autoriaProc(sel,ult,atividades),demandaLendo:ed!=='de
       headStatsOn: s.screen==='servico' && s.vw>=1100,
       headStats:[{label:'há +30 dias',val:fmt(inS.filter(p=>p.aba==='pendente'&&(this.dias(p)||0)>30).length),cor:'#A3281F'},{label:'em reiteração',val:fmt(inS.filter(p=>p.aba==='pendente'&&p.marcacao==='reiteracao').length),cor:'#8A5A00'},{label:'urgentes',val:fmt(inS.filter(p=>p.aba==='pendente'&&p.marcacao==='urgente').length),cor:'#A3281F'}],
       marcChips,porMarc,vis,colOpts,colsVisN:String(1+Object.values(vis).filter(Boolean).length),colsOpen:s.colsOpen,toggleCols:this.toggleCols,colsPadrao:this.colsPadrao,porUnidade,etapaOpts:this.ETAPAS.map((l,i)=>({v:String(i),l:(i+1)+'. '+l})),unidadeAll:this.UNID.map(u=>u[0]),
-      fEtapa:this.ff('etapa'),navSecoes,...pendVals,...todosVals,voltarLabel:({todos:'Todos os Processos',pendencias:'Pendências',painel:'Painel geral'})[s.voltarPara]||(proc?proc.servicoLabel:''),fPrazo:this.ff('prazo'),goPendencias:this.goPendencias,navPendStyle,pendBadge:comPrazo.length+acoes.length?String(comPrazo.length+acoes.length):'',pendenciasVisible:s.screen==='pendencias',pendGrupos,kpiPrazosVencidos:fmt(comPrazo.filter(x=>x.sp.dif<0).length),painelPrazos,kpis,painelRecentes,painelRecentesVazio:!painelRecentes.length,painelAntigos,orgaosColunas,painelPrazosVazio:!comPrazo.length,porUnidadeVazio:!porUnidade.length,equipe,equipeVazia:!equipe.length,exigeNumeroReit:s.obsCategoria==='reiteracao'&&!s.comentarioEditando,obsNumeroReit:s.obsNumeroReit,setObsNumeroReit:this.setObsNumeroReit,formSituacaoSugestao:this.situacaoSugerida(s.form),marcFormOpts:this.MARC_ORD.filter(k=>s.role==='super'||k!=='concluido').map(k=>({v:k,l:this.MARC[k].l})),setFormMemo:this.uf('memo'),setFormSituacao:this.uf('situacao'),setFormPrazoDias:this.uf('prazoDias'),setFormPrazoData:this.uf('prazoData'),setFormMarcacao:this.uf('marcacao'),formDup,formDupOn:formDup.length>0,cadastrarMesmoAssim:this.cadastrarMesmoAssim,fAno:this.ff('ano'),anoOpts:[...new Set(inS.map(p=>this.anoProc(p)).filter(Boolean))].sort().reverse(),marcOptsLista:this.MARC_ORD.map(k=>({v:k,l:this.MARC[k].l})),formConvite:s.form.servico==='CONVITES',setFormSetorReceber:this.uf('setorReceber'),setFormDataEvento:this.uf('dataEvento'),fUnidade:this.ff('unidade'),fReit:this.ff('reit'),
+      fEtapa:this.ff('etapa'),navSecoes,...pendVals,...todosVals,voltarLabel:({todos:'Todos os Processos',pendencias:'Pendências',painel:'Painel geral',meus:'Meus Processos'})[s.voltarPara]||(proc?proc.servicoLabel:''),fPrazo:this.ff('prazo'),goPendencias:this.goPendencias,navPendStyle,pendBadge:comPrazo.length+acoes.length?String(comPrazo.length+acoes.length):'',pendenciasVisible:s.screen==='pendencias',pendGrupos,kpiPrazosVencidos:fmt(comPrazo.filter(x=>x.sp.dif<0).length),painelPrazos,kpis,painelRecentes,painelRecentesVazio:!painelRecentes.length,painelAntigos,orgaosColunas,painelPrazosVazio:!comPrazo.length,porUnidadeVazio:!porUnidade.length,equipe,equipeVazia:!equipe.length,exigeNumeroReit:s.obsCategoria==='reiteracao'&&!s.comentarioEditando,obsNumeroReit:s.obsNumeroReit,setObsNumeroReit:this.setObsNumeroReit,formSituacaoSugestao:this.situacaoSugerida(s.form),marcFormOpts:this.MARC_ORD.filter(k=>s.role==='super'||k!=='concluido').map(k=>({v:k,l:this.MARC[k].l})),setFormMemo:this.uf('memo'),setFormSituacao:this.uf('situacao'),setFormPrazoDias:this.uf('prazoDias'),setFormPrazoData:this.uf('prazoData'),setFormMarcacao:this.uf('marcacao'),formDup,formDupOn:formDup.length>0,cadastrarMesmoAssim:this.cadastrarMesmoAssim,fAno:this.ff('ano'),anoOpts:[...new Set(inS.map(p=>this.anoProc(p)).filter(Boolean))].sort().reverse(),marcOptsLista:this.MARC_ORD.map(k=>({v:k,l:this.MARC[k].l})),formConvite:s.form.servico==='CONVITES',setFormSetorReceber:this.uf('setorReceber'),setFormDataEvento:this.uf('dataEvento'),fUnidade:this.ff('unidade'),fReit:this.ff('reit'),
       avancarEtapa:this.avancarEtapa,voltarEtapa:this.voltarEtapa,setUnidade:this.setUnidade,oficioTexto:s.oficioTexto,setOficioTexto:this.setOficioTexto,salvarOficio:this.salvarOficio,limparOficio:this.limparOficio,
       logVisible:s.screen==='log',navLogStyle,goLog:this.goLog,logCount:String(s.log.length),
       usuariosVisible:s.screen==='usuarios',navUsuariosStyle,goUsuarios:this.goUsuarios,usuariosCount:String(s.usuarios.length),usuarios:s.usuarios,usuarioForm:s.usuarioForm,setUsuarioNome:this.setUsuarioNome,setUsuarioEmail:this.setUsuarioEmail,setUsuarioSenha:this.setUsuarioSenha,cadastrarUsuario:this.cadastrarUsuario,usuariosErro:s.usuariosErro,usuariosErroOn:!!s.usuariosErro,usuariosSucesso:s.usuariosSucesso,usuariosSucessoOn:!!s.usuariosSucesso,usuariosCarregando:s.usuariosCarregando,usuariosBtnTexto:s.usuariosCarregando?'Cadastrando…':'Cadastrar usuário',
@@ -1959,9 +2033,18 @@ proc={...sel,dados,...this.autoriaProc(sel,ult,atividades),demandaLendo:ed!=='de
       doLogin:this.doLogin,loginErro:s.loginErro||'',loginErroOn:!!s.loginErro,loginCarregando:s.loginCarregando,loginBtnTexto:s.loginCarregando?'Entrando…':'Entrar',
       isSuper:s.role==='super',userName,userRole:s.user.perfil,userInitials:userName.split(' ').filter(Boolean).map(w=>w[0]).slice(0,2).join(''),
       navGrupos:grupos,navPainelStyle,goPainel:this.goPainel,openNovo:this.openNovo,logout:this.logout,
-      painelVisible:s.screen==='painel',meusVisible:s.screen==='meus',meusVazio:s.meusProcs.length===0,servicoVisible:s.screen==='servico',processoVisible:s.screen==='processo',novoVisible:s.screen==='novo',novoBtnOn:!['novo','log','usuarios'].includes(s.screen),
-      crumb:s.screen==='todos'?'Acompanhamento':s.screen==='pendencias'?'Acompanhamento > Pendências':s.screen==='usuarios'?'Gestão / Usuários':s.screen==='log'?'Gestão / Registro de atividades':s.screen==='painel'?'Superintendência':(s.screen==='novo'?'Cadastro':(s.screen==='processo'?('Serviços / '+cur.label):'Serviços')),
-      pageTitle:s.screen==='todos'?'Todos os Processos':s.screen==='pendencias'?'Pendências':s.screen==='usuarios'?'Usuários':s.screen==='log'?'Registro de atividades':s.screen==='painel'?'Painel geral':(s.screen==='novo'?'Novo processo':(s.screen==='processo'?'Detalhe do processo':cur.label)),
+      painelVisible:s.screen==='painel',...(()=>{ const porId=new Map(procs.map(p=>[p.id,p])), ids=s.meusIds.filter(id=>porId.has(id));
+        const contaMon=p=>(p.obs||[]).filter(o=>o.categoria==='monitor_sei'||o.tipo==='monitor_sei').length;
+        const linha=p=>{ const r=p.aba==='respondido'; return {id:p.id,numero:this.nums(p).principal,servicoLabel:this.sv(p.servico).label,orgao:p.orgao||'Órgão não informado',status:r?'Respondido':'Pendente',stColor:r?'#1E8E4E':'#8A5A06',stBg:r?'#F1F8F4':'#FDF6EA',stBorder:r?'#CFE7D8':'#F0DDB8'}; };
+        const meusLista=ids.map(id=>{ const p=porId.get(id), n=contaMon(p); return {...linha(p),...this.verifInfo(p),monitorTxt:n?(n+' registro(s) do monitor SEI'):'Sem registros do monitor SEI',abrir:()=>this.openProcesso(p),remover:()=>this.removerMeus(id)}; });
+        const q=this.norm(s.importarBusca||'').trim(), cand=q?procs.filter(p=>this.norm([this.nums(p).principal,p.numero,this.sv(p.servico).label,p.orgao,p.usuario].join(' ')).includes(q)):[];
+        const importarLista=cand.slice(0,40).map(p=>{ const ja=s.meusIds.includes(p.id); return {...linha(p),podeAdd:!ja,jaAdd:ja,add:()=>this.addMeus(p.id)}; });
+        return {meusVisible:s.screen==='meus',meusVazio:!meusLista.length,meusLista,meusInfo:meusLista.length+' processo(s) na sua lista',monitorStatusTxt:s.monitorOnline===true?('Monitor SEI ligado · último sinal '+s.monitorSinal):s.monitorOnline===false?('Monitor SEI sem sinal'+(s.monitorSinal?' desde '+s.monitorSinal:'')+' — os pedidos ficam na fila até o PC 1 voltar'):'Situação do monitor SEI desconhecida',monitorStatusCor:s.monitorOnline===true?'#1E8E4E':s.monitorOnline===false?'#8A5A06':'#7A828A',
+          atualizarTxt:Object.values(s.pedidos||{}).some(v=>['enviando','pendente','rodando'].includes(v.status))?'Verificando…':'Verificar todos',importarAberto:!!s.importarAberto,importarBusca:s.importarBusca||'',importarLista,importarVazio:!importarLista.length,
+          importarVazioTxt:q?'Nenhum processo encontrado.':'Digite para buscar entre os '+fmt(procs.length)+' processos.',importarRodape:cand.length>40?('Mostrando 40 de '+fmt(cand.length)+' resultados. Refine a busca.'):(fmt(cand.length)+' resultado(s)'),
+          importarProcesso:this.importarProcesso,fecharImportar:this.fecharImportar,setImportarBusca:this.setImportarBusca,atualizarTodos:this.atualizarTodos}; })(),servicoVisible:s.screen==='servico',processoVisible:s.screen==='processo',novoVisible:s.screen==='novo',novoBtnOn:!['novo','log','usuarios'].includes(s.screen),
+      crumb:s.screen==='todos'||s.screen==='meus'?'Acompanhamento':s.screen==='pendencias'?'Acompanhamento > Pendências':s.screen==='usuarios'?'Gestão / Usuários':s.screen==='log'?'Gestão / Registro de atividades':s.screen==='painel'?'Superintendência':(s.screen==='novo'?'Cadastro':(s.screen==='processo'?('Serviços / '+cur.label):'Serviços')),
+      pageTitle:s.screen==='todos'?'Todos os Processos':s.screen==='meus'?'Meus Processos':s.screen==='pendencias'?'Pendências':s.screen==='usuarios'?'Usuários':s.screen==='log'?'Registro de atividades':s.screen==='painel'?'Painel geral':(s.screen==='novo'?'Novo processo':(s.screen==='processo'?'Detalhe do processo':cur.label)),
       hoje:s.screen==='pendencias'?this.agora():new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'short',year:'numeric'}).format(new Date()).replace('.',''),
       kpiTotal:fmt(total),kpiPend:fmt(total-resp),kpiResp:fmt(resp),kpiVelhos:fmt(velhos),kpiSemResponsavel:fmt(semResponsavel),kpiTaxa:(total?Math.round(resp/total*100):0)+'%',
       servResumo,orgaosRanking,meses,antigos,recentesGrupos,
