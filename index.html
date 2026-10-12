@@ -68,6 +68,38 @@
 </sc-if>
 
 <sc-if value="{{ appVisible }}" hint-placeholder-val="{{ false }}">
+<sc-if value="{{ avisosAberto }}" hint-placeholder-val="{{ false }}">
+<div onClick="{{ fecharAvisos }}" style="position:fixed;inset:0;z-index:70">
+  <div onClick="{{ pararClique }}" role="dialog" aria-label="Novidades do SEI" style="position:fixed;top:48px;right:12px;width:min(440px,calc(100vw - 24px));max-height:calc(100vh - 64px);display:flex;flex-direction:column;background:#fff;border:1px solid #DADDE1;border-radius:2px;box-shadow:0 12px 40px rgba(0,0,0,.2)">
+    <div style="padding:12px 16px;border-bottom:1px solid #DADDE1;display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+      <div>
+        <h3 style="font-weight:600;font-size:14.5px;margin:0;color:#1F2328">Novidades do SEI</h3>
+        <div style="font-size:12px;color:#7A828A;margin-top:3px">{{ avisosResumo }}</div>
+      </div>
+      <button onClick="{{ fecharAvisos }}" style="height:28px;padding:0 10px;background:#fff;color:#1F2328;border:1px solid #C9CED3;border-radius:2px;font-size:12.5px;cursor:pointer">Fechar</button>
+    </div>
+    <div style="overflow:auto;flex:1">
+      <sc-if value="{{ avisosVazio }}"><div style="padding:20px 16px;font-size:13px;color:#7A828A">Nenhuma novidade registrada ainda. Quando o monitor encontrar documento ou andamento novo em algum processo, ele aparece aqui.</div></sc-if>
+      <sc-for list="{{ avisosLista }}" as="av">
+        <button onClick="{{ av.abrir }}" style="display:block;width:100%;text-align:left;padding:10px 16px 10px 13px;border:none;border-bottom:1px solid #ECEEF0;border-left:3px solid {{ av.barra }};background:{{ av.fundo }};cursor:pointer;font-family:inherit" style-hover="background:#F5F7FA">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+            <span style="font-family:'IBM Plex Mono';font-weight:600;font-size:13px;color:#1F2328">{{ av.numero }}</span>
+            <span style="padding:0 6px;font-size:11px;font-weight:600;border:1px solid {{ av.tipoBorder }};background:{{ av.tipoBg }};color:{{ av.tipoCor }};border-radius:2px">{{ av.tipo }}</span>
+            <sc-if value="{{ av.naoVisto }}"><span style="font-size:11px;font-weight:600;color:#8A5A06">Nova</span></sc-if>
+          </div>
+          <div style="font-size:13px;color:#16202B;margin-top:4px;line-height:1.45">{{ av.descricao }}</div>
+          <div style="font-size:11.5px;color:#7A828A;margin-top:3px">{{ av.detalhe }}</div>
+        </button>
+      </sc-for>
+    </div>
+    <div style="padding:10px 16px;background:#FAFBFB;border-top:1px solid #DADDE1;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+      <sc-if value="{{ navAvisoPode }}"><button onClick="{{ alternarAvisoNavegador }}" style="height:30px;padding:0 10px;background:#fff;color:#12355B;border:1px solid #C9CED3;border-radius:2px;font-size:12.5px;cursor:pointer">{{ navAvisoTxt }}</button></sc-if>
+      <sc-if value="{{ navAvisoBloqueado }}"><span style="font-size:12px;color:#8A5A06">Avisos do navegador bloqueados nas configurações do site.</span></sc-if>
+      <sc-if value="{{ temAvisos }}"><button onClick="{{ marcarAvisosVistos }}" style="height:30px;padding:0 12px;background:#12355B;color:#fff;border:1px solid #12355B;border-radius:2px;font-weight:600;font-size:12.5px;cursor:pointer">Marcar todas como vistas</button></sc-if>
+    </div>
+  </div>
+</div>
+</sc-if>
 <div style="min-height:100vh;display:flex;flex-direction:column">
   <div style="background:#12355B;color:#fff;height:44px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 16px 0 18px">
     <div style="display:flex;align-items:center;gap:12px;min-width:0">
@@ -77,6 +109,7 @@
     </div>
     <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
       <sc-if value="{{ largo }}" hint-placeholder-val="{{ true }}"><span style="font-size:13px;color:#DCE4EC;white-space:nowrap">{{ userName }} <span style="color:#AFC0D2">· {{ userRole }}</span></span></sc-if>
+      <button onClick="{{ abrirAvisos }}" aria-label="{{ avisosAria }}" style="height:28px;padding:0 10px;background:{{ avisosBtnBg }};border:1px solid #3B5A7C;color:#fff;border-radius:2px;cursor:pointer;font-size:12.5px;display:flex;align-items:center;gap:6px" style-hover="background:#1C4570">Avisos<sc-if value="{{ temAvisos }}"><span style="min-width:18px;height:18px;padding:0 5px;display:inline-flex;align-items:center;justify-content:center;background:#F2C98A;color:#12355B;border-radius:2px;font-size:11.5px;font-weight:700">{{ avisosCount }}</span></sc-if></button>
       <button onClick="{{ abrirSenha }}" style="height:28px;padding:0 10px;background:transparent;border:1px solid #3B5A7C;color:#fff;border-radius:2px;cursor:pointer;font-size:12.5px" style-hover="background:#1C4570">Senha</button>
       <button onClick="{{ logout }}" style="height:28px;padding:0 10px;background:transparent;border:1px solid #3B5A7C;color:#fff;border-radius:2px;cursor:pointer;font-size:12.5px" style-hover="background:#1C4570">Sair</button>
     </div>
@@ -1014,6 +1047,7 @@
                   <input value="{{ linkTexto }}" onInput="{{ setLink }}" placeholder="Colar endereço do processo" style="width:100%;height:38px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:14px;background:#fff;color:#1F2328;height:34px;font-size:13px;flex:1;min-width:0">
                   <button onClick="{{ salvarLink }}" style="height:36px;padding:0 16px;background:#12355B;color:#fff;border:1px solid #12355B;border-radius:2px;font-weight:600;font-size:13.5px;cursor:pointer;height:34px;padding:0 12px;font-size:13px;flex-shrink:0">Salvar</button>
                 </div>
+                <div style="font-size:12px;color:#7A828A;line-height:1.5;margin-top:8px">Se o monitor não achar o processo sozinho: pesquise o número na <a href="https://sei.saoluis.ma.gov.br/sei/modulos/pesquisa/md_pesq_processo_pesquisar.php?acao_externa=protocolo_pesquisar&acao_origem_externa=protocolo_pesquisar&infra_item_menu=2&id_orgao_acesso_externo=0&infra_hash=868e0c7f0f9573b23a84c15e1118f425" target="_blank" rel="noopener noreferrer" style="color:#1F5F9E">Pesquisa Pública do SEI</a>, abra o processo e cole aqui o endereço da página dele. Ao salvar, o monitor passa a acompanhá-lo.</div>
               </sc-if></sc-if>
               <sc-if value="{{ proc.edicaoBloqueada }}" hint-placeholder-val="{{ false }}"><sc-if value="{{ proc.semLink }}" hint-placeholder-val="{{ true }}"><span style="font-size:13px;color:#7A828A">Link não registrado.</span></sc-if></sc-if>
             </div>
@@ -1216,7 +1250,7 @@ class Component extends DCLogic {
     return {...p,_e:1,etapa:p.etapa??et,unidade:p.unidade??(u?u[0]:''),reit:p.reit??nums.slice(1),oficio:p.oficio??(of?'Ofício nº '+of[1]:'')}; }
   state = {
     acompanhamentoAberto:false,
-    meusIds:[], pedidos:{}, monitorOnline:null, monitorSinal:'', importarAberto:false, importarBusca:'', atualizando:false, meusAtualizadoEm:'',
+    meusIds:[], novidades:[], novVisto:0, avisosAberto:false, navAviso:false, pedidos:{}, monitorOnline:null, monitorSinal:'', importarAberto:false, importarBusca:'', atualizando:false, meusAtualizadoEm:'',
     screen:'login', role:null,
     loginEmail:'spsmediasemcas@gmail.com', loginSenha:'', loginErro:'', loginCarregando:false, dbOnline:false,
     activeServico:'PAEFI', activeTab:'pendentes', comentarioBusca:'', comentarioOrdem:'recentes',
@@ -1293,8 +1327,8 @@ class Component extends DCLogic {
   }
   mapComentario(c){ return {id:c.id,sourceIndex:c.source_index,authorUserId:c.author_user_id,titulo:c.title,categoria:c.category,tipo:c.comment_type,texto:c.body,mensagemSei:c.sei_message,anexos:c.attachments||[],dataEvento:c.event_date_text,autor:c.author_name,perfil:c.author_role,data:c.display_date,editadoPor:c.edited_by_name||'',editadoEm:c.edited_at_text||''}; }
   // ---- "Verificar agora": pedido gravado no Supabase, executado pelo monitor SEI (PC 1)
-  async checarMonitor(){ try{ const r=await this.supa('/rest/v1/monitor_status?select=ultimo_sinal&order=ultimo_sinal.desc&limit=1'); const t=r&&r[0]?new Date(r[0].ultimo_sinal).getTime():0;
-      this.setState({monitorOnline:!!t&&Date.now()-t<180000,monitorSinal:t?this.fmtCurto(t):''}); }catch(e){ this.setState({monitorOnline:null,monitorSinal:''}); } }
+  async checarMonitor(){ try{ const r=await this.supa('/rest/v1/monitor_status?select=ultimo_sinal,processos_monitorados,ultima_rodada&order=ultimo_sinal.desc&limit=1'); const t=r&&r[0]?new Date(r[0].ultimo_sinal).getTime():0;
+      this.setState({monitorOnline:!!t&&Date.now()-t<180000,monitorSinal:t?this.fmtCurto(t):'',monitorQtd:r&&r[0]?r[0].processos_monitorados:0,monitorAuto:r&&r[0]?(r[0].ultima_rodada||''):''}); }catch(e){ this.setState({monitorOnline:null,monitorSinal:''}); } }
   async pedirVerificacao(pids){ const s=this.state, ativos=s.pedidos||{}, uid=this.session&&this.session.user&&this.session.user.id;
     const porId=new Map(s.processos.map(p=>[p.id,p])), alvo=[...new Set(pids)].filter(id=>porId.has(id)&&!['pendente','rodando'].includes((ativos[id]||{}).status));
     if(!alvo.length||!uid) return;
@@ -1318,6 +1352,25 @@ class Component extends DCLogic {
   async recarregarComentarios(pids){ if(!pids.length) return; const rows=await this.supaTodos('/rest/v1/process_comments?select=*&process_id=in.('+pids.join(',')+')&order=process_id,source_index,id');
     const por=new Map(pids.map(id=>[id,[]])); (rows||[]).forEach(c=>{ if(por.has(c.process_id)) por.get(c.process_id).push(this.mapComentario(c)); });
     this.setState(st=>({processos:st.processos.map(p=>por.has(p.id)?{...p,obs:por.get(p.id)}:p)})); }
+  // ---- Avisos: novidades que o monitor registrou em monitor_novidades
+  iniciarAvisos(){ let nav=false; try{ nav=localStorage.getItem('semcas_avisos_nav')==='1'&&'Notification' in window&&Notification.permission==='granted'; }catch(e){}
+    this.setState({navAviso:nav}); this.carregarNovidades(true); clearInterval(this._novT); this._novT=setInterval(()=>this.carregarNovidades(false),60000); }
+  async carregarNovidades(primeira){ if(!this.session) return;
+    try{ const [rows,vistas]=await Promise.all([this.supa('/rest/v1/monitor_novidades?select=*&order=criado_em.desc&limit=60'),this.supa('/rest/v1/monitor_novidades_vistas?select=visto_em')]);
+      const visto=vistas&&vistas[0]?new Date(vistas[0].visto_em).getTime():0, antes=this._novIds||new Set();
+      const chegaram=primeira?[]:(rows||[]).filter(r=>!antes.has(r.id)&&new Date(r.criado_em).getTime()>visto);
+      this._novIds=new Set((rows||[]).map(r=>r.id)); this.setState({novidades:rows||[],novVisto:visto});
+      if(chegaram.length){ this.recarregarComentarios([...new Set(chegaram.map(r=>r.process_id))]).catch(()=>{}); this.avisarNavegador(chegaram); }
+    }catch(e){} }
+  avisarNavegador(lista){ if(!this.state.navAviso||!('Notification' in window)||Notification.permission!=='granted') return;
+    try{ const n=new Notification(lista.length===1?('Novidade no SEI: '+lista[0].sei_number):(lista.length+' novidades no SEI'),{body:lista.slice(0,4).map(r=>(r.categoria==='documento'?'Documento: ':'Andamento: ')+r.descricao+' ('+r.sei_number+')').join('\n'),tag:'semcas-novidades'});
+      n.onclick=()=>{ window.focus(); const p=this.state.processos.find(x=>x.id===lista[0].process_id); if(p) this.openProcesso(p); n.close(); }; }catch(e){} }
+  abrirAvisos=()=>{ this.setState({avisosAberto:true,menuOpen:false}); this.carregarNovidades(false); };
+  fecharAvisos=()=>this.setState({avisosAberto:false});
+  marcarAvisosVistos=async()=>{ const uid=this.session&&this.session.user&&this.session.user.id; if(!uid) return; const ult=(this.state.novidades||[]).reduce((m,r)=>Math.max(m,new Date(r.criado_em).getTime()),0)||Date.now();
+    this.setState({novVisto:ult}); try{ await this.supa('/rest/v1/monitor_novidades_vistas?on_conflict=user_id',{method:'POST',prefer:'return=minimal,resolution=merge-duplicates',body:{user_id:uid,visto_em:new Date(ult).toISOString()}}); }catch(e){} };
+  alternarAvisoNavegador=async()=>{ if(!('Notification' in window)) return; if(this.state.navAviso){ try{localStorage.setItem('semcas_avisos_nav','0');}catch(e){} this.setState({navAviso:false}); return; }
+    let perm=Notification.permission; if(perm==='default') perm=await Notification.requestPermission(); const ok=perm==='granted'; try{localStorage.setItem('semcas_avisos_nav',ok?'1':'0');}catch(e){} this.setState({navAviso:ok}); };
   verifInfo(p){ const v=(this.state.pedidos||{})[p.id], on=this.state.monitorOnline, ocupado=!!v&&['enviando','pendente','rodando'].includes(v.status);
     let txt='', cor='#5B636B';
     if(v){ if(v.status==='enviando') txt='Enviando pedido…';
@@ -1352,6 +1405,7 @@ class Component extends DCLogic {
     const role=perfil.role==='superintendente'?'super':'administrativo',nome=perfil.display_name||this.nomeDoEmail(perfil.email);
     await new Promise(resolve=>this.setState({role,user:{nome,perfil:role==='super'?'Superintendente':'Administrativo'},screen:role==='super'?'painel':'pendencias',activeServico:'PAEFI',activeTab:'pendentes',pagina:1,filtros:{...this.FILTROS0},loginErro:'',loginCarregando:false},resolve));
     this.setState({meusIds:this.lerMeus()}); this.checarMonitor();
+    setTimeout(()=>this.iniciarAvisos(),1500);
     await this.loadDbData();this.registrar('Acesso',null,'Entrou no sistema');
   }
   persist(){ try{ const s=this.state; localStorage.setItem('semcas_spsemc_v2',JSON.stringify({recs:s.processos.filter(p=>this.touched.has(p.id)),deleted:[...this.deleted],log:s.log})); }catch(e){} }
@@ -1629,7 +1683,7 @@ class Component extends DCLogic {
   openProcesso=(p)=>this.setState({voltarPara:['todos','pendencias','painel','meus'].includes(this.state.screen)?this.state.screen:(this.state.screen==='processo'?this.state.voltarPara:'servico'),todosColsOpen:false,screen:'processo',selectedId:p.id,obsNumeroReit:'',activeServico:p.servico,comentarioBusca:'',comentarioOrdem:'recentes',linkTexto:'',obsTitulo:'',obsCategoria:'comentario',obsTexto:'',obsDataEvento:'',obsMensagemSei:'',obsAnexos:[],anexosCarregando:false,obsErro:false,comentarioEditando:null,responsavelTexto:p.responsavelInterno||'',proximaAcaoTexto:p.proximaAcao||'',proximaDataTexto:p.proximaData||'',acompanhamentoSalvo:false,editKey:null,confirmDel:false});
   backToServico=()=>this.setState({screen:this.state.voltarPara||'servico',editKey:null});
   setLink=e=>this.setState({linkTexto:e.target.value});
-  salvarLink=()=>{ const l=this.state.linkTexto.trim(); if(!l) return; if(!this.linkSeguro(l)){this.setState({storageErro:"Informe um link completo começando com https://"});return;} const st=this.stamp(); this.mut(this.state.selectedId,p=>({...p,link:l,hist:{...(p.hist||{}),link:st}}),'Link SEI','Adicionou o link do processo no SEI'); this.setState({linkTexto:''}); };
+  salvarLink=()=>{ const l=this.state.linkTexto.trim(); if(!l) return; if(!this.linkSeguro(l)){this.setState({storageErro:"Informe um link completo começando com https://"});return;} const st=this.stamp(), pid=this.state.selectedId; const r=this.mut(pid,p=>({...p,link:l,hist:{...(p.hist||{}),link:st}}),'Link SEI','Adicionou o link do processo no SEI'); this.setState({linkTexto:''}); if(/md_pesq_processo_exibir\.php/i.test(l)&&r&&r.then) r.then(()=>this.pedirVerificacao([pid])).catch(()=>{}); };
   setObsTitulo=e=>this.setState({obsTitulo:e.target.value,obsErro:false});
   setComentarioBusca=e=>this.setState({comentarioBusca:e.target.value});
   setComentarioOrdem=e=>this.setState({comentarioOrdem:e.target.value});
@@ -2027,6 +2081,16 @@ proc={...sel,dados,...this.verifInfo(sel),...this.autoriaProc(sel,ult,atividades
       logRows,logVazio:logRows.length===0,logInfo:fmt(logF.length)+' registro(s)',
       logUsers:[...new Set(s.log.map(l=>l.autor))],logAcoes:[...new Set(s.log.map(l=>l.acao))],
       logUser:s.logUser,logAcao:s.logAcao,logQ:s.logQ,setLogUser:this.setLogUser,setLogAcao:this.setLogAcao,setLogQ:this.setLogQ,
+      ...(()=>{ const porId=new Map(procs.map(p=>[p.id,p])), visto=s.novVisto||0, lista=(s.novidades||[]).filter(r=>porId.has(r.process_id));
+        const naoVistos=lista.filter(r=>new Date(r.criado_em).getTime()>visto).length, perm=('Notification' in window)?Notification.permission:'indisponivel';
+        return {avisosAberto:!!s.avisosAberto,abrirAvisos:this.abrirAvisos,fecharAvisos:this.fecharAvisos,marcarAvisosVistos:this.marcarAvisosVistos,alternarAvisoNavegador:this.alternarAvisoNavegador,
+          temAvisos:naoVistos>0,avisosCount:naoVistos>99?'99+':String(naoVistos),avisosAria:naoVistos?('Avisos: '+naoVistos+' novidade(s) não vista(s)'):'Avisos',avisosBtnBg:naoVistos?'#1C4570':'transparent',
+          avisosResumo:naoVistos?(naoVistos+' novidade(s) ainda não vista(s)'):(lista.length?'Tudo visto. Últimas novidades encontradas pelo monitor.':'Documentos e andamentos novos encontrados pelo monitor.'),
+          avisosVazio:!lista.length,navAvisoPode:perm!=='indisponivel'&&perm!=='denied',navAvisoBloqueado:perm==='denied',navAvisoTxt:s.navAviso?'Desligar aviso no navegador':'Avisar também pelo navegador',
+          avisosLista:lista.slice(0,40).map(r=>{ const nv=new Date(r.criado_em).getTime()>visto, doc=r.categoria==='documento', p=porId.get(r.process_id);
+            return {numero:r.sei_number||this.nums(p).principal,tipo:doc?'Documento':'Andamento',tipoBg:doc?'#EEEAF8':'#E8F2FA',tipoCor:doc?'#59408C':'#0F5E91',tipoBorder:doc?'#D7CDEE':'#C4DDEC',
+              descricao:r.descricao||'(sem descrição)',detalhe:[r.unidade,r.data_sei?('no SEI em '+r.data_sei):'','encontrado em '+this.fmtCurto(new Date(r.criado_em).getTime())].filter(Boolean).join(' · '),
+              naoVisto:nv,barra:nv?'#C98A1B':'transparent',fundo:nv?'#FFFBF2':'#fff',abrir:()=>{ this.setState({avisosAberto:false}); this.openProcesso(p); }}; })}; })(),
       confirmDel:s.confirmDel,pedirExcluir:this.pedirExcluir,acompanhamentoAberto:!!s.acompanhamentoAberto,abrirAcompanhamento:this.abrirAcompanhamento,fecharAcompanhamento:this.fecharAcompanhamento,pararClique:e=>e.stopPropagation(),cancelExcluir:this.cancelExcluir,confirmarExcluir:this.confirmarExcluir,
       loginVisible:s.screen==='login',appVisible:s.screen!=='login',recuperandoOn:!!s.recuperando,loginNormalOn:!s.recuperando,salvarSenhaRecuperada:this.salvarSenhaRecuperada,esqueciSenha:this.esqueciSenha,loginInfo:s.loginInfo||'',loginInfoOn:!!s.loginInfo,
       loginEmail:s.loginEmail,loginSenha:s.loginSenha,setLoginEmail:this.setLoginEmail,setLoginSenha:this.setLoginSenha,
@@ -2039,7 +2103,7 @@ proc={...sel,dados,...this.verifInfo(sel),...this.autoriaProc(sel,ult,atividades
         const meusLista=ids.map(id=>{ const p=porId.get(id), n=contaMon(p); return {...linha(p),...this.verifInfo(p),monitorTxt:n?(n+' registro(s) do monitor SEI'):'Sem registros do monitor SEI',abrir:()=>this.openProcesso(p),remover:()=>this.removerMeus(id)}; });
         const q=this.norm(s.importarBusca||'').trim(), cand=q?procs.filter(p=>this.norm([this.nums(p).principal,p.numero,this.sv(p.servico).label,p.orgao,p.usuario].join(' ')).includes(q)):[];
         const importarLista=cand.slice(0,40).map(p=>{ const ja=s.meusIds.includes(p.id); return {...linha(p),podeAdd:!ja,jaAdd:ja,add:()=>this.addMeus(p.id)}; });
-        return {meusVisible:s.screen==='meus',meusVazio:!meusLista.length,meusLista,meusInfo:meusLista.length+' processo(s) na sua lista',monitorStatusTxt:s.monitorOnline===true?('Monitor SEI ligado · último sinal '+s.monitorSinal):s.monitorOnline===false?('Monitor SEI sem sinal'+(s.monitorSinal?' desde '+s.monitorSinal:'')+' — os pedidos ficam na fila até o PC 1 voltar'):'Situação do monitor SEI desconhecida',monitorStatusCor:s.monitorOnline===true?'#1E8E4E':s.monitorOnline===false?'#8A5A06':'#7A828A',
+        return {meusVisible:s.screen==='meus',meusVazio:!meusLista.length,meusLista,meusInfo:meusLista.length+' processo(s) na sua lista',monitorStatusTxt:s.monitorOnline===true?('Monitor SEI ligado · '+fmt(s.monitorQtd||0)+' processo(s) acompanhados · último sinal '+s.monitorSinal+(s.monitorAuto?(' · '+s.monitorAuto):'')):s.monitorOnline===false?('Monitor SEI sem sinal'+(s.monitorSinal?' desde '+s.monitorSinal:'')+' — os pedidos ficam na fila até o PC 1 voltar'):'Situação do monitor SEI desconhecida',monitorStatusCor:s.monitorOnline===true?'#1E8E4E':s.monitorOnline===false?'#8A5A06':'#7A828A',
           atualizarTxt:Object.values(s.pedidos||{}).some(v=>['enviando','pendente','rodando'].includes(v.status))?'Verificando…':'Verificar todos',importarAberto:!!s.importarAberto,importarBusca:s.importarBusca||'',importarLista,importarVazio:!importarLista.length,
           importarVazioTxt:q?'Nenhum processo encontrado.':'Digite para buscar entre os '+fmt(procs.length)+' processos.',importarRodape:cand.length>40?('Mostrando 40 de '+fmt(cand.length)+' resultados. Refine a busca.'):(fmt(cand.length)+' resultado(s)'),
           importarProcesso:this.importarProcesso,fecharImportar:this.fecharImportar,setImportarBusca:this.setImportarBusca,atualizarTodos:this.atualizarTodos}; })(),servicoVisible:s.screen==='servico',processoVisible:s.screen==='processo',novoVisible:s.screen==='novo',novoBtnOn:!['novo','log','usuarios'].includes(s.screen),

@@ -309,6 +309,30 @@ def so_digitos(numero):
     return re.sub(r"\D", "", numero or "")
 
 
+def numero_principal(texto):
+    """Primeiro nº SEI do texto, no formato 25101.000000/2026 (aceita '25101000000/2026', '25101. 000000/2026'...)."""
+    m = re.search(r"(\d{5})\s*\.?\s*(\d{6})\s*/\s*(\d{4})", texto or "")
+    return f"{m.group(1)}.{m.group(2)}/{m.group(3)}" if m else ""
+
+
+def processos_do_sistema(so_pendentes=True, cfg=None):
+    """Processos do Controle de Processos com nº SEI reconhecível: [{id, numero, link}]."""
+    cfg = cfg or _ler_config()
+    filtro = "&status=eq.pendente" if so_pendentes else ""
+    linhas = _get(cfg, "/rest/v1/processes?select=id,sei_number,sei_link,status,created_at"
+                       "&order=created_at.desc" + filtro + "&limit=5000") or []
+    vistos, saida = set(), []
+    for r in linhas:
+        numero = numero_principal(r.get("sei_number"))
+        if not numero or numero in vistos:
+            continue
+        vistos.add(numero)
+        link = (r.get("sei_link") or "").strip()
+        saida.append({"id": r["id"], "numero": numero,
+                      "link": link if LINK_PROCESSO_SEI in link and link.startswith("https://") else ""})
+    return saida
+
+
 def pedidos_pendentes(cfg=None, limite=10):
     cfg = cfg or _ler_config()
     if not cfg:
@@ -324,6 +348,24 @@ def pegar_pedido(pedido_id, cfg=None):
         cfg, "/rest/v1/monitor_pedidos?id=eq.%s&status=eq.pendente" % urllib.parse.quote(pedido_id),
         "PATCH", {"status": "rodando", "iniciado_em": _agora_iso()}, "return=representation")
     return bool(linhas)
+
+
+LINK_PROCESSO_SEI = "md_pesq_processo_exibir.php"
+
+
+def link_do_processo(process_id, cfg=None):
+    """Link da página do processo no SEI salvo no sistema (campo "Link do processo no SEI")."""
+    cfg = cfg or _ler_config()
+    linhas = _get(cfg, "/rest/v1/processes?select=sei_link&id=eq.%s" % urllib.parse.quote(process_id)) or []
+    link = ((linhas[0] or {}).get("sei_link") or "").strip() if linhas else ""
+    return link if LINK_PROCESSO_SEI in link and link.startswith("https://") else ""
+
+
+def guardar_link(process_id, url, cfg=None):
+    """Salva no sistema o link achado pela pesquisa, só se o campo estiver vazio."""
+    cfg = cfg or _ler_config()
+    _requisitar(cfg, "/rest/v1/processes?id=eq.%s&or=(sei_link.is.null,sei_link.eq.)"
+                % urllib.parse.quote(process_id), "PATCH", {"sei_link": url}, "return=minimal")
 
 
 def avisar_pedido(pedido_id, mensagem, cfg=None):
@@ -350,6 +392,35 @@ def sinal_de_vida(processos_monitorados, ultima_rodada="", cfg=None, nome="monit
                  "processos_monitorados": int(processos_monitorados),
                  "ultima_rodada": ultima_rodada or ""},
                 "return=minimal,resolution=merge-duplicates")
+
+
+# ---------------------------------------------------------------- avisos de novidades
+def registrar_novidades(con, processo_id, novidades, cfg=None):
+    """Grava em monitor_novidades o que apareceu de novo (o site mostra no botão "Avisos").
+
+    `novidades` é a lista (categoria, item) devolvida por verificar(); a carga inicial
+    de um processo recém-cadastrado não entra aqui.
+    """
+    cfg = cfg or _ler_config()
+    if not cfg or not novidades:
+        return 0
+    proc = con.execute("SELECT numero FROM processos WHERE id=?", (processo_id,)).fetchone()
+    numero = ((proc[0] if proc else "") or "").strip()
+    pid_semcas = _achar_processo_semcas(cfg, numero)
+    if not pid_semcas:
+        return 0
+    linhas = []
+    for categoria, it in novidades:
+        desc = re.sub(r"^(\d{6,})(?=[A-Za-zÀ-ÿ])", r"\1 - ", (it.get("descricao") or "").strip())
+        linhas.append({
+            "process_id": pid_semcas, "sei_number": numero, "categoria": categoria,
+            "descricao": desc[:500], "unidade": (it.get("unidade") or "")[:120],
+            "data_sei": (it.get("data") or "")[:40], "link": it.get("link") or "",
+            "chave": str(it.get("chave") or ""),
+        })
+    _requisitar(cfg, "/rest/v1/monitor_novidades?on_conflict=process_id,categoria,chave", "POST",
+                linhas, "return=minimal,resolution=ignore-duplicates", timeout=60)
+    return len(linhas)
 
 
 def sincronizar_tudo(con):

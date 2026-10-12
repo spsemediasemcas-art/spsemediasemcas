@@ -225,11 +225,12 @@ def buscar_conteudos(processo_id, numero_processo, limite=30):
     return {it["chave"]: it for it in pend}
 
 
-def verificar(proc, semcas_na_hora=False):
+def verificar(proc, semcas_na_hora=False, enviar=True):
     """Verifica um processo. Retorna lista de novidades.
 
     semcas_na_hora=True envia ao Controle de Processos SEMCAS antes de voltar
     (usado pelo "Verificar agora" do site, que precisa do resultado já gravado).
+    enviar=False não manda nada (quem chamou confere o processo e envia depois).
     """
     agora = datetime.now().strftime("%d/%m/%Y %H:%M")
     try:
@@ -266,10 +267,27 @@ def verificar(proc, semcas_na_hora=False):
     for categoria, it in novidades:
         if categoria == "documento" and it["chave"] in lidos:
             it["resumo"] = lidos[it["chave"]].get("resumo")
+    if not enviar:
+        return novidades
     _enviar_nuvem(proc["id"], semcas_em_segundo_plano=not semcas_na_hora)
     if semcas_na_hora and semcas_sync is not None and semcas_sync.ativo():
         semcas_sync.sincronizar_processo(con, proc["id"])
+    if novidades:
+        _avisar_novidades(proc["id"], novidades)
     return novidades
+
+
+def _avisar_novidades(processo_id, novidades):
+    """Registra as novidades para o botão "Avisos" do site. Nunca derruba o monitor."""
+    if semcas_sync is None or not semcas_sync.ativo():
+        return
+
+    def tarefa():
+        try:
+            semcas_sync.registrar_novidades(con, processo_id, list(novidades))
+        except Exception as e:  # noqa: BLE001
+            print(f"[avisos] não consegui registrar as novidades: {str(e)[:200]}")
+    threading.Thread(target=tarefa, daemon=True).start()
 
 
 def notificar(titulo, texto):
@@ -310,86 +328,254 @@ def atender_pedido(ped):
     """Executa um pedido "Verificar agora" vindo do site."""
     if not semcas_sync.pegar_pedido(ped["id"]):
         return
-    alvo = semcas_sync.so_digitos(ped.get("sei_number"))
-    with lock:
-        procs = [dict(p) for p in con.execute("SELECT * FROM processos")]
-    proc = next((p for p in procs if alvo and semcas_sync.so_digitos(p.get("numero")) == alvo), None)
-    novo = False
+    numero = semcas_sync.numero_principal(ped.get("sei_number")) or (ped.get("sei_number") or "").strip()
+    proc = processo_local(numero)
     if not proc:
-        proc = cadastrar_pelo_numero(ped)
-        if not proc:
-            return
-        novo = True
+        incluir_por_pedido(ped, numero)
+        return
     print(f"[pedido] verificando {proc.get('numero')} a pedido do site")
     try:
         nov = verificar(proc, semcas_na_hora=True)
         with lock:
             erro = con.execute("SELECT erro FROM processos WHERE id=?", (proc["id"],)).fetchone()[0]
-            total = con.execute("SELECT COUNT(*) FROM itens WHERE processo_id=?", (proc["id"],)).fetchone()[0]
         if erro:
             semcas_sync.concluir_pedido(ped["id"], "erro", f"O SEI não respondeu como esperado: {erro}")
-        elif novo:
-            semcas_sync.concluir_pedido(
-                ped["id"], "concluido",
-                f"Processo encontrado no SEI e incluído no monitor. {total} documento(s) e andamento(s) "
-                "carregados. Daqui em diante ele é verificado automaticamente.", novidades=total)
         else:
             semcas_sync.concluir_pedido(ped["id"], "concluido", novidades=len(nov))
     except Exception as e:  # noqa: BLE001
         semcas_sync.concluir_pedido(ped["id"], "erro", f"Falha na verificação: {e}")
 
 
-def cadastrar_pelo_numero(ped):
-    """Processo ainda fora do monitor: pesquisa no SEI (código de verificação) e cadastra."""
-    numero = (ped.get("sei_number") or "").strip()
-    print(f"[pedido] {numero} não está no monitor - pesquisando no SEI")
-    semcas_sync.avisar_pedido(ped["id"], "Processo novo no monitor: procurando no SEI. "
-                                         "Pode levar de 30 segundos a alguns minutos.")
-    ultimo = [0.0]
+def processo_local(numero):
+    alvo = semcas_sync.so_digitos(numero)
+    if not alvo:
+        return None
+    with lock:
+        procs = [dict(p) for p in con.execute("SELECT * FROM processos")]
+    return next((p for p in procs if semcas_sync.so_digitos(p.get("numero")) == alvo), None)
 
-    def ao_progresso(msg):
-        if time.time() - ultimo[0] > 5:      # não inunda o banco
-            ultimo[0] = time.time()
-            try:
-                semcas_sync.avisar_pedido(ped["id"], f"Procurando no SEI: {msg}")
-            except Exception:  # noqa: BLE001
-                pass
 
-    url = None
+def incluir_por_pedido(ped, numero):
+    """Processo ainda fora do monitor, pedido pelo site: link salvo ou pesquisa no SEI."""
     try:
-        from buscar_link_processo import buscar_link
-        for chance in (1, 2):
+        link = semcas_sync.link_do_processo(ped["process_id"])
+    except Exception as e:  # noqa: BLE001
+        print(f"[pedido] {numero}: não consegui ler o link salvo -> {e}")
+        link = ""
+    if link:
+        print(f"[pedido] {numero} não está no monitor - usando o link salvo no sistema")
+        semcas_sync.avisar_pedido(ped["id"], "Usando o link do processo salvo no sistema. Carregando documentos e andamentos…")
+    else:
+        print(f"[pedido] {numero} não está no monitor - pesquisando no SEI")
+        semcas_sync.avisar_pedido(ped["id"], "Processo novo no monitor: procurando no SEI. "
+                                             "Pode levar de 30 segundos a alguns minutos.")
+        ultimo = [0.0]
+
+        def ao_progresso(msg):
+            if time.time() - ultimo[0] > 5:      # não inunda o banco
+                ultimo[0] = time.time()
+                try:
+                    semcas_sync.avisar_pedido(ped["id"], f"Procurando no SEI: {msg}")
+                except Exception:  # noqa: BLE001
+                    pass
+
+        def ao_rodada(n):
+            semcas_sync.avisar_pedido(ped["id"], f"Procurando no SEI: nova rodada ({n} de 3)…")
+
+        try:
+            link = buscar_url_sei(numero, ao_progresso, ao_rodada)
+        except Exception as e:  # noqa: BLE001
+            semcas_sync.concluir_pedido(ped["id"], "erro", f"Falha ao pesquisar o processo no SEI: {e}")
+            return
+        if not link:
+            semcas_sync.concluir_pedido(
+                ped["id"], "nao_monitorado",
+                f"Não foi possível localizar o processo {numero} na pesquisa pública do SEI "
+                "em 3 rodadas de busca (número inexistente, processo sigiloso ou código de verificação "
+                "não reconhecido). Tente de novo em alguns minutos, ou pesquise o processo na Pesquisa "
+                "Pública do SEI e cole o link da página dele em \"Link no SEI\".")
+            return
+        semcas_sync.avisar_pedido(ped["id"], "Processo encontrado no SEI. Carregando documentos e andamentos…")
+    try:
+        ok, info = incluir_no_monitor(numero, link, ped["process_id"])
+    except Exception as e:  # noqa: BLE001
+        semcas_sync.concluir_pedido(ped["id"], "erro", f"Falha na verificação: {e}")
+        return
+    if ok:
+        semcas_sync.concluir_pedido(
+            ped["id"], "concluido",
+            f"Processo encontrado no SEI e incluído no monitor. {info} documento(s) e andamento(s) "
+            "carregados. Daqui em diante ele é verificado automaticamente.", novidades=info)
+    else:
+        semcas_sync.concluir_pedido(ped["id"], "erro", info + " Confira o link em \"Link no SEI\" e tente de novo.")
+
+
+busca_lock = threading.Lock()   # um navegador de busca por vez (pedido do site e inclusão automática)
+
+
+def buscar_url_sei(numero, ao_progresso=None, ao_rodada=None):
+    """Pesquisa o número no SEI (código de verificação). Devolve o link da página do processo ou None.
+
+    A busca às vezes desiste cedo depois de um código recusado pelo SEI;
+    uma rodada nova (navegador novo) costuma achar. Até 3 rodadas.
+    """
+    from buscar_link_processo import buscar_link
+    with busca_lock:
+        falhas = 0
+        for rodada in (1, 2, 3):
+            if rodada > 1 and ao_rodada:
+                ao_rodada(rodada)
             try:
                 url = buscar_link(numero, orgao="SEMCAS", oculto=True,
                                   max_tentativas=8, ao_progresso=ao_progresso)
-                break
             except Exception as e:  # noqa: BLE001
-                print(f"[pedido] {numero}: busca {chance} falhou -> {e}")
-                if chance == 2:
+                print(f"[busca] {numero}: rodada {rodada} falhou -> {e}")
+                falhas += 1
+                if falhas == 3:
                     raise
-                time.sleep(2)
-    except Exception as e:  # noqa: BLE001
-        semcas_sync.concluir_pedido(ped["id"], "erro", f"Falha ao pesquisar o processo no SEI: {e}")
-        return None
-    if not url:
-        semcas_sync.concluir_pedido(
-            ped["id"], "nao_monitorado",
-            f"Não foi possível localizar o processo {numero} na pesquisa pública do SEI "
-            "(número inexistente, processo sigiloso ou código de verificação não reconhecido). "
-            "Tente de novo em alguns minutos.")
-        return None
+                url = None
+            if url:
+                return url
+            time.sleep(2)
+    return None
+
+
+def incluir_no_monitor(numero, url, process_id):
+    """Cadastra o link no monitor, confere se é mesmo deste processo e envia ao sistema.
+
+    Devolve (True, total_de_itens) ou (False, motivo). Link errado ou quebrado é desfeito.
+    """
+    alvo = semcas_sync.so_digitos(numero)
     with lock:
         try:
             cur = con.execute("INSERT INTO processos(url,numero,criado_em) VALUES(?,?,?)",
                               (url, numero, datetime.now().isoformat()))
             con.commit()
-            proc = dict(con.execute("SELECT * FROM processos WHERE id=?",
-                                    (cur.lastrowid,)).fetchone())
+            proc = dict(con.execute("SELECT * FROM processos WHERE id=?", (cur.lastrowid,)).fetchone())
         except sqlite3.IntegrityError:
-            proc = dict(con.execute("SELECT * FROM processos WHERE url=?", (url,)).fetchone())
-    print(f"[pedido] {numero}: achou e cadastrou -> {url}")
-    semcas_sync.avisar_pedido(ped["id"], "Processo encontrado no SEI. Carregando documentos e andamentos…")
-    return proc
+            proc = None
+    if proc is None:     # esse link já está no monitor (com outro número)
+        existente = processo_local_por_url(url)
+        return False, f"O link é do processo {existente.get('numero') if existente else '?'}, que já está no monitor."
+    verificar(proc, enviar=False)
+    with lock:
+        erro, numero_sei = con.execute("SELECT erro, numero FROM processos WHERE id=?",
+                                       (proc["id"],)).fetchone()
+        total = con.execute("SELECT COUNT(*) FROM itens WHERE processo_id=?", (proc["id"],)).fetchone()[0]
+    outro = not erro and semcas_sync.so_digitos(numero_sei) != alvo
+    if erro or outro:
+        with lock:
+            con.execute("DELETE FROM itens WHERE processo_id=?", (proc["id"],))
+            con.execute("DELETE FROM processos WHERE id=?", (proc["id"],))
+            con.commit()
+        return False, (f"O link é do processo {numero_sei}, não deste." if outro else
+                       f"O link não abriu a página do processo no SEI ({erro}).")
+    try:
+        semcas_sync.guardar_link(process_id, url)
+    except Exception as e:  # noqa: BLE001
+        print(f"[monitor] {numero}: não consegui salvar o link no sistema -> {e}")
+    _enviar_nuvem(proc["id"], semcas_em_segundo_plano=False)
+    semcas_sync.sincronizar_processo(con, proc["id"])
+    return True, total
+
+
+def processo_local_por_url(url):
+    with lock:
+        r = con.execute("SELECT * FROM processos WHERE url=?", (url,)).fetchone()
+    return dict(r) if r else None
+
+
+# ------------------------------------------- inclusão automática dos processos do sistema
+AUTO_INCLUIR = True            # procura sozinho os processos do sistema que ainda não estão no monitor
+AUTO_SO_PENDENTES = True       # True: só os pendentes; False: também os respondidos
+AUTO_PAUSA = 20                # segundos entre uma busca e outra (não sobrecarregar o SEI)
+AUTO_MAX_FALHAS = 3            # depois disso, o processo precisa do link colado no site
+AUTO_ESPERA_FALHA_H = 6        # horas até tentar de novo um processo que não foi achado
+ARQ_AUTO = PASTA / "auto_incluir.json"
+auto_situacao = {"faltam": 0, "sem_link": 0, "rodando": False}
+
+
+def _ler_auto():
+    try:
+        return json.loads(ARQ_AUTO.read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001
+        return {}
+
+
+def _gravar_auto(d):
+    try:
+        ARQ_AUTO.write_text(json.dumps(d, ensure_ascii=False, indent=1), encoding="utf-8")
+    except Exception as e:  # noqa: BLE001
+        print(f"[auto] não consegui gravar {ARQ_AUTO.name}: {e}")
+
+
+def resumo_auto():
+    if not AUTO_INCLUIR:
+        return ""
+    if auto_situacao["faltam"] == 0 and not auto_situacao["rodando"]:
+        txt = "Inclusão automática: todos os processos do sistema já estão no monitor"
+    else:
+        txt = f"Inclusão automática: {auto_situacao['faltam']} processo(s) ainda sendo procurados no SEI"
+    if auto_situacao["sem_link"]:
+        txt += f"; {auto_situacao['sem_link']} não encontrado(s) — cole o link em \"Link no SEI\""
+    return txt
+
+
+def auto_incluir_rodada():
+    """Uma passada: procura no SEI cada processo do sistema que ainda não está no monitor."""
+    lista = semcas_sync.processos_do_sistema(so_pendentes=AUTO_SO_PENDENTES)
+    falhas = _ler_auto()
+    with lock:
+        locais = {semcas_sync.so_digitos(r[0]) for r in con.execute("SELECT numero FROM processos")}
+    fila = [p for p in lista if semcas_sync.so_digitos(p["numero"]) not in locais]
+    agora = time.time()
+    auto_situacao.update(faltam=len(fila), rodando=True,
+                         sem_link=sum(1 for p in fila if falhas.get(p["numero"], {}).get("n", 0) >= AUTO_MAX_FALHAS))
+    print(f"[auto] {len(fila)} processo(s) do sistema ainda fora do monitor")
+    for p in fila:
+        numero = p["numero"]
+        f = falhas.get(numero, {})
+        link_salvo = p["link"]
+        if not link_salvo and f.get("n", 0) >= AUTO_MAX_FALHAS:
+            continue
+        if not link_salvo and f and agora - f.get("quando", 0) < AUTO_ESPERA_FALHA_H * 3600:
+            continue
+        if processo_local(numero):          # entrou por um pedido do site nesse meio tempo
+            auto_situacao["faltam"] -= 1
+            continue
+        try:
+            url = link_salvo or buscar_url_sei(numero)
+            if url:
+                ok, info = incluir_no_monitor(numero, url, p["id"])
+            else:
+                ok, info = False, "não encontrado na pesquisa pública do SEI"
+        except Exception as e:  # noqa: BLE001
+            ok, info = False, f"falha: {str(e)[:150]}"
+        if ok:
+            print(f"[auto] {numero}: incluído no monitor ({info} itens)")
+            falhas.pop(numero, None)
+            auto_situacao["faltam"] -= 1
+        else:
+            n = f.get("n", 0) + 1
+            falhas[numero] = {"n": n, "quando": time.time(), "erro": info}
+            print(f"[auto] {numero}: {info} (tentativa {n} de {AUTO_MAX_FALHAS})")
+            if n >= AUTO_MAX_FALHAS:
+                auto_situacao["sem_link"] += 1
+        _gravar_auto(falhas)
+        time.sleep(AUTO_PAUSA)
+    auto_situacao["rodando"] = False
+
+
+def laco_auto_incluir():
+    time.sleep(90)        # deixa o monitor subir e atender pedidos primeiro
+    while True:
+        try:
+            if semcas_sync is not None and semcas_sync.ativo():
+                auto_incluir_rodada()
+        except Exception as e:  # noqa: BLE001
+            print(f"[auto] aviso: {str(e)[:200]}")
+            auto_situacao["rodando"] = False
+        time.sleep(30 * 60)
 
 
 def laco_pedidos():
@@ -401,7 +587,7 @@ def laco_pedidos():
                 if time.time() - ultimo_sinal > 60:
                     with lock:
                         n = con.execute("SELECT COUNT(*) FROM processos").fetchone()[0]
-                    semcas_sync.sinal_de_vida(n)
+                    semcas_sync.sinal_de_vida(n, resumo_auto())
                     ultimo_sinal = time.time()
                 for ped in semcas_sync.pedidos_pendentes():
                     try:
@@ -761,6 +947,8 @@ def main():
         print("[semcas] DESLIGADO — sem semcas_config.txt, nada é enviado ao sistema.")
     threading.Thread(target=laco, daemon=True).start()
     threading.Thread(target=laco_pedidos, daemon=True).start()
+    if AUTO_INCLUIR:
+        threading.Thread(target=laco_auto_incluir, daemon=True).start()
     srv = ThreadingHTTPServer(("127.0.0.1", PORTA), Painel)
     print(f"Painel em http://localhost:{PORTA}  (Ctrl+C para sair)")
     if "--sem-navegador" not in sys.argv:
