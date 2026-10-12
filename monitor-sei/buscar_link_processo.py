@@ -110,6 +110,28 @@ def _preparar_formulario(page, processo, orgao):
     }""" % orgao.upper())
 
 
+def _esperar_imagem_nova(page, anterior, limite=6.0):
+    """Espera a imagem do captcha trocar no DOM depois de pedir um novo codigo.
+
+    Devolve True se trocou. Sem `anterior`, apenas espera um instante curto.
+    """
+    el = page.locator("#imgCaptcha, #imgInfraCaptcha")
+    if el.count() == 0:
+        return False
+    if anterior is None:
+        time.sleep(0.6)
+        return True
+    t0 = time.time()
+    while time.time() - t0 < limite:
+        time.sleep(0.15)
+        try:
+            if el.first.screenshot() != anterior:
+                return True
+        except Exception:
+            return False
+    return False
+
+
 def _resolver_captcha(img_bytes, modelo, templates):
     from sei_captcha_pipeline import resolver_captcha
     return resolver_captcha(img_bytes, modelo=modelo, templates=templates)
@@ -153,14 +175,31 @@ def buscar_link(processo, orgao="SEMCAS", oculto=True,
             "nenhum processo", "não encontrado",
         ))
 
-    def recarregar():
+    def recarregar(anterior=None):
+        """Gera um codigo de verificacao novo e ESPERA a imagem mudar de verdade.
+
+        O clique no botao de recarregar dispara a geracao no servidor, mas a
+        imagem no DOM so troca ~0,2-0,5s depois. Sem esperar, lemos a imagem
+        VELHA e enviamos contra o codigo NOVO do servidor — o SEI recusa em
+        todas as tentativas seguintes. Essa espera e o que faz a busca acertar.
+
+        Se o botao nao produzir imagem nova, recarrega a pagina inteira.
+        """
         try:
             page.click("#infraImgRecarregarCaptcha", timeout=3000)
         except Exception:
+            pass
+        if _esperar_imagem_nova(page, anterior, limite=3.0):
+            return
+        # botao nao bastou: recarrega a pagina inteira
+        try:
             page.reload(wait_until="domcontentloaded")
             page.wait_for_selector("#txtProtocoloPesquisa", timeout=45000)
             _preparar_formulario(page, processo, orgao)
             time.sleep(1.2)
+            _esperar_imagem_nova(page, anterior, limite=6.0)
+        except Exception:
+            pass
 
     args_lancamento = [
         # --no-sandbox: obrigatório para Chromium como root no container Linux
@@ -189,6 +228,7 @@ def buscar_link(processo, orgao="SEMCAS", oculto=True,
                     _preparar_formulario(page, processo, orgao)
                     continue
 
+                img_bytes = None
                 try:
                     img_bytes = captcha_el.first.screenshot()
                     result = _resolver_captcha(img_bytes, modelo, templates)
@@ -197,12 +237,12 @@ def buscar_link(processo, orgao="SEMCAS", oculto=True,
                         f"(certeza {result['confianca']:.2f})")
                 except Exception as e:
                     log(f"tentativa {tent}: erro no solver ({e})")
-                    recarregar()
+                    recarregar(img_bytes)
                     continue
 
                 if not codigo or len(codigo) < 5:
                     log("leitura incompleta, gerando novo codigo")
-                    recarregar()
+                    recarregar(img_bytes)
                     continue
 
                 page.fill("#txtInfraCaptcha", codigo[:6])
@@ -225,12 +265,12 @@ def buscar_link(processo, orgao="SEMCAS", oculto=True,
 
                 if sei_recusou():
                     log("SEI recusou o captcha, tentando outro")
-                    recarregar()
+                    recarregar(img_bytes)
                     continue
 
                 if page.locator("#txtInfraCaptcha").count() > 0:
                     log("sem confirmação de sucesso, tentando outro captcha")
-                    recarregar()
+                    recarregar(img_bytes)
                     continue
                 break
         finally:
