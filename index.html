@@ -781,7 +781,7 @@
           <div style="display:flex;gap:6px 14px;flex-wrap:wrap;margin-top:6px;font-size:12.5px;color:#5B636B"><sc-if value="{{ proc.temCadastrado }}" hint-placeholder-val="{{ true }}"><span>{{ proc.cadastradoTxt }}</span></sc-if><span>{{ proc.ultimaTxt }}</span></div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <sc-if value="{{ proc.temMonitor }}" hint-placeholder-val="{{ false }}"><button onClick="{{ abrirAcompanhamento }}" style="height:36px;padding:0 14px;background:#fff;color:#1F5F9E;border:1px solid #B8D4F0;border-radius:2px;font-weight:500;font-size:13.5px;cursor:pointer" style-hover="background:#F0F7FF">📋 Acompanhamento</button></sc-if>
+          <sc-if value="{{ proc.temMonitor }}" hint-placeholder-val="{{ false }}"><button onClick="{{ abrirAcompanhamento }}" style="height:36px;padding:0 14px;background:#fff;color:#1F5F9E;border:1px solid #B8D4F0;border-radius:2px;font-weight:500;font-size:13.5px;cursor:pointer" style-hover="background:#F0F7FF">Acompanhamento SEI <span style="display:inline-block;min-width:18px;margin-left:4px;padding:0 5px;font-size:11.5px;font-weight:600;background:#EEF2F7;border:1px solid #D3DEE9;color:#24476B;border-radius:2px">{{ proc.monitorCount }}</span></button></sc-if>
           <sc-if value="{{ proc.podeConcluir }}" hint-placeholder-val="false"><button onClick="{{ toggleAba }}" style="height:36px;padding:0 16px;border-radius:2px;font-weight:600;font-size:13.5px;cursor:pointer;border:1px solid {{ proc.acaoBorder }};background:{{ proc.acaoBg }};color:{{ proc.acaoColor }}">{{ proc.acaoBtn }}</button></sc-if>
           <sc-if value="{{ proc.podeExcluir }}" hint-placeholder-val="{{ false }}"><button onClick="{{ pedirExcluir }}" style="height:36px;padding:0 14px;background:#fff;color:#1F2328;border:1px solid #C9CED3;border-radius:2px;font-weight:500;font-size:13.5px;cursor:pointer;color:#A3281F;border-color:#E2B4AF" style-hover="background:#FBF1F0">Excluir ficha</button></sc-if>
         </div>
@@ -949,41 +949,48 @@
         </aside>
       </div>
 
-      <sc-if value="{{ confirmDel }}" hint-placeholder-val="{{ false }}">
       <sc-if value="{{ acompanhamentoAberto }}" hint-placeholder-val="{{ false }}">
-<div onClick="{{ fecharAcompanhamento }}" style="position:fixed;inset:0;background:rgba(20,30,40,.45);z-index:60;display:flex;align-items:center;justify-content:center;padding:20px">
-  <div onClick="event.stopPropagation()" style="background:#fff;border-radius:2px;max-width:720px;width:100%;max-height:80vh;overflow:auto;box-shadow:0 12px 40px rgba(0,0,0,.2)">
-    <div style="padding:20px 22px 16px;border-bottom:1px solid #DADDE1;display:flex;justify-content:space-between;align-items:center">
-      <div>
-        <h3 style="font-weight:600;font-size:17px;margin:0 0 4px">Acompanhamento de processo</h3>
-        <div style="font-size:12.5px;color:#7A828A">Documentos e andamentos encontrados pela consulta automática do SEI</div>
-      </div>
-      <button onClick="{{ fecharAcompanhamento }}" style="background:transparent;border:none;font-size:20px;cursor:pointer;color:#7A828A;padding:4px 8px">×</button>
-    </div>
-    <div style="padding:16px 22px">
-      <sc-if value="{{ proc.temMonitor }}" hint-placeholder-val="{{ false }}">
-        <sc-for list="{{ proc.monitorItens }}" as="mi">
-          <div style="padding:12px 0;border-bottom:1px solid #ECEEF0">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
-              <div style="flex:1;min-width:0">
-                <div style="font-size:13.5px;font-weight:500;color:#1F2328">{{ mi.titulo }}</div>
-                <div style="font-size:12.5px;color:#5B636B;margin-top:2px">{{ mi.data }} · {{ mi.unidade }}</div>
-                <div style="font-size:13px;color:#2E353B;margin-top:4px;line-height:1.5">{{ mi.texto }}</div>
-              </div>
-              <sc-if value="{{ mi.temLink }}" hint-placeholder-val="{{ false }}">
-                <a href="{{ mi.link }}" target="_blank" rel="noopener" style="font-size:12.5px;color:#1F5F9E;text-decoration:underline;white-space:nowrap">Abrir no SEI</a>
-              </sc-if>
+      <div onClick="{{ fecharAcompanhamento }}" style="position:fixed;inset:0;background:rgba(20,30,40,.45);z-index:60;display:flex;align-items:center;justify-content:center;padding:20px">
+        <div onClick="event.stopPropagation()" role="dialog" aria-label="Acompanhamento do processo" style="background:#fff;border:1px solid #DADDE1;border-radius:2px;max-width:760px;width:100%;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,.2)">
+          <div style="padding:16px 20px 14px;border-bottom:1px solid #DADDE1;display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+            <div style="min-width:0">
+              <div style="font-size:12px;color:#7A828A;margin-bottom:2px">Processo SEI · {{ proc.servicoLabel }}</div>
+              <h3 style="font-weight:600;font-size:16px;margin:0;color:#1F2328">Acompanhamento <span style="font-family:'IBM Plex Mono';font-weight:500">{{ proc.numero }}</span></h3>
+              <div style="font-size:12.5px;color:#7A828A;margin-top:4px">Andamentos e documentos obtidos pela consulta automática do SEI. Última consulta: {{ proc.monitorUltima }}</div>
             </div>
+            <button onClick="{{ fecharAcompanhamento }}" aria-label="Fechar" style="height:32px;padding:0 12px;background:#fff;color:#1F2328;border:1px solid #C9CED3;border-radius:2px;font-weight:500;font-size:13px;cursor:pointer;white-space:nowrap">Fechar</button>
           </div>
-        </sc-for>
+          <div style="padding:10px 20px;border-bottom:1px solid #ECEEF0;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+            <sc-for list="{{ proc.monitorFiltros }}" as="fl">
+              <button onClick="{{ fl.onClick }}" style="{{ fl.style }}">{{ fl.label }} <span style="font-weight:600">{{ fl.n }}</span></button>
+            </sc-for>
+          </div>
+          <div style="overflow:auto;flex:1">
+            <sc-if value="{{ proc.monitorVazio }}" hint-placeholder-val="{{ false }}"><div style="padding:24px 20px;font-size:13px;color:#7A828A">Nenhum registro nesta categoria.</div></sc-if>
+            <sc-for list="{{ proc.monitorVisiveis }}" as="mi">
+              <div style="display:grid;grid-template-columns:118px minmax(0,1fr);gap:14px;padding:12px 20px;border-bottom:1px solid #ECEEF0;align-items:start">
+                <div>
+                  <div style="font-family:'IBM Plex Mono';font-size:12.5px;color:#1F2328">{{ mi.dataSei }}</div>
+                  <div style="font-family:'IBM Plex Mono';font-size:12px;color:#7A828A;margin-top:1px">{{ mi.horaSei }}</div>
+                </div>
+                <div style="min-width:0">
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:5px">
+                    <span style="display:inline-block;padding:1px 7px;font-size:11.5px;font-weight:600;border:1px solid {{ mi.tipoBorder }};background:{{ mi.tipoBg }};color:{{ mi.tipoCor }};border-radius:2px">{{ mi.tipo }}</span>
+                    <sc-if value="{{ mi.temUnidade }}"><span style="font-family:'IBM Plex Mono';font-size:11.5px;color:#3A4753;padding:1px 7px;background:#F3F5F7;border:1px solid #DADDE1;border-radius:2px">{{ mi.unidade }}</span></sc-if>
+                  </div>
+                  <div style="font-size:13.5px;line-height:1.5;color:#16202B;white-space:pre-wrap">{{ mi.texto }}</div>
+                  <sc-if value="{{ mi.temCorpo }}"><div style="font-size:12.5px;line-height:1.5;color:#5B636B;margin-top:4px;white-space:pre-wrap">{{ mi.corpo }}</div></sc-if>
+                  <sc-if value="{{ mi.temLink }}"><a href="{{ mi.link }}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:6px;font-size:12.5px;color:#1F5F9E;text-decoration:underline">Abrir documento no SEI</a></sc-if>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="padding:10px 20px;background:#FAFBFB;border-top:1px solid #DADDE1;font-size:12px;color:#7A828A">{{ proc.monitorCount }} registro(s) · Registros automáticos não podem ser editados. Para anotações, use Comentários e atualizações.</div>
+        </div>
+      </div>
       </sc-if>
-      <sc-if value="{{ proc.semMonitor }}" hint-placeholder-val="{{ true }}">
-        <div style="padding:24px 0;text-align:center;color:#7A828A;font-size:13.5px">Nenhum acompanhamento encontrado ainda.</div>
-      </sc-if>
-    </div>
-  </div>
-</div>
-</sc-if>
+
+      <sc-if value="{{ confirmDel }}" hint-placeholder-val="{{ false }}">
 
 <div style="position:fixed;inset:0;background:rgba(20,30,40,.45);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px">
         <div style="background:#fff;border-radius:2px;max-width:460px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.2)">
@@ -1405,7 +1412,7 @@ class Component extends DCLogic {
   pendPagProx=()=>this.setState(s=>({pendPag:s.pendPag+1,pendMenu:null}));
   setPendPorPag=e=>this.setState({pendPorPag:+e.target.value||10,pendPag:1});
   fecharPendMenu=()=>this.setState({pendMenu:null});
-abrirAcompanhamento=()=>this.setState({acompanhamentoAberto:true});
+abrirAcompanhamento=()=>this.setState({acompanhamentoAberto:true,acompFiltro:'todos'});
 fecharAcompanhamento=()=>this.setState({acompanhamentoAberto:false});
   avisoPend(t){ this.setState({pendAviso:t}); clearTimeout(this._avisoT); this._avisoT=setTimeout(()=>this.setState({pendAviso:''}),2200); }
   abrirComFoco(p,cat){ this.setState({pendMenu:null}); this.openProcesso(p); setTimeout(()=>{ this.setState({obsCategoria:cat}); setTimeout(()=>{ const el=document.querySelector(cat==='reiteracao'?'input[placeholder="25101.000000/2026"]':'textarea[placeholder^="Descreva"]'); if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); el.focus(); } },250); },50); }
@@ -1676,7 +1683,7 @@ fecharAcompanhamento=()=>this.setState({acompanhamentoAberto:false});
       const d=this.dias(sel); const r=sel.aba==='respondido';
       const catEstilo={'Reiteração recebida':['#FFE6C4','#7A4600','#F2C98A'],Atualização:['#EEF2F7','#24476B','#D3DEE9'],Cobrança:['#FFF4DD','#7A4D00','#E9D19D'],Pendência:['#FCEDEB','#8E1D16','#E8C2BE'],Decisão:['#E8F2FA','#0F5E91','#C4DDEC'],Orientação:['#EEEAF8','#59408C','#D7CDEE']};
       const uid=this.session?.user?.id;const todosObs=(sel.obs||[]).map((o,i)=>{const categoria=o.categoria||(o.data==='importado'?'Planilha':'Sem categoria'), ce=catEstilo[categoria]||['#F3F5F7','#5B636B','#DADDE1'],sourceIndex=Number.isInteger(o.sourceIndex)?o.sourceIndex:i,proprio=o.authorUserId===uid; return {...o,temEditado:!!o.editadoPor,editadoTxt:o.editadoPor?('Editado por '+o.editadoPor+(o.editadoEm?' em '+o.editadoEm:'')):'',sourceIndex,titulo:o.titulo||(o.data==='importado'?'Observação importada':'Comentário anterior'),categoria,anexos:(o.anexos||[]).filter(a=>a&&/^data:image\/(png|jpeg|webp);base64,/.test(a.url||'')),temDataEvento:!!o.dataEvento,temMensagemSei:!!o.mensagemSei,catBg:ce[0],catCor:ce[1],catBorder:ce[2],perfil:o.perfil||'Planilha',data:o.data==='importado'?'importado da planilha':o.data,podeEditarComentario:(o.tipo||'comentario')==='comentario'&&(isSuper||proprio),editar:()=>this.iniciarEdicaoComentario(sel.id,sourceIndex),podeExcluir:isSuper||proprio,excluir:()=>this.excluirComentario(sel.id,sourceIndex,o.id)};});
-      const obs=todosObs.filter(o=>this.norm([o.titulo,o.texto,o.autor,o.categoria,o.dataEvento,o.mensagemSei].join(' ')).includes(this.norm(s.comentarioBusca)));
+      const ehMonitor=o=>o.categoria==='monitor_sei'||o.tipo==='monitor_sei'; const manuaisObs=todosObs.filter(o=>!ehMonitor(o)); const obs=manuaisObs.filter(o=>this.norm([o.titulo,o.texto,o.autor,o.categoria,o.dataEvento,o.mensagemSei].join(' ')).includes(this.norm(s.comentarioBusca)));
       if(s.comentarioOrdem==='recentes')obs.reverse();
       const processoAtividades=atividades.filter(l=>l.pid===sel.id);
       const ed=s.editKey, campos=[['numero','Nº do processo SEI','25101.000000/2026'],['servico','Serviço'],['orgao','Órgão solicitante'],['usuario','Pessoa/família referenciada','Nome ou “Não se aplica”'],['encaminhamento','Encaminhamento'],['prazoDias','Prazo do órgão','Ex.: 72 horas, 30 dias'],['prazoData','Data-limite do prazo','dd/mm/aaaa']].concat(sel.servico==='CONVITES'?[['setorReceber','Setor que vai receber','Ex.: PAEFI e os 5 CREAS'],['dataEvento','Data e horário do evento','Ex.: 05/12/2026 às 8:30']]:[]).concat([['link','Link do processo no SEI','https://']]);
@@ -1684,8 +1691,14 @@ fecharAcompanhamento=()=>this.setState({acompanhamentoAberto:false});
       const dados=campos.map(([k,label,placeholder])=>{ const v=this.valorCampo(sel,k), hi=(sel.hist||{})[k], ehSelect=k==='servico'||k==='encaminhamento';
         return {k,label,placeholder:placeholder||'',valor:k==='servico'?this.sv(v).label:(v||'Não informado'),cor:v?'#1F2328':'#9AA6B2',lendo:ed!==k,editando:ed===k,podeEditar:podeEditar&&ed!==k,ehSelect,ehTexto:!ehSelect,opcoes:opcoesDe(k),temQuem:!!hi,quem:hi?('Alterado por '+hi.autor+' em '+hi.data):'',onEdit:()=>this.startEdit(k,k==='prazoData'?(v||this.sugestaoPrazoData(sel)):v)}; });
       proc={...sel,dados,...this.autoriaProc(sel,ult,atividades),demandaLendo:ed!=='demanda',demandaEditando:ed==='demanda',podeEditarDemanda:podeEditar&&ed!=='demanda',editarDemanda:()=>this.startEdit('demanda',sel.demanda),servicoLabel:this.sv(sel.servico).label,usuario:sel.usuario||'Não informado',temEncaminhamento:!!sel.encaminhamento,etapas,obs,atividades:processoAtividades,semAtividades:!processoAtividades.length,
-         ...(()=>{ const mon=todosObs.filter(o=>o.categoria==='monitor_sei'||o.tipo==='monitor_sei'); const itens=mon.map(o=>{ const txt=String(o.texto||'').replace(/\s+$/,''); const linhas=txt.split('\n'); const cab=linhas[0]||''; const corpo=linhas.slice(1).join('\n').trim(); const m=cab.match(/^(\S+)\s*\(([^)]*)\)\s*(.*)$/); return {titulo:(o.titulo||'Novidade no SEI'), quando:(o.data||o.dataEvento||''), unidade:(m&&m[2])?m[2]:'', temUnidade:!!(m&&m[2]), texto:(m?((m[1]||'')+' '+(m[3]||'')+(corpo?('\n\n'+corpo):'')).trim():txt), link:(o.mensagemSei||''), temLink:!!(o.mensagemSei||'') }; }); return {temMonitor:itens.length>0, semMonitor:itens.length===0, monitorItens:itens, monitorCount:itens.length}; })(),semComentarios:!obs.length,comentarioVazioTexto:todosObs.length?'Nenhum comentário corresponde à busca.':'Nenhum comentário registrado. Adicione a primeira atualização abaixo.',
-        obsCount:obs.length+' de '+todosObs.length+' registro(s)',
+         ...(()=>{ const mon=todosObs.filter(ehMonitor); const ehDoc=o=>/documento/i.test(o.titulo||''); const chave=(d,h)=>{const m=String(d||'').match(/(\d{2})\/(\d{2})\/(\d{4})/);return m?(m[3]+m[2]+m[1]+(h||'00:00')):'';};
+           const itens=mon.map(o=>{ const txt=String(o.texto||'').replace(/\s+$/,''); const linhas=txt.split('\n'); const cab=(linhas[0]||'').trim(); const corpo=linhas.slice(1).join('\n').trim(); const m=cab.match(/^(\d{2}\/\d{2}\/\d{4})(?:\s+(\d{1,2}:\d{2}))?\s*(?:\(([^)]*)\))?\s*(.*)$/); const doc=ehDoc(o); const dataSei=m?m[1]:(o.dataEvento||''); const horaSei=m&&m[2]?m[2]:''; const url=(String(o.mensagemSei||'').match(/https?:\/\/\S+/)||[''])[0]; const link=this.linkSeguro(url);
+             return {tipo:doc?'Documento':'Andamento',ehDoc:doc,tipoBg:doc?'#EEEAF8':'#E8F2FA',tipoCor:doc?'#59408C':'#0F5E91',tipoBorder:doc?'#D7CDEE':'#C4DDEC',dataSei:dataSei||'—',horaSei,unidade:m&&m[3]?m[3]:'',temUnidade:!!(m&&m[3]),texto:m?(m[4]||cab):cab,corpo,temCorpo:!!corpo,link,temLink:!!link,k:chave(dataSei,horaSei)}; }).sort((a,b)=>b.k.localeCompare(a.k));
+           const filtro=s.acompFiltro||'todos', nDoc=itens.filter(x=>x.ehDoc).length; const vis=itens.filter(x=>filtro==='todos'||(filtro==='doc'?x.ehDoc:!x.ehDoc));
+           const fb=(k,label,n)=>({label,n:String(n),onClick:()=>this.setState({acompFiltro:k}),style:'height:30px;padding:0 12px;border-radius:2px;cursor:pointer;font-size:12.5px;border:1px solid '+(filtro===k?'#12355B':'#C9CED3')+';background:'+(filtro===k?'#12355B':'#fff')+';color:'+(filtro===k?'#fff':'#3A4753')});
+           const ult=mon.map(o=>String(o.data||'')).filter(x=>/\d{2}\/\d{2}\/\d{4}/.test(x)).sort((a,b)=>chave(a,(a.match(/\d{1,2}:\d{2}/)||[''])[0]).localeCompare(chave(b,(b.match(/\d{1,2}:\d{2}/)||[''])[0]))).pop()||'—';
+           return {temMonitor:itens.length>0, semMonitor:itens.length===0, monitorItens:itens, monitorVisiveis:vis, monitorVazio:!vis.length, monitorCount:String(itens.length), monitorUltima:ult, monitorFiltros:[fb('todos','Todos',itens.length),fb('and','Andamentos',itens.length-nDoc),fb('doc','Documentos',nDoc)]}; })(),semComentarios:!obs.length,comentarioVazioTexto:manuaisObs.length?'Nenhum comentário corresponde à busca.':'Nenhum comentário registrado. Adicione a primeira atualização abaixo.',
+        obsCount:obs.length+' de '+manuaisObs.length+' registro(s)',
         dias:d==null?'—':fmt(d),diasColor:this.diasColor(d),link:this.linkSeguro(sel.link),temLink:!!this.linkSeguro(sel.link),semLink:!this.linkSeguro(sel.link),
         abaTxt:r?'Respondido':'Pendente',stColor:r?'#1E8E4E':'#8A5A06',stBg:r?'#F1F8F4':'#FDF6EA',stBorder:r?'#CFE7D8':'#F0DDB8',
         podeEditar,podeExcluir:isSuper,podeConcluir:isSuper,edicaoBloqueada:!podeEditar,
