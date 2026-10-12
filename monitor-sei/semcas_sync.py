@@ -326,6 +326,13 @@ def pegar_pedido(pedido_id, cfg=None):
     return bool(linhas)
 
 
+def avisar_pedido(pedido_id, mensagem, cfg=None):
+    """Atualiza só a mensagem de andamento (o site mostra enquanto roda)."""
+    cfg = cfg or _ler_config()
+    _requisitar(cfg, "/rest/v1/monitor_pedidos?id=eq.%s" % urllib.parse.quote(pedido_id), "PATCH",
+                {"mensagem": (mensagem or "")[:500]}, "return=minimal")
+
+
 def concluir_pedido(pedido_id, status, mensagem="", novidades=0, cfg=None):
     cfg = cfg or _ler_config()
     _requisitar(cfg, "/rest/v1/monitor_pedidos?id=eq.%s" % urllib.parse.quote(pedido_id), "PATCH",

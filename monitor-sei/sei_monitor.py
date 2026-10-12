@@ -314,23 +314,82 @@ def atender_pedido(ped):
     with lock:
         procs = [dict(p) for p in con.execute("SELECT * FROM processos")]
     proc = next((p for p in procs if alvo and semcas_sync.so_digitos(p.get("numero")) == alvo), None)
+    novo = False
     if not proc:
-        semcas_sync.concluir_pedido(
-            ped["id"], "nao_monitorado",
-            f"O processo {ped.get('sei_number') or ''} ainda não está cadastrado no monitor SEI (PC 1). "
-            "Cadastre-o no painel do monitor para poder verificar.")
-        return
+        proc = cadastrar_pelo_numero(ped)
+        if not proc:
+            return
+        novo = True
     print(f"[pedido] verificando {proc.get('numero')} a pedido do site")
     try:
         nov = verificar(proc, semcas_na_hora=True)
         with lock:
             erro = con.execute("SELECT erro FROM processos WHERE id=?", (proc["id"],)).fetchone()[0]
+            total = con.execute("SELECT COUNT(*) FROM itens WHERE processo_id=?", (proc["id"],)).fetchone()[0]
         if erro:
             semcas_sync.concluir_pedido(ped["id"], "erro", f"O SEI não respondeu como esperado: {erro}")
+        elif novo:
+            semcas_sync.concluir_pedido(
+                ped["id"], "concluido",
+                f"Processo encontrado no SEI e incluído no monitor. {total} documento(s) e andamento(s) "
+                "carregados. Daqui em diante ele é verificado automaticamente.", novidades=total)
         else:
             semcas_sync.concluir_pedido(ped["id"], "concluido", novidades=len(nov))
     except Exception as e:  # noqa: BLE001
         semcas_sync.concluir_pedido(ped["id"], "erro", f"Falha na verificação: {e}")
+
+
+def cadastrar_pelo_numero(ped):
+    """Processo ainda fora do monitor: pesquisa no SEI (código de verificação) e cadastra."""
+    numero = (ped.get("sei_number") or "").strip()
+    print(f"[pedido] {numero} não está no monitor - pesquisando no SEI")
+    semcas_sync.avisar_pedido(ped["id"], "Processo novo no monitor: procurando no SEI. "
+                                         "Pode levar de 30 segundos a alguns minutos.")
+    ultimo = [0.0]
+
+    def ao_progresso(msg):
+        if time.time() - ultimo[0] > 5:      # não inunda o banco
+            ultimo[0] = time.time()
+            try:
+                semcas_sync.avisar_pedido(ped["id"], f"Procurando no SEI: {msg}")
+            except Exception:  # noqa: BLE001
+                pass
+
+    url = None
+    try:
+        from buscar_link_processo import buscar_link
+        for chance in (1, 2):
+            try:
+                url = buscar_link(numero, orgao="SEMCAS", oculto=True,
+                                  max_tentativas=8, ao_progresso=ao_progresso)
+                break
+            except Exception as e:  # noqa: BLE001
+                print(f"[pedido] {numero}: busca {chance} falhou -> {e}")
+                if chance == 2:
+                    raise
+                time.sleep(2)
+    except Exception as e:  # noqa: BLE001
+        semcas_sync.concluir_pedido(ped["id"], "erro", f"Falha ao pesquisar o processo no SEI: {e}")
+        return None
+    if not url:
+        semcas_sync.concluir_pedido(
+            ped["id"], "nao_monitorado",
+            f"Não foi possível localizar o processo {numero} na pesquisa pública do SEI "
+            "(número inexistente, processo sigiloso ou código de verificação não reconhecido). "
+            "Tente de novo em alguns minutos.")
+        return None
+    with lock:
+        try:
+            cur = con.execute("INSERT INTO processos(url,numero,criado_em) VALUES(?,?,?)",
+                              (url, numero, datetime.now().isoformat()))
+            con.commit()
+            proc = dict(con.execute("SELECT * FROM processos WHERE id=?",
+                                    (cur.lastrowid,)).fetchone())
+        except sqlite3.IntegrityError:
+            proc = dict(con.execute("SELECT * FROM processos WHERE url=?", (url,)).fetchone())
+    print(f"[pedido] {numero}: achou e cadastrou -> {url}")
+    semcas_sync.avisar_pedido(ped["id"], "Processo encontrado no SEI. Carregando documentos e andamentos…")
+    return proc
 
 
 def laco_pedidos():

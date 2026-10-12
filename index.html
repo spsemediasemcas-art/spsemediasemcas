@@ -1322,8 +1322,8 @@ class Component extends DCLogic {
     let txt='', cor='#5B636B';
     if(v){ if(v.status==='enviando') txt='Enviando pedido…';
       else if(v.status==='pendente') { txt=on===false?('Na fila, mas o monitor (PC 1) está sem sinal'+(this.state.monitorSinal?' desde '+this.state.monitorSinal:'')+'. A verificação roda quando ele voltar.'):'Na fila do monitor SEI…'; cor=on===false?'#8A5A06':'#5B636B'; }
-      else if(v.status==='rodando') txt='Verificando no SEI…';
-      else if(v.status==='concluido') { txt=v.novidades?(v.novidades+' novidade(s) encontrada(s). Veja em Acompanhamento SEI.'):'Verificado agora. Nenhuma novidade no SEI.'; cor='#1E8E4E'; }
+      else if(v.status==='rodando') txt=v.mensagem||'Verificando no SEI…';
+      else if(v.status==='concluido') { txt=v.mensagem||(v.novidades?(v.novidades+' novidade(s) encontrada(s). Veja em Acompanhamento SEI.'):'Verificado agora. Nenhuma novidade no SEI.'); cor='#1E8E4E'; }
       else { txt=v.mensagem||'Não foi possível verificar.'; cor='#A3281F'; } }
     return {temVerif:!!txt,verifTxt:txt,verifCor:cor,verifBtn:ocupado?'Verificando…':'Verificar agora',verificar:()=>this.pedirVerificacao([p.id])}; }
   async loadDbData(){
