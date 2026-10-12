@@ -1,0 +1,129 @@
+===============================================================
+   MONITOR DE PROCESSOS SEI - PREFEITURA DE SAO LUIS
+   Versao portatil - funciona em qualquer computador
+===============================================================
+
+Sistema de acompanhamento processual do SEI. Pesquisa os
+processos, encontra o link de cada um, acompanha documentos e
+andamentos novos e mostra tudo no painel.
+
+Desenvolvido por: Jurandy Santana
+WhatsApp: (98) 98401-6496
+
+---------------------------------------------------------------
+COMO USAR EM QUALQUER COMPUTADOR
+---------------------------------------------------------------
+Nao precisa instalar nada. A pasta ja traz o proprio Python e o
+proprio navegador (na subpasta "_portatil").
+
+1. Copie a pasta inteira para um pendrive, ou compacte em .zip e
+   envie (o zip fica em torno de 1 GB).
+2. No outro computador, copie/descompacte a pasta (ex.: na Area
+   de Trabalho) e de duplo clique em "1 - Abrir Monitor.bat".
+3. Pronto. O painel abre em http://localhost:8765.
+
+IMPORTANTE: mantenha a pasta inteira junta. O "_portatil" precisa
+ficar dentro dela. Nao precisa de internet para o monitor; a
+internet e usada apenas para consultar o SEI.
+
+---------------------------------------------------------------
+OS 4 ATALHOS
+---------------------------------------------------------------
+  1 - Abrir Monitor.bat
+      Abre o painel com os processos acompanhados.
+
+  2 - Pesquisar em Fila.bat
+      Le os numeros do arquivo "numeros.txt" (um por linha),
+      pesquisa cada um no SEI e guarda o link achado.
+      Pode deixar rodando: quem ja foi pesquisado nao repete.
+      Se cair no meio, e so abrir de novo - continua de onde parou.
+
+  3 - Importar para o Monitor.bat
+      Pega os processos achados na pesquisa e cadastra no monitor,
+      ja baixando os documentos e andamentos de cada um.
+
+  4 - Atualizar Base.bat
+      Abre o navegador e vai baixando codigos de verificacao
+      novos para voce conferir. Serve para deixar o sistema mais
+      certeiro ao longo do tempo.
+
+---------------------------------------------------------------
+PESQUISAR OS PROCESSOS (passo a passo)
+---------------------------------------------------------------
+1. Abra o arquivo "numeros.txt" (Bloco de Notas) e cole os
+   numeros, um por linha. Exemplo:
+       25101.011492/2025
+       25101.008000/2025
+2. Duplo clique em "2 - Pesquisar em Fila.bat".
+3. Ele pergunta quantos pesquisar: aperte Enter para fazer todos,
+   ou digite uma quantidade (ex.: 50) para fazer por partes.
+4. Ao terminar, duplo clique em "3 - Importar para o Monitor.bat".
+5. Abra o monitor ("1 - Abrir Monitor.bat") - os processos estarao
+   na lista, sendo verificados automaticamente.
+
+O resultado da pesquisa fica no arquivo "fila_resultado.csv".
+
+DICA: alguns numeros podem nao ser encontrados na primeira vez,
+porque o codigo de verificacao de imagem pode falhar. Rode a fila
+de novo mais tarde que eles costumam aparecer.
+
+---------------------------------------------------------------
+ACOMPANHAMENTO DENTRO DO SISTEMA SEMCAS (opcional)
+---------------------------------------------------------------
+O monitor pode enviar o que encontra para o sistema "Controle de
+Processos SEMCAS", onde aparece no submenu "Acompanhamento de
+processo" de cada processo.
+
+Para ligar:
+1. Copie "semcas_config.exemplo.txt" para "semcas_config.txt".
+2. Preencha a url do projeto e a chave de servico (service_role).
+3. Rode:  3 - Importar para o Monitor.bat  (ou peca o envio).
+
+Sem esse arquivo, tudo funciona normalmente - apenas nao envia.
+
+---------------------------------------------------------------
+NUVEM PROPRIA - SUPABASE (opcional)
+---------------------------------------------------------------
+1. Crie um projeto em https://supabase.com (gratuito).
+2. No SQL Editor, cole o conteudo de "supabase_schema.sql" e rode.
+3. Copie "supabase_config.exemplo.txt" para "supabase_config.txt"
+   e preencha url= e key= (chave service_role).
+
+---------------------------------------------------------------
+ARQUIVOS PRINCIPAIS
+---------------------------------------------------------------
+  1 - Abrir Monitor.bat          abre o painel
+  2 - Pesquisar em Fila.bat      pesquisa os numeros em fila
+  3 - Importar para o Monitor.bat  cadastra os achados
+  4 - Atualizar Base.bat         melhora o reconhecimento
+  numeros.txt                    lista de numeros a pesquisar
+  fila_resultado.csv             resultado da pesquisa
+  sei_monitor.py                 programa principal (painel web)
+  pesquisar_fila.py              pesquisa em fila
+  importar_fila.py               importa os achados
+  buscar_link_processo.py        consulta automatica por numero
+  sei_captcha_pipeline.py        reconhecimento do codigo de imagem
+  semcas_sync.py                 envio para o Controle de Processos
+  supabase_sync.py               envio para o Supabase
+  modelo_svm.pkl                 base de reconhecimento treinada
+  rotulos.txt                    padroes de codigo validados
+  sei_monitor.db                 banco local (processos e itens)
+  documentos/                    PDFs baixados
+  _portatil/                     Python e navegador embutidos
+
+---------------------------------------------------------------
+COMO FUNCIONA
+---------------------------------------------------------------
+- Painel em http://localhost:8765 com os processos acompanhados,
+  andamentos e documentos.
+- Verificacao automatica a cada 30 minutos (ou pelo botao
+  "Verificar agora"), com aviso na tela quando aparece novidade.
+- Consulta por numero: o sistema abre o SEI, le o codigo de
+  verificacao de imagem automaticamente e pega o link.
+- Os PDFs ficam salvos localmente, na pasta "documentos".
+
+---------------------------------------------------------------
+SUPORTE
+---------------------------------------------------------------
+Desenvolvido por: Jurandy Santana
+WhatsApp: (98) 98401-6496

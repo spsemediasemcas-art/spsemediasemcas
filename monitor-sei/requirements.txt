@@ -1,0 +1,13 @@
+requirements.txt — dependências do Monitor SEI 24h
+====================================================
+Ambiente Python já instalado em:
+    C:/Users/PC/tse_automator_env
+
+Este arquivo é apenas documentação. Para recriar o ambiente
+em outra máquina:
+
+    pip install playwright scikit-learn opencv-python numpy requests
+    playwright install chromium
+
+Desenvolvido por: Jurandy Santana
+WhatsApp: (98) 98401-6496

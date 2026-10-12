@@ -1,0 +1,14 @@
+# Configuração do Supabase — preencha e RENOMEIE este arquivo para:
+#     supabase_config.txt
+# (o sistema só lê 'supabase_config.txt'; este exemplo é ignorado)
+#
+# url  -> endereço do projeto: painel do Supabase -> Project Settings -> Data API
+# key  -> a service_role key (Settings -> API -> service_role, secreta).
+#         NUNCA use a anon key aqui — ela é pública e não escreve com RLS ligado.
+#
+# Sem este arquivo (ou com linhas em branco), o sistema opera apenas
+# localmente e o Supabase é simplesmente ignorado.
+#
+# Desenvolvido por: Jurandy Santana — WhatsApp: (98) 98401-6496
+url=https://xxxxxxxxxxxxxxxx.supabase.co
+key=eyJhbGciOi...sua-service-role-key-aqui...

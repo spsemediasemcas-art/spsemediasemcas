@@ -1,0 +1,21 @@
+# Configuracao do sistema Controle de Processos SEMCAS
+# Desenvolvido por: Jurandy Santana - WhatsApp: (98) 98401-6496
+#
+# Copie este arquivo para "semcas_config.txt" e preencha.
+# Assim o monitor envia o acompanhamento dos processos para o
+# sistema Controle de Processos SEMCAS, onde aparece no submenu
+# "Acompanhamento de processo" de cada processo.
+#
+# Escolha UMA das duas formas de entrar (apague a outra):
+
+# --- Forma A: conta do sistema (o mesmo login que voce usa) ---
+url=https://cqcvbrgrstdrcqhakcvc.supabase.co
+email=SEU_EMAIL_DE_ACESSO
+senha=SUA_SENHA
+
+# --- Forma B: chave de servico (so se voce tiver acesso ao painel) ---
+# url=https://cqcvbrgrstdrcqhakcvc.supabase.co
+# key=COLE_AQUI_A_CHAVE_SERVICE_ROLE
+
+# OBS: a senha fica guardada apenas neste computador, no arquivo
+# semcas_config.txt. Nao compartilhe esse arquivo.
