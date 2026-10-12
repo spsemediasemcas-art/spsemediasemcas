@@ -951,7 +951,7 @@
 
       <sc-if value="{{ acompanhamentoAberto }}" hint-placeholder-val="{{ false }}">
       <div onClick="{{ fecharAcompanhamento }}" style="position:fixed;inset:0;background:rgba(20,30,40,.45);z-index:60;display:flex;align-items:center;justify-content:center;padding:20px">
-        <div onClick="event.stopPropagation()" role="dialog" aria-label="Acompanhamento do processo" style="background:#fff;border:1px solid #DADDE1;border-radius:2px;max-width:760px;width:100%;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,.2)">
+        <div onClick="{{ pararClique }}" role="dialog" aria-label="Acompanhamento do processo" style="background:#fff;border:1px solid #DADDE1;border-radius:2px;max-width:760px;width:100%;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,.2)">
           <div style="padding:16px 20px 14px;border-bottom:1px solid #DADDE1;display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
             <div style="min-width:0">
               <div style="font-size:12px;color:#7A828A;margin-bottom:2px">Processo SEI · {{ proc.servicoLabel }}</div>
@@ -980,7 +980,7 @@
                   </div>
                   <div style="font-size:13.5px;line-height:1.5;color:#16202B;white-space:pre-wrap">{{ mi.texto }}</div>
                   <sc-if value="{{ mi.temCorpo }}"><div style="font-size:12.5px;line-height:1.5;color:#5B636B;margin-top:4px;white-space:pre-wrap">{{ mi.corpo }}</div></sc-if>
-                  <sc-if value="{{ mi.temLink }}"><a href="{{ mi.link }}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:6px;font-size:12.5px;color:#1F5F9E;text-decoration:underline">Abrir documento no SEI</a></sc-if>
+                  <sc-if value="{{ mi.temLink }}"><a href="{{ mi.link }}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:6px;font-size:12.5px;color:#1F5F9E;text-decoration:underline">{{ mi.linkTxt }}</a></sc-if>
                 </div>
               </div>
             </sc-for>
@@ -1692,8 +1692,8 @@ fecharAcompanhamento=()=>this.setState({acompanhamentoAberto:false});
         return {k,label,placeholder:placeholder||'',valor:k==='servico'?this.sv(v).label:(v||'Não informado'),cor:v?'#1F2328':'#9AA6B2',lendo:ed!==k,editando:ed===k,podeEditar:podeEditar&&ed!==k,ehSelect,ehTexto:!ehSelect,opcoes:opcoesDe(k),temQuem:!!hi,quem:hi?('Alterado por '+hi.autor+' em '+hi.data):'',onEdit:()=>this.startEdit(k,k==='prazoData'?(v||this.sugestaoPrazoData(sel)):v)}; });
       proc={...sel,dados,...this.autoriaProc(sel,ult,atividades),demandaLendo:ed!=='demanda',demandaEditando:ed==='demanda',podeEditarDemanda:podeEditar&&ed!=='demanda',editarDemanda:()=>this.startEdit('demanda',sel.demanda),servicoLabel:this.sv(sel.servico).label,usuario:sel.usuario||'Não informado',temEncaminhamento:!!sel.encaminhamento,etapas,obs,atividades:processoAtividades,semAtividades:!processoAtividades.length,
          ...(()=>{ const mon=todosObs.filter(ehMonitor); const ehDoc=o=>/documento/i.test(o.titulo||''); const chave=(d,h)=>{const m=String(d||'').match(/(\d{2})\/(\d{2})\/(\d{4})/);return m?(m[3]+m[2]+m[1]+(h||'00:00')):'';};
-           const itens=mon.map(o=>{ const txt=String(o.texto||'').replace(/\s+$/,''); const linhas=txt.split('\n'); const cab=(linhas[0]||'').trim(); const corpo=linhas.slice(1).join('\n').trim(); const m=cab.match(/^(\d{2}\/\d{2}\/\d{4})(?:\s+(\d{1,2}:\d{2}))?\s*(?:\(([^)]*)\))?\s*(.*)$/); const doc=ehDoc(o); const dataSei=m?m[1]:(o.dataEvento||''); const horaSei=m&&m[2]?m[2]:''; const url=(String(o.mensagemSei||'').match(/https?:\/\/\S+/)||[''])[0]; const link=this.linkSeguro(url);
-             return {tipo:doc?'Documento':'Andamento',ehDoc:doc,tipoBg:doc?'#EEEAF8':'#E8F2FA',tipoCor:doc?'#59408C':'#0F5E91',tipoBorder:doc?'#D7CDEE':'#C4DDEC',dataSei:dataSei||'—',horaSei,unidade:m&&m[3]?m[3]:'',temUnidade:!!(m&&m[3]),texto:m?(m[4]||cab):cab,corpo,temCorpo:!!corpo,link,temLink:!!link,k:chave(dataSei,horaSei)}; }).sort((a,b)=>b.k.localeCompare(a.k));
+           const itens=mon.map(o=>{ const txt=String(o.texto||'').replace(/\s+$/,''); const linhas=txt.split('\n'); const cab=(linhas[0]||'').trim(); const corpo=linhas.slice(1).join('\n').trim(); const m=cab.match(/^(\d{2}\/\d{2}\/\d{4})(?:\s+(\d{1,2}:\d{2}))?\s*(?:\(([^)]*)\))?\s*(.*)$/); const doc=ehDoc(o); const dataSei=m?m[1]:(o.dataEvento||''); const horaSei=m&&m[2]?m[2]:''; const url=(String(o.mensagemSei||'').match(/https?:\/\/\S+/)||[''])[0]; const linkDoc=this.linkSeguro(url), linkProc=this.linkSeguro(sel.link), link=linkDoc||linkProc;
+             return {tipo:doc?'Documento':'Andamento',ehDoc:doc,tipoBg:doc?'#EEEAF8':'#E8F2FA',tipoCor:doc?'#59408C':'#0F5E91',tipoBorder:doc?'#D7CDEE':'#C4DDEC',dataSei:dataSei||'—',horaSei,unidade:m&&m[3]?m[3]:'',temUnidade:!!(m&&m[3]),texto:m?(m[4]||cab):cab,corpo,temCorpo:!!corpo,link,temLink:!!link,linkTxt:linkDoc?'Abrir documento no SEI':'Abrir processo no SEI',k:chave(dataSei,horaSei)}; }).sort((a,b)=>b.k.localeCompare(a.k));
            const filtro=s.acompFiltro||'todos', nDoc=itens.filter(x=>x.ehDoc).length; const vis=itens.filter(x=>filtro==='todos'||(filtro==='doc'?x.ehDoc:!x.ehDoc));
            const fb=(k,label,n)=>({label,n:String(n),onClick:()=>this.setState({acompFiltro:k}),style:'height:30px;padding:0 12px;border-radius:2px;cursor:pointer;font-size:12.5px;border:1px solid '+(filtro===k?'#12355B':'#C9CED3')+';background:'+(filtro===k?'#12355B':'#fff')+';color:'+(filtro===k?'#fff':'#3A4753')});
            const ult=mon.map(o=>String(o.data||'')).filter(x=>/\d{2}\/\d{2}\/\d{4}/.test(x)).sort((a,b)=>chave(a,(a.match(/\d{1,2}:\d{2}/)||[''])[0]).localeCompare(chave(b,(b.match(/\d{1,2}:\d{2}/)||[''])[0]))).pop()||'—';
@@ -1903,7 +1903,7 @@ fecharAcompanhamento=()=>this.setState({acompanhamentoAberto:false});
       logRows,logVazio:logRows.length===0,logInfo:fmt(logF.length)+' registro(s)',
       logUsers:[...new Set(s.log.map(l=>l.autor))],logAcoes:[...new Set(s.log.map(l=>l.acao))],
       logUser:s.logUser,logAcao:s.logAcao,logQ:s.logQ,setLogUser:this.setLogUser,setLogAcao:this.setLogAcao,setLogQ:this.setLogQ,
-      confirmDel:s.confirmDel,pedirExcluir:this.pedirExcluir,cancelExcluir:this.cancelExcluir,confirmarExcluir:this.confirmarExcluir,
+      confirmDel:s.confirmDel,pedirExcluir:this.pedirExcluir,acompanhamentoAberto:!!s.acompanhamentoAberto,abrirAcompanhamento:this.abrirAcompanhamento,fecharAcompanhamento:this.fecharAcompanhamento,pararClique:e=>e.stopPropagation(),cancelExcluir:this.cancelExcluir,confirmarExcluir:this.confirmarExcluir,
       loginVisible:s.screen==='login',appVisible:s.screen!=='login',recuperandoOn:!!s.recuperando,loginNormalOn:!s.recuperando,salvarSenhaRecuperada:this.salvarSenhaRecuperada,esqueciSenha:this.esqueciSenha,loginInfo:s.loginInfo||'',loginInfoOn:!!s.loginInfo,
       loginEmail:s.loginEmail,loginSenha:s.loginSenha,setLoginEmail:this.setLoginEmail,setLoginSenha:this.setLoginSenha,
       doLogin:this.doLogin,loginErro:s.loginErro||'',loginErroOn:!!s.loginErro,loginCarregando:s.loginCarregando,loginBtnTexto:s.loginCarregando?'Entrando…':'Entrar',
