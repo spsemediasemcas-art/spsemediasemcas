@@ -6,11 +6,15 @@ echo   MONITOR DE PROCESSOS SEI 24H + SUPABASE
 echo   Prefeitura de Sao Luis - MA
 echo ========================================================
 echo.
-if exist "supabase_config.txt" (
-  echo   Supabase: ATIVO - dados enviados para a nuvem
+if exist "semcas_config.txt" (
+  echo   Controle de Processos SEMCAS: LIGADO - envia ao sistema e atende "Verificar agora"
 ) else (
-  echo   Supabase: DESATIVADO - operacao local
-  echo   ^(para ativar, veja LEIA-ME.txt^)
+  echo   Controle de Processos SEMCAS: DESLIGADO - falta o semcas_config.txt
+)
+if exist "supabase_config.txt" (
+  echo   Nuvem propria do monitor ^(opcional^): ATIVA
+) else (
+  echo   Nuvem propria do monitor ^(opcional^): nao usada
 )
 echo.
 echo   Painel:  http://localhost:8765

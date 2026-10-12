@@ -695,7 +695,11 @@ def main():
         threading.Thread(target=lambda: sync_start.sincronizar_tudo(con),
                          daemon=True).start()
     elif supabase_sync is not None:
-        print("[supabase] desativado (sem supabase_config.txt). Só local.")
+        print("[supabase] nuvem própria do monitor não usada (opcional).")
+    if semcas_sync is not None and semcas_sync.ativo():
+        print("[semcas] ligado ao Controle de Processos SEMCAS — envio e \"Verificar agora\" ativos.")
+    else:
+        print("[semcas] DESLIGADO — sem semcas_config.txt, nada é enviado ao sistema.")
     threading.Thread(target=laco, daemon=True).start()
     threading.Thread(target=laco_pedidos, daemon=True).start()
     srv = ThreadingHTTPServer(("127.0.0.1", PORTA), Painel)
