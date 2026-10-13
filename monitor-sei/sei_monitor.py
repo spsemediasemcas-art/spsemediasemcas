@@ -16,6 +16,7 @@ Ambiente Python: veja LEIA-ME.txt (a pasta ja traz o ambiente portatil)
 """
 import html
 import json
+import os
 import re
 import sqlite3
 import subprocess
@@ -55,6 +56,86 @@ UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
 
 lock = threading.Lock()
 
+# ---------------------------------------------------------------- encerramento limpo
+_sair = threading.Event()
+
+
+def _encerrar(sinal=None, quadro=None):
+    """Fecha tudo e termina o processo.
+
+    Fechar a janela do console no Windows NAO dispara KeyboardInterrupt: o
+    processo Python continuaria vivo em segundo plano (foi assim que duas
+    copias do monitor acabaram na mesma porta). Este tratamento garante que
+    o Ctrl+C e o fechamento da janela finalizem de verdade.
+    """
+    _sair.set()
+    try:
+        srv = globals().get("_servidor")
+        if srv is not None:
+            srv.shutdown()
+    except Exception:  # noqa: BLE001
+        pass
+    # Envia ao Supabase tudo que ainda não foi enviado antes de morrer
+    if semcas_sync is not None and semcas_sync.ativo():
+        try:
+            with lock:
+                procs = [dict(p) for p in con.execute("SELECT * FROM processos")]
+            for p in procs:
+                try:
+                    semcas_sync.sincronizar_processo(con, p["id"])
+                except Exception:  # noqa: BLE001
+                    pass
+            print("[monitor] envio final ao Supabase concluído.", flush=True)
+        except Exception as e:  # noqa: BLE001
+            print(f"[monitor] envio final falhou: {e}", flush=True)
+    try:
+        con.close()
+    except Exception:  # noqa: BLE001
+        pass
+    print("\n[monitor] encerrado.", flush=True)
+    os._exit(0)
+
+
+if os.name == "nt":
+    try:
+        import ctypes
+        _h = ctypes.windll.kernel32.SetConsoleCtrlHandler(
+            ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_uint)(_encerrar), True)
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def _fechar_instancia_anterior():
+    """Encerra outra copia do monitor, se estiver rodando.
+
+    O Windows deixa dois processos ouvirem a mesma porta (SO_REUSEADDR): a
+    copia antiga continua respondendo com o codigo velho e parece que a
+    correcao nao funcionou. Melhor garantir que so exista uma.
+    """
+    if os.name != "nt":
+        return
+    eu = os.getpid()
+    ps = ("Get-CimInstance Win32_Process -Filter \"name='python.exe'\" | "
+          "Where-Object CommandLine -match 'sei_monitor' | "
+          "Select-Object -ExpandProperty ProcessId")
+    try:
+        r = subprocess.run(["powershell", "-NoProfile", "-Command", ps],
+                           capture_output=True, text=True, timeout=25,
+                           errors="replace")
+    except Exception:  # noqa: BLE001
+        return
+    for linha in (r.stdout or "").splitlines():
+        linha = linha.strip()
+        if not linha.isdigit():
+            continue
+        pid = int(linha)
+        if pid == eu:
+            continue
+        print(f"[monitor] encerrando copia anterior (PID {pid})...", flush=True)
+        subprocess.run(["taskkill", "/F", "/PID", str(pid)],
+                       capture_output=True, timeout=15)
+        time.sleep(1)
+
 
 # ---------------------------------------------------------------- banco
 def conectar():
@@ -82,6 +163,9 @@ def conectar():
     for col in ("conteudo", "resumo", "assinatura", "arquivo", "conteudo_status"):
         if col not in existentes:
             con.execute(f"ALTER TABLE itens ADD COLUMN {col} TEXT")
+    # andamento não tem documento para abrir: limpa o erro antigo de tentativa de leitura
+    con.execute("UPDATE itens SET conteudo_status=NULL WHERE categoria='andamento' "
+                "AND conteudo_status LIKE 'erro:%'")
     con.commit()
     return con
 
@@ -185,7 +269,7 @@ def ler_documento(item, numero_processo):
         data_doc = re.search(r"\d{1,2} de \w+ de \d{4}\s*\n", corpo)
         if data_doc:
             corpo = corpo[data_doc.end():]
-        return {"conteudo": texto, "resumo": re.sub(r"\s+", " ", corpo).strip()[:400],
+        return {"conteudo": texto, "resumo": re.sub(r"\s+", " ", corpo).strip()[:1500],
                 "assinatura": "; ".join(assin), "arquivo": None}
 
     disp = cab.get("Content-Disposition") or ""
@@ -202,11 +286,22 @@ def ler_documento(item, numero_processo):
 
 
 def buscar_conteudos(processo_id, numero_processo, limite=30):
-    """Baixa o conteúdo dos documentos que ainda não foram lidos."""
+    """Abre os documentos que ainda não têm conteúdo. Retorna {chave: item}.
+
+    Documento sem link é sigiloso (o SEI não mostra o conteúdo na pesquisa
+    pública): fica marcado como 'sigiloso' e não é tentado de novo.
+    """
     with lock:
+        con.execute("UPDATE itens SET conteudo_status='sigiloso' WHERE processo_id=? "
+                    "AND categoria='documento' AND COALESCE(link,'')='' "
+                    "AND (conteudo_status IS NULL OR conteudo_status LIKE 'erro:%')",
+                    (processo_id,))
+        con.commit()
         pend = [dict(r) for r in con.execute(
-            "SELECT * FROM itens WHERE processo_id=? AND categoria='documento' AND link<>'' "
-            "AND conteudo_status IS NULL ORDER BY novo DESC, CAST(chave AS INTEGER) DESC LIMIT ?",
+            "SELECT * FROM itens WHERE processo_id=? AND categoria='documento' "
+            "AND COALESCE(link,'')<>'' AND (conteudo_status IS NULL "
+            "OR conteudo_status LIKE 'erro:%') "
+            "ORDER BY novo DESC, CAST(chave AS INTEGER) DESC LIMIT ?",
             (processo_id, limite))]
     for it in pend:
         try:
@@ -489,7 +584,7 @@ def processo_local_por_url(url):
 AUTO_INCLUIR = True            # procura sozinho os processos do sistema que ainda não estão no monitor
 AUTO_SO_PENDENTES = True       # True: só os pendentes; False: também os respondidos
 AUTO_PAUSA = 20                # segundos entre uma busca e outra (não sobrecarregar o SEI)
-AUTO_MAX_FALHAS = 3            # depois disso, o processo precisa do link colado no site
+AUTO_MAX_FALHAS = 1            # se não achou na primeira, pula e não tenta mais
 AUTO_ESPERA_FALHA_H = 6        # horas até tentar de novo um processo que não foi achado
 ARQ_AUTO = PASTA / "auto_incluir.json"
 auto_situacao = {"faltam": 0, "sem_link": 0, "rodando": False}
@@ -567,7 +662,7 @@ def auto_incluir_rodada():
 
 
 def laco_auto_incluir():
-    time.sleep(90)        # deixa o monitor subir e atender pedidos primeiro
+    time.sleep(10)        # deixa o monitor subir e atender pedidos primeiro
     while True:
         try:
             if semcas_sync is not None and semcas_sync.ativo():
@@ -657,6 +752,7 @@ function docs(it){return it.map(i=>`<tr class="${i.novo?'novo':''}"><td>${esc(i.
  ${i.assinatura?`<div class="mut">✍ Assinado por ${esc(i.assinatura)}</div>`:''}
  ${i.conteudo?`<details><summary>Ver texto completo</summary><pre>${esc(i.conteudo)}</pre></details>`:''}
  ${i.arquivo?`<a href="/arquivo/${i.id}" target="_blank">📄 Abrir arquivo salvo</a>`:''}
+ ${i.conteudo_status==='sigiloso'?`<div class="mut">🔒 Documento sigiloso — conteúdo não disponível na pesquisa pública</div>`:''}
  ${i.conteudo_status&&i.conteudo_status.startsWith('erro')?`<div class="erro">${esc(i.conteudo_status)}</div>`:''}
  ${!i.conteudo_status&&i.link?`<div class="mut">(conteúdo ainda não baixado)</div>`:''}
 </td></tr>`).join('')}
@@ -930,6 +1026,7 @@ class Painel(BaseHTTPRequestHandler):
 
 
 def main():
+    _fechar_instancia_anterior()
     if "--uma-vez" in sys.argv:
         nov = verificar_todos()
         print(f"Concluído. {len(nov)} novidade(s).")
@@ -943,6 +1040,12 @@ def main():
         print("[supabase] nuvem própria do monitor não usada (opcional).")
     if semcas_sync is not None and semcas_sync.ativo():
         print("[semcas] ligado ao Controle de Processos SEMCAS — envio e \"Verificar agora\" ativos.")
+        try:
+            n = semcas_sync.destravar_pedidos()
+            if n:
+                print(f"[pedido] {n} pedido(s) que ficaram parados voltaram para a fila.")
+        except Exception as e:  # noqa: BLE001
+            print(f"[pedido] não consegui destravar pedidos antigos: {str(e)[:200]}")
     else:
         print("[semcas] DESLIGADO — sem semcas_config.txt, nada é enviado ao sistema.")
     threading.Thread(target=laco, daemon=True).start()
@@ -950,6 +1053,7 @@ def main():
     if AUTO_INCLUIR:
         threading.Thread(target=laco_auto_incluir, daemon=True).start()
     srv = ThreadingHTTPServer(("127.0.0.1", PORTA), Painel)
+    globals()["_servidor"] = srv
     print(f"Painel em http://localhost:{PORTA}  (Ctrl+C para sair)")
     if "--sem-navegador" not in sys.argv:
         webbrowser.open(f"http://localhost:{PORTA}")
@@ -957,6 +1061,8 @@ def main():
         srv.serve_forever()
     except KeyboardInterrupt:
         pass
+    finally:
+        _encerrar()
 
 
 if __name__ == "__main__":

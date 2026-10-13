@@ -27,7 +27,9 @@ Uso:
 import json
 import os
 import re
+import hashlib
 import sys
+import threading
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -199,8 +201,15 @@ def _marca():
     return {}
 
 
+_marca_lock = threading.Lock()   # várias threads enviam ao mesmo tempo
+
+
 def _salvar_marca(m):
-    json.dump(m, open(ARQ_MARCA, "w", encoding="utf-8"), ensure_ascii=False)
+    """Grava num arquivo temporário e troca: se cair no meio, a marca antiga continua inteira."""
+    tmp = ARQ_MARCA + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(m, f, ensure_ascii=False)
+    os.replace(tmp, ARQ_MARCA)
 
 
 # ---------------------------------------------------------------- conteudo
@@ -213,31 +222,55 @@ def _texto_item(item):
     desc = re.sub(r"^(\d{6,})(?=[A-Za-zÀ-ÿ])", r"\1 - ", desc)
     cabeca = " ".join(p for p in (data, f"({unidade})" if unidade else "", desc) if p).strip()
     resumo = (item.get("resumo") or "").strip()
+    assinatura = (item.get("assinatura") or "").strip()
+    partes = []
+    if item.get("conteudo_status") == "sigiloso":
+        partes.append("🔒 Documento sigiloso: conteúdo não disponível na pesquisa pública do SEI.")
     if resumo:
-        return cabeca + "\n\n" + resumo[:1500]
+        partes.append(resumo[:1500])
+    if assinatura:
+        partes.append(f"Assinado por: {assinatura}")
+    if partes:
+        return cabeca + "\n\n" + "\n\n".join(partes)
     return cabeca
 
 
+def _numeros_no_texto(texto):
+    """Todos os nº SEI do texto, normalizados (o campo pode ter espaço, sem ponto, dois números...)."""
+    return {f"{a}.{b}/{c}" for a, b, c in
+            re.findall(r"(\d{5})\s*\.?\s*(\d{6})\s*/\s*(\d{4})", texto or "")}
+
+
 def _achar_processo_semcas(cfg, numero):
-    """Procura o id do processo no SEMCAS pelo numero SEI (campo sei_number)."""
+    """Procura o id do processo no SEMCAS pelo numero SEI (campo sei_number).
+
+    Tenta o número exato; se não achar, procura pelo trecho "000000...2026" e
+    confere o número normalizado — o campo no sistema nem sempre está no
+    formato exato do SEI.
+    """
+    numero = numero_principal(numero) or (numero or "").strip()
     if not numero:
         return None
-    marca = _marca()
-    cache = marca.get("_ids", {})
+    cache = _marca().get("_ids", {})
     if numero in cache:
         return cache[numero]
     try:
         dados = _get(cfg, "/rest/v1/processes?select=id,sei_number&sei_number=eq."
                      + urllib.parse.quote(numero))
-        if dados:
-            ids = marca.get("_ids", {})
-            ids[numero] = dados[0]["id"]
-            marca["_ids"] = ids
-            _salvar_marca(marca)
-            return dados[0]["id"]
+        if not dados:
+            seq, ano = numero[6:12], numero[-4:]
+            candidatos = _get(cfg, "/rest/v1/processes?select=id,sei_number&sei_number=ilike."
+                              + urllib.parse.quote(f"*{seq}*{ano}*")) or []
+            dados = [r for r in candidatos if numero in _numeros_no_texto(r.get("sei_number"))]
     except Exception:
         return None
-    return None
+    if not dados:
+        return None
+    with _marca_lock:
+        marca = _marca()
+        marca.setdefault("_ids", {})[numero] = dados[0]["id"]
+        _salvar_marca(marca)
+    return dados[0]["id"]
 
 
 def sincronizar_processo(con, processo_id, cfg=None):
@@ -256,21 +289,29 @@ def sincronizar_processo(con, processo_id, cfg=None):
     if not pid_semcas:
         return 0
 
-    marca = _marca()
-    ja = set(marca.get(str(processo_id), []))
+    # marca = {chave: hash do que foi enviado}. Formato antigo (lista de chaves)
+    # vale como "enviado sem hash": é reenviado uma vez e o registro no sistema
+    # é atualizado (resumo, assinatura e título novos).
+    enviados = _marca().get(str(processo_id), {})
+    if isinstance(enviados, list):
+        enviados = dict.fromkeys(enviados)
 
-    itens = con.execute(
-        "SELECT * FROM itens WHERE processo_id=? ORDER BY id", (processo_id,)).fetchall()
-    novos = 0
+    itens = [dict(r) for r in con.execute(
+        "SELECT * FROM itens WHERE processo_id=? ORDER BY id", (processo_id,)).fetchall()]
+    if not itens:
+        return 0
+    # o que veio na primeira verificação é o histórico; o resto apareceu depois
+    carga_inicial = itens[0].get("detectado_em")
+    uid = _usuario_id(cfg)
+    lote = []
     for it in itens:
-        it = dict(it)
         chave = f"{it['categoria']}:{it['chave']}"
-        if chave in ja:
-            continue
+        tipo = "Documento" if it["categoria"] == "documento" else "Andamento"
+        origem = "Histórico do SEI" if it.get("detectado_em") == carga_inicial else "Novidade no SEI"
         corpo = {
             "process_id": pid_semcas,
             "source_index": 900000 + int(it["id"]),   # faixa propria do monitor
-            "title": "Documento novo" if it["categoria"] == "documento" else "Andamento novo",
+            "title": f"{origem} · {tipo}",
             "category": "monitor_sei",
             "comment_type": "monitor_sei",
             "body": _texto_item(it),
@@ -279,23 +320,51 @@ def sincronizar_processo(con, processo_id, cfg=None):
             "event_date_text": it.get("data") or datetime.now().strftime("%d/%m/%Y"),
             "author_name": "Monitor SEI",
             "author_role": "consulta automatica",
-            "display_date": datetime.now().strftime("%d/%m/%Y %H:%M"),
+            # quando o monitor encontrou o item (fixo: não muda a cada reenvio)
+            "display_date": it.get("detectado_em") or datetime.now().strftime("%d/%m/%Y %H:%M"),
         }
-        uid = _usuario_id(cfg)
         if uid:
             corpo["author_user_id"] = uid
+        h = hashlib.sha1(json.dumps(corpo, sort_keys=True, ensure_ascii=False)
+                         .encode("utf-8")).hexdigest()
+        if enviados.get(chave) != h:
+            lote.append((chave, h, corpo))
+
+    # O site numera comentário manual como "maior source_index + 1", que pode cair
+    # na faixa do monitor. Índice ocupado por comentário de pessoa NUNCA é
+    # sobrescrito: o item do monitor fica de fora (como era com o 409).
+    if lote:
+        ocupados = _get(cfg, "/rest/v1/process_comments?select=source_index"
+                             "&process_id=eq.%s&source_index=gte.900000&category=neq.monitor_sei"
+                             % urllib.parse.quote(str(pid_semcas))) or []
+        ocupados = {r["source_index"] for r in ocupados}
+        if ocupados:
+            pulados = [c for _, _, c in lote if c["source_index"] in ocupados]
+            if pulados:
+                print(f"[semcas] {numero}: {len(pulados)} item(ns) não enviado(s) - índice já usado "
+                      "por comentário manual no sistema")
+            lote = [x for x in lote if x[2]["source_index"] not in ocupados]
+
+    # envia em blocos; se o registro já existir (mesmo processo + source_index), atualiza
+    novos = 0
+    for i in range(0, len(lote), 100):
+        bloco = lote[i:i + 100]
         try:
-            _post(cfg, "/rest/v1/process_comments", corpo)
-            ja.add(chave)
-            novos += 1
+            _requisitar(cfg, "/rest/v1/process_comments?on_conflict=process_id,source_index",
+                        "POST", [c for _, _, c in bloco],
+                        "return=minimal,resolution=merge-duplicates", timeout=90)
         except urllib.error.HTTPError as e:
             detalhe = e.read().decode("utf-8", "replace")[:200]
             raise RuntimeError(f"SEMCAS recusou ({e.code}): {detalhe}")
         except Exception as e:
             raise RuntimeError(f"falha ao enviar: {e}")
-
-    marca[str(processo_id)] = sorted(ja)
-    _salvar_marca(marca)
+        for chave, h, _ in bloco:
+            enviados[chave] = h
+        novos += len(bloco)
+        with _marca_lock:     # relê: outra thread pode ter gravado outro processo
+            marca = _marca()
+            marca[str(processo_id)] = enviados
+            _salvar_marca(marca)
     return novos
 
 
@@ -339,6 +408,18 @@ def pedidos_pendentes(cfg=None, limite=10):
         return []
     return _get(cfg, "/rest/v1/monitor_pedidos?select=id,process_id,sei_number"
                      "&status=eq.pendente&order=criado_em&limit=%d" % limite) or []
+
+
+def destravar_pedidos(cfg=None):
+    """Na partida: pedido que ficou 'rodando' é de um monitor que fechou no meio. Volta para a fila."""
+    cfg = cfg or _ler_config()
+    if not cfg:
+        return 0
+    _, linhas = _requisitar(
+        cfg, "/rest/v1/monitor_pedidos?status=eq.rodando", "PATCH",
+        {"status": "pendente", "mensagem": "O monitor foi reiniciado; o pedido voltou para a fila."},
+        "return=representation")
+    return len(linhas or [])
 
 
 def pegar_pedido(pedido_id, cfg=None):

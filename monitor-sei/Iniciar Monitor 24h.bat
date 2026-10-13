@@ -1,6 +1,20 @@
 @echo off
 chcp 65001 > nul
 cd /d "%~dp0"
+
+REM Ambiente portatil - funciona em qualquer computador, sem instalar nada
+set "PY=%~dp0_portatil\python\python.exe"
+set "PYTHONPATH=%~dp0"
+set "PLAYWRIGHT_BROWSERS_PATH=%~dp0_portatil\navegador"
+
+if not exist "%PY%" (
+  echo   ERRO: ambiente portatil nao encontrado.
+  echo   A pasta "_portatil" precisa estar junto deste arquivo.
+  echo.
+  pause
+  exit /b 1
+)
+
 echo ========================================================
 echo   MONITOR DE PROCESSOS SEI 24H + SUPABASE
 echo   Prefeitura de Sao Luis - MA
@@ -27,4 +41,4 @@ echo   Desenvolvido por: Jurandy Santana
 echo   WhatsApp: ^(98^) 98401-6496
 echo ========================================================
 echo.
-"C:\Users\PC\tse_automator_env\Scripts\python.exe" sei_monitor.py
+"%PY%" sei_monitor.py

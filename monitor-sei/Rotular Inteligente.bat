@@ -2,11 +2,33 @@
 chcp 65001 > nul
 cd /d "%~dp0"
 
-REM Python do ambiente do projeto (tem Playwright, OpenCV e scikit-learn).
+REM Ambiente portatil - funciona em qualquer computador, sem instalar nada.
 REM NAO usar "python" generico do PATH: nao tem as bibliotecas e o script
 REM quebra na primeira linha sem avisar.
 set "PY=%~dp0_portatil\python\python.exe"
-if not exist "%PY%" set "PY=C:\Users\PC\tse_automator_env\Scripts\python.exe"
+set "PYTHONPATH=%~dp0"
+set "PLAYWRIGHT_BROWSERS_PATH=%~dp0_portatil\navegador"
+if not exist "%PY%" (
+  echo   ERRO: ambiente portatil nao encontrado.
+  echo   A pasta "_portatil" precisa estar junto deste arquivo.
+  echo.
+  pause
+  exit /b 1
+)
+
+REM O Python portatil nao tem tkinter (interface grafica). Se faltar, usa o venv.
+"%PY%" -c "import tkinter" >nul 2>&1
+if errorlevel 1 (
+  set "PY=C:\Users\PC\tse_automator_env\Scripts\python.exe"
+  if not exist "%PY%" (
+    echo   ERRO: nem o portatil nem o venv tem tkinter.
+    echo   Instale o Python completo ou rode pelo venv.
+    echo.
+    pause
+    exit /b 1
+  )
+  echo   (usando o venv - o portatil nao tem interface grafica)
+)
 
 echo ========================================================
 echo     ROTULAGEM INTELIGENTE - SEI SAO LUIS

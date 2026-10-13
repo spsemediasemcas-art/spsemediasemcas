@@ -268,11 +268,12 @@ def buscar_link(processo, orgao="SEMCAS", oculto=True,
                     recarregar(img_bytes)
                     continue
 
-                if page.locator("#txtInfraCaptcha").count() > 0:
-                    log("sem confirmação de sucesso, tentando outro captcha")
-                    recarregar(img_bytes)
-                    continue
-                break
+                # O SEI aceitou o captcha mas não mostrou o link.
+                # Isso acontece quando o processo não existe, é sigiloso,
+                # ou o SEI mostrou uma página intermediária.
+                # Não adianta continuar tentando — o processo não vai aparecer.
+                log("SEI aceitou o captcha mas não encontrou o processo (pode ser inexistente ou sigiloso)")
+                return None
         finally:
             browser.close()
     return None
