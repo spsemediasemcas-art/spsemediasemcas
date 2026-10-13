@@ -219,8 +219,9 @@
               <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
                 <span style="font-family:'IBM Plex Mono';font-weight:600;font-size:14px;color:#1F2328">{{ mp.numero }}</span>
                 <span style="display:inline-block;padding:1px 7px;font-size:11.5px;font-weight:600;border:1px solid {{ mp.stBorder }};background:{{ mp.stBg }};color:{{ mp.stColor }};border-radius:2px">{{ mp.status }}</span>
+                <span title="Menu de origem" style="display:inline-block;padding:1px 8px;font-size:11.5px;font-weight:700;letter-spacing:.02em;border:1px solid #C4D3E6;background:#EAF1FA;color:#12355B;border-radius:2px">{{ mp.servicoLabel }}</span>
               </div>
-              <div style="font-size:12.5px;color:#5B636B;margin-top:3px">{{ mp.servicoLabel }} · {{ mp.orgao }}</div>
+              <div style="font-size:12.5px;color:#5B636B;margin-top:3px">{{ mp.orgao }}</div>
               <div style="font-size:12px;color:#7A828A;margin-top:2px">{{ mp.monitorTxt }}</div>
               <sc-if value="{{ mp.temVerif }}"><div role="status" style="font-size:12px;margin-top:3px;color:{{ mp.verifCor }}">{{ mp.verifTxt }}</div></sc-if>
             </div>
@@ -897,7 +898,7 @@
           <sc-if value="{{ proc.podeExcluir }}" hint-placeholder-val="{{ false }}"><button onClick="{{ pedirExcluir }}" style="height:36px;padding:0 14px;background:#fff;color:#1F2328;border:1px solid #C9CED3;border-radius:2px;font-weight:500;font-size:13.5px;cursor:pointer;color:#A3281F;border-color:#E2B4AF" style-hover="background:#FBF1F0">Excluir ficha</button></sc-if>
         </div>
       </section>
-      <sc-if value="{{ proc.edicaoBloqueada }}" hint-placeholder-val="false"><div style="padding:10px 14px;background:#FFF7E8;border:1px solid #E8D2A4;color:#6F4A08;font-size:13px;line-height:1.5">Somente a Superintendente pode concluir, reabrir ou excluir este processo.</div></sc-if>
+      <sc-if value="{{ proc.edicaoBloqueada }}" hint-placeholder-val="false"><div style="padding:10px 14px;background:#FFF7E8;border:1px solid #E8D2A4;color:#6F4A08;font-size:13px;line-height:1.5">Você não tem permissão para alterar este processo.</div></sc-if>
 
       <section style="background:#fff;border:1px solid #DADDE1;border-radius:2px">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #DADDE1"><div><h2 style="font-size:14.5px;font-weight:600;margin:0;color:#1F2328">Acompanhamento atual</h2><div style="font-size:12.5px;color:#7A828A;margin-top:2px">Defina quem acompanha e qual é a próxima providência.</div></div></div>
@@ -1452,6 +1453,7 @@ class Component extends DCLogic {
     await this.loadDbData();this.registrar('Acesso',null,'Entrou no sistema');
   }
   persist(){ try{ const s=this.state; localStorage.setItem('semcas_spsemc_v2',JSON.stringify({recs:s.processos.filter(p=>this.touched.has(p.id)),deleted:[...this.deleted],log:s.log})); }catch(e){} }
+  podeExcluirProcesso(p){return !!p&&!!this.session&&(this.state.role==='super'||(this.state.role==='administrativo'&&!!p.createdBy&&p.createdBy===this.session.user.id));}
   podeEditarProcesso(p){return !!p&&!!this.session&&(this.state.role==='super'||this.state.role==='administrativo');}
   setorReceberDe(p){ return String((p&&p.setorReceber)||((/^Setor que vai receber:\s*([\s\S]*)$/i.exec((p&&p.situacao)||'')||[])[1])||'').trim(); }
   anoProc(p){ const q=this.nums(p).seq; if(q[0]) return String(q[0]); const t=this.ts(p.recebido); return t==null?'':String(new Date(t).getUTCFullYear()); }
@@ -1591,7 +1593,7 @@ class Component extends DCLogic {
   importarProcesso=()=>this.setState({importarAberto:true,importarBusca:''});
   fecharImportar=()=>this.setState({importarAberto:false});
   setImportarBusca=e=>this.setState({importarBusca:e.target.value});
-  addMeus=(id)=>{ const ids=this.state.meusIds; if(!ids.includes(id)) this.salvarMeus([id,...ids]); };
+  addMeus=(id)=>{ const ids=this.state.meusIds.length?this.state.meusIds:this.lerMeus(); if(!ids.includes(id)) this.salvarMeus([id,...ids]); };
   removerMeus=(id)=>this.salvarMeus(this.state.meusIds.filter(x=>x!==id));
   atualizarTodos=()=>this.pedirVerificacao(this.state.meusIds);
   goPendencias=()=>this.setState({screen:'pendencias',menuOpen:false,pendMenu:null});
@@ -1677,7 +1679,7 @@ class Component extends DCLogic {
   logPaginaProx=()=>this.setState(st=>({logPagina:(st.logPagina||1)+1}));
   avancarEtapa=()=>this.mudarEtapa(1);
   voltarEtapa=()=>this.mudarEtapa(-1);
-  mudarEtapa=(d)=>{ const p0=this.state.processos.find(p=>p.id===this.state.selectedId); if(!p0) return; const e=Math.max(0,Math.min(5,(p0.etapa||0)+d)); if(e===p0.etapa) return;if(e===5&&this.state.role!=='super'){this.setState({storageErro:'Somente a Superintendente pode concluir um processo.'});return;}
+  mudarEtapa=(d)=>{ const p0=this.state.processos.find(p=>p.id===this.state.selectedId); if(!p0) return; const e=Math.max(0,Math.min(5,(p0.etapa||0)+d)); if(e===p0.etapa) return;
     const hoje=this.hojeTxt(), u=p0.unidade?' do '+p0.unidade:'';
     const sit=['Recebido na Média Complexidade','Encaminhado ao serviço em '+hoje,'Aguardando relatório'+u,'Relatório recebido'+u+' em '+hoje,'Encaminhado ao Gabinete em '+hoje,'Gabinete encaminhou o ofício ao demandante em '+hoje][e];
     const st=this.stamp();
@@ -1687,7 +1689,7 @@ class Component extends DCLogic {
   salvarOficio=()=>{ let v=this.state.oficioTexto.trim(); if(!v) return; if(/^\d/.test(v)) v='Ofício nº '+v; this.mut(this.state.selectedId,p=>({...p,oficio:v}),'Edição','Ofício de resposta: '+v); this.setState({oficioTexto:''}); };
   limparOficio=()=>{ const p=this.state.processos.find(x=>x.id===this.state.selectedId); this.setState({oficioTexto:p?p.oficio:''}); this.mut(this.state.selectedId,p=>({...p,oficio:''}),'Edição','Ofício de resposta removido para correção'); };
   setMarcacao=(k)=>this.setMarcacaoDe(this.state.selectedId,k);
-  setMarcacaoDe=(id,k)=>{ const p0=this.state.processos.find(p=>p.id===id); if(!p0||(p0.marcacao||'')===k) return;if(k==='concluido'&&this.state.role!=='super'){this.setState({storageErro:'Somente a Superintendente pode marcar como concluído.'});return;} const st=this.stamp();
+  setMarcacaoDe=(id,k)=>{ const p0=this.state.processos.find(p=>p.id===id); if(!p0||(p0.marcacao||'')===k) return;const st=this.stamp();
     this.mut(p0.id,p=>({...p,marcacao:k,hist:{...(p.hist||{}),marcacao:st}}),'Edição','Marcação: '+this.MARC[k].l); };
   toggleMarc=(k)=>this.setState(s=>({filtros:{...s.filtros,marc:s.filtros.marc===k?'':k},pagina:1}));
   COLS = [['recebido','Recebido / Memo'],['orgao','Órgão solicitante'],['demanda','Demanda'],['usuario','Pessoa/família referenciada'],['situacao','Situação'],['setor','Resposta do setor'],['gabinete','Resposta do Gabinete'],['obs','Comentário mais recente'],['ultima','Última atualização'],['parado','Sem atualização há'],['dias','Dias em aberto']];
@@ -1699,7 +1701,7 @@ class Component extends DCLogic {
   colsPadrao=()=>this.salvarCols([...this.COLS_PADRAO]);
   pedirExcluir=()=>this.setState({confirmDel:true});
   cancelExcluir=()=>this.setState({confirmDel:false});
-  confirmarExcluir=()=>{ const id=this.state.selectedId; const p=this.state.processos.find(x=>x.id===id); if(!p||this.state.role!=='super') return;
+  confirmarExcluir=()=>{ const id=this.state.selectedId; const p=this.state.processos.find(x=>x.id===id); if(!this.podeExcluirProcesso(p)) return;
     this.deleted.add(id); this.touched.delete(id);
     this.setState(s=>({processos:s.processos.filter(x=>x.id!==id),confirmDel:false,screen:'servico',selectedId:null}),()=>{this.registrar('Exclusão',p,'Ficha excluída · '+p.orgao);this.supa('/rest/v1/processes?id=eq.'+encodeURIComponent(id),{method:'DELETE',prefer:'return=minimal'}).catch(err=>this.setState({storageErro:'A ficha saiu da tela, mas não foi excluída do banco: '+err.message}));}); };
   goServico=(k)=>this.setState({menuOpen:false,screen:'servico',activeServico:k,activeTab:'pendentes',pagina:1,filtros:{...this.FILTROS0}});
@@ -1759,11 +1761,11 @@ class Component extends DCLogic {
     const registro={titulo,categoria,tipo:cat.k,texto:t,mensagemSei,anexos:s.obsAnexos.map(a=>({...a})),dataEvento,autor:u.nome,perfil:u.perfil,data,authorUserId:this.session.user.id,sourceIndex,_tmp:'c'+Date.now()+Math.random().toString(36).slice(2,6)};
     if(s.comentarioEditando){const ed=s.comentarioEditando,antigo=(p0.obs||[]).find(o=>o.sourceIndex===ed.sourceIndex),uid=this.session?.user?.id;if(!antigo||(s.role!=='super'&&antigo.authorUserId!==uid)){this.setState({obsErro:true,obsErroTexto:'Você pode editar somente comentários feitos por você.'});return;}const novo={...antigo,...registro,id:antigo.id,_tmp:antigo._tmp,sourceIndex:antigo.sourceIndex,authorUserId:antigo.authorUserId,autor:antigo.autor,perfil:antigo.perfil,data:antigo.data,editadoPor:u.nome,editadoEm:data};const processos=s.processos.map(p=>p.id===p0.id?{...p,obs:(p.obs||[]).map(o=>o.sourceIndex===ed.sourceIndex?novo:o)}:p);this.setState({processos,comentarioEditando:null,obsTitulo:'',obsCategoria:'comentario',obsTexto:'',obsDataEvento:'',obsDataSug:'',obsMensagemSei:'',obsAnexos:[],obsErro:false,comentarioOrdem:'recentes'});const filtro=antigo.id?('id=eq.'+encodeURIComponent(antigo.id)):('process_id=eq.'+encodeURIComponent(p0.id)+'&source_index=eq.'+encodeURIComponent(antigo.sourceIndex));this.supa('/rest/v1/process_comments?'+filtro,{method:'PATCH',body:{...this.comentarioDb(novo,antigo.sourceIndex,p0.id),edited_by_name:u.nome,edited_at_text:data},prefer:'return=minimal'}).then(()=>this.registrar('Edição',p0,'Comentário atualizado: '+titulo)).catch(err=>this.setState({storageErro:'A edição ficou visível nesta tela, mas não foi sincronizada: '+err.message}));return;}
     if(!this.podeEditarProcesso(p0)&&cat.k!=='comentario'){this.setState({obsErro:true,obsErroTexto:'Você pode comentar neste processo, mas somente quem o cadastrou ou a Superintendente pode alterar os cabeçalhos.'});return;}
-    if(!this.podeEditarProcesso(p0)){const processos=s.processos.map(p=>p.id===s.selectedId?{...p,obs:[...(p.obs||[]),registro]}:p);this.setState({processos,obsTitulo:'',obsCategoria:'comentario',obsTexto:'',obsDataEvento:'',obsDataSug:'',obsMensagemSei:'',obsAnexos:[],obsErro:false,comentarioBusca:'',comentarioOrdem:'recentes'});this.inserirComentario(p0.id,registro).then(()=>this.registrar('Comentário',p0,categoria+': '+titulo)).catch(err=>this.setState({storageErro:'O comentário ficou visível nesta tela, mas não foi sincronizado: '+err.message}));return;}
+    if(!this.podeEditarProcesso(p0)){const processos=s.processos.map(p=>p.id===s.selectedId?{...p,obs:[...(p.obs||[]),registro]}:p);this.setState({processos,obsTitulo:'',obsCategoria:'comentario',obsTexto:'',obsDataEvento:'',obsDataSug:'',obsMensagemSei:'',obsAnexos:[],obsErro:false,comentarioBusca:'',comentarioOrdem:'recentes'});this.addMeus(p0.id);this.inserirComentario(p0.id,registro).then(()=>this.registrar('Comentário',p0,categoria+': '+titulo)).catch(err=>this.setState({storageErro:'O comentário ficou visível nesta tela, mas não foi sincronizado: '+err.message}));return;}
     const valor=cat.k==='situacao'?t:[dataEvento,t].filter(Boolean).join(' — '),antes=cat.campo?p0[cat.campo]||'':'';
     const salvo=this.mut(s.selectedId,p=>({...p,...(cat.campo?{[cat.campo]:valor,hist:{...(p.hist||{}),[cat.campo]:{autor:u.nome,data}}}:{}),obs:[...(p.obs||[]),registro]}),cat.campo?'Atualização':'Comentário',categoria+': '+titulo+(cat.campo?' · de '+(antes||'(não registrado)')+' para '+valor:''));
     if(salvo)salvo.then(()=>this.inserirComentario(p0.id,registro),()=>{}).catch(err=>this.setState({storageErro:'O comentário ficou visível nesta tela, mas não foi sincronizado: '+err.message}));
-    if(salvo)this.setState({obsTitulo:'',obsCategoria:'comentario',obsTexto:'',obsDataEvento:'',obsDataSug:'',obsMensagemSei:'',obsAnexos:[],obsErro:false,comentarioBusca:'',comentarioOrdem:'recentes'}); };
+    if(salvo)this.addMeus(p0.id);if(salvo)this.setState({obsTitulo:'',obsCategoria:'comentario',obsTexto:'',obsDataEvento:'',obsDataSug:'',obsMensagemSei:'',obsAnexos:[],obsErro:false,comentarioBusca:'',comentarioOrdem:'recentes'}); };
   setResponsavelTexto=e=>this.setState({responsavelTexto:e.target.value,acompanhamentoSalvo:false});
   setProximaAcaoTexto=e=>this.setState({proximaAcaoTexto:e.target.value,acompanhamentoSalvo:false});
   setProximaDataTexto=e=>this.setState({proximaDataTexto:e.target.value,acompanhamentoSalvo:false});
@@ -1781,7 +1783,7 @@ class Component extends DCLogic {
     const extra=k==='numero'?{reit:(v.replace(/\s/g,'').match(/\d{5}\.?\d{6}\/\d{4}/g)||[]).slice(1)}:k==='encaminhamento'&&this.UNID.some(x=>x[0]===v)?{unidade:v}:{};
     const ok=this.mut(this.state.selectedId,p=>({...p,[k]:v,...extra,hist:{...(p.hist||{}),[k]:st}}),'Edição',(this.CAMPO[k]||k)+': de '+(nome(antes)||'(não registrado)')+' para '+(nome(v)||'(apagado)'));
     if(ok&&k==='servico') this.setState({activeServico:v}); };
-  toggleAba=()=>{ if(this.state.role!=='super'){this.setState({storageErro:'Somente a Superintendente pode concluir ou reabrir processos.'});return;} const p0=this.state.processos.find(p=>p.id===this.state.selectedId); const r=!!p0&&p0.aba==='respondido';
+  toggleAba=()=>{ const p0=this.state.processos.find(p=>p.id===this.state.selectedId); const r=!!p0&&p0.aba==='respondido';
     this.mut(this.state.selectedId,p=>({...p,aba:r?'pendente':'respondido'}),r?'Reabertura':'Resposta',r?'Processo reaberto como pendente':'Processo movido para Respondidos'); };
   openNovo=()=>this.setState({menuOpen:false,screen:'novo',formErro:'',formDup:[],formDupOk:false,form:{servico:this.state.activeServico||'PAEFI',encaminhamento:'',numero:'',recebido:'',orgao:'',usuario:'',link:'',demanda:'',setorReceber:'',dataEvento:'',memo:'',situacao:'',prazoDias:'',prazoData:'',marcacao:''}});
   cancelNovo=()=>this.setState({screen:this.state.role==='super'?'painel':'pendencias',formDup:[],formDupOk:false});
@@ -1792,9 +1794,9 @@ class Component extends DCLogic {
     if(f.memo&&!this.dataValida(f.memo)){this.setState({formErro:'Informe a data do memo no formato dd/mm/aaaa ou deixe em branco.'});return;}
     if(f.prazoData&&!this.dataValida(f.prazoData)){this.setState({formErro:'Informe a data-limite do prazo no formato dd/mm/aaaa ou deixe em branco.'});return;}
     if(!this.state.formDupOk){ const dup=this.processosComSEI(f.numero); if(dup.length){this.setState({formDup:dup.map(p=>p.id),formErro:''});return;} }
-    const marc=f.marcacao==='concluido'&&this.state.role!=='super'?'':(f.marcacao||''), etapaIni=f.memo&&f.encaminhamento?2:(f.memo?1:0);
+    const marc=f.marcacao||'', etapaIni=f.memo&&f.encaminhamento?2:(f.memo?1:0);
     const uid=this.session?.user?.id||null;const np0={id:'n'+Date.now(),servico:f.servico,encaminhamento:f.encaminhamento||'',aba:'pendente',numero:f.numero.trim(),recebido:f.recebido||this.hojeTxt(),memo:f.memo||'',unidade:this.UNID.some(x=>x[0]===f.encaminhamento)?f.encaminhamento:'',orgao:f.orgao||'—',demanda:f.demanda,usuario:f.usuario||'',situacao:(f.situacao||'').trim()||this.situacaoSugerida(f),prazoDias:(f.prazoDias||'').trim(),prazoData:f.prazoData||'',marcacao:marc,marcacaoOrigem:marc?'cadastro':'',respSetor:'',respGabinete:'',obs:[],conclusao:'',link:this.linkSeguro(f.link.trim()),...(f.servico==='CONVITES'?{setorReceber:(f.setorReceber||'').trim(),dataEvento:(f.dataEvento||'').trim()}:{}),createdBy:uid,updatedBy:uid}; const np=this.enrich({...np0,etapa:etapaIni});
-    this.touched.add(np.id); this.setState(s=>({processos:[np,...s.processos],screen:'processo',selectedId:np.id,activeServico:f.servico,activeTab:'pendentes',formDup:[],formDupOk:false}),()=>{this.syncProcessToDb(np,true).then(()=>this.registrar('Cadastro',np,'Novo processo registrado em '+this.sv(np.servico).label)).catch(err=>this.setState({storageErro:'O cadastro ficou neste navegador, mas não foi salvo no banco: '+err.message}));this.openProcesso(np);}); };
+    this.touched.add(np.id); this.addMeus(np.id); this.setState(s=>({processos:[np,...s.processos],screen:'processo',selectedId:np.id,activeServico:f.servico,activeTab:'pendentes',formDup:[],formDupOk:false}),()=>{this.syncProcessToDb(np,true).then(()=>this.registrar('Cadastro',np,'Novo processo registrado em '+this.sv(np.servico).label)).catch(err=>this.setState({storageErro:'O cadastro ficou neste navegador, mas não foi salvo no banco: '+err.message}));this.openProcesso(np);}); };
 
   tab(a){ return 'background:transparent;border:none;border-bottom:2px solid '+(a?'#12355B':'transparent')+';padding:8px 2px 10px;font-size:14px;font-weight:'+(a?'600':'400')+';color:'+(a?'#12355B':'#3D454D')+';cursor:pointer;display:flex;align-items:center'; }
 
@@ -1925,14 +1927,14 @@ proc={...sel,dados,...this.verifInfo(sel),...this.autoriaProc(sel,ult,atividades
         obsCount:obs.length+' de '+manuaisObs.length+' registro(s)',
         dias:d==null?'—':fmt(d),diasColor:this.diasColor(d),link:this.linkSeguro(sel.link),temLink:!!this.linkSeguro(sel.link),semLink:!this.linkSeguro(sel.link),
         abaTxt:r?'Respondido':'Pendente',stColor:r?'#1E8E4E':'#8A5A06',stBg:r?'#F1F8F4':'#FDF6EA',stBorder:r?'#CFE7D8':'#F0DDB8',
-        podeEditar,podeExcluir:isSuper,podeConcluir:isSuper,edicaoBloqueada:!podeEditar,
+        podeEditar,podeExcluir:this.podeExcluirProcesso(sel),podeConcluir:podeEditar,edicaoBloqueada:!podeEditar,
         ...(()=>{ const nn=this.nums(sel); const nBase=nn.vinc.filter(v=>!v.extra).length; return {principal:nn.principal,totalProc:String(1+nn.vinc.length),
           vinc:nn.vinc.map((v,i)=>({numero:v.numero,nota:v.nota||'',temNota:!!v.nota,n:String(i+2),removivel:podeEditar&&!!v.extra,remover:()=>this.remVinc(i-nBase)}))}; })(),
         marcOpts:this.MARC_ORD.filter(k=>k).map(k=>{ const m=this.MARC[k], on=(sel.marcacao||'')===k; return {label:m.l,bar:m.bar,onClick:()=>this.setMarcacao(k),
           style:'display:flex;align-items:center;gap:7px;height:32px;padding:0 10px;border-radius:2px;cursor:pointer;font-size:13px;font-weight:'+(on?'600':'400')+';border:1px solid '+(on?m.bar:'#C9CED3')+';background:'+(on?m.bg:'#fff')+';color:'+(on?m.fg:'#3A4753')}; }),
         marcOrigem:(sel.hist&&sel.hist.marcacao)?('Alterada por '+sel.hist.marcacao.autor+' em '+sel.hist.marcacao.data):(sel.marcacaoOrigem==='planilha'?'Cor importada da planilha':'Clique para classificar'),
         passos:this.ETAPAS.map((l,i)=>{ const e=sel.etapa||0, done=i<e, cur=i===e; return {n:String(i+1),label:l,bg:done?'#0A3D62':(cur?'#fff':'#fff'),fg:done?'#fff':(cur?'#0A3D62':'#9AA6B2'),bd:done||cur?'#0A3D62':'#D5DCE3',line:i===5?'transparent':(i<e?'#0A3D62':'#E1E6EB'),fw:cur?'700':'500',tc:cur?'#0A3D62':(done?'#3A4753':'#9AA6B2')}; }),
-         podeAvancar:podeEditar&&(sel.etapa||0)<5&&(isSuper||(sel.etapa||0)<4), podeVoltar:podeEditar&&(sel.etapa||0)>0, proxEtapa:this.ETAPAS[Math.min(5,(sel.etapa||0)+1)],
+         podeAvancar:podeEditar&&(sel.etapa||0)<5, podeVoltar:podeEditar&&(sel.etapa||0)>0, proxEtapa:this.ETAPAS[Math.min(5,(sel.etapa||0)+1)],
         etapaQuem:(sel.hist&&sel.hist.etapa)?('Atualizada por '+sel.hist.etapa.autor+' em '+sel.hist.etapa.data):'Identificada automaticamente pela Situação',
         unidade:sel.unidade||'', oficio:sel.oficio||'', temOficio:!!sel.oficio, semOficio:!sel.oficio, reit:sel.reit||[], reitN:String((sel.reit||[]).length), temReit:(sel.reit||[]).length>0,
         acaoTxt:r?'Este processo está na aba Respondidos.':'Quando a resposta for enviada ao demandante, mova o processo para Respondidos.',
