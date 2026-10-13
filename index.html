@@ -78,18 +78,24 @@
       </div>
       <button onClick="{{ fecharAvisos }}" style="height:28px;padding:0 10px;background:#fff;color:#1F2328;border:1px solid #C9CED3;border-radius:2px;font-size:12.5px;cursor:pointer">Fechar</button>
     </div>
-    <div style="overflow:auto;flex:1">
+    <div style="padding:8px 16px;border-bottom:1px solid #ECEEF0;background:#FAFBFB"><input onInput="{{ setAvisosBusca }}" value="{{ avisosBusca }}" placeholder="Filtrar por nº, descrição ou unidade" style="width:100%;height:28px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:12.5px;font-family:inherit"></div>
+    <div style="overflow-y:auto;overscroll-behavior:contain;flex:1 1 auto;min-height:0;max-height:min(460px,calc(100vh - 230px))">
       <sc-if value="{{ avisosVazio }}"><div style="padding:20px 16px;font-size:13px;color:#7A828A">Nenhuma novidade registrada ainda. Quando o monitor encontrar documento ou andamento novo em algum processo, ele aparece aqui.</div></sc-if>
+      <sc-if value="{{ avisosSemFiltro }}"><div style="padding:20px 16px;font-size:13px;color:#7A828A">Nenhuma novidade corresponde ao filtro.</div></sc-if>
       <sc-for list="{{ avisosLista }}" as="av">
-        <button onClick="{{ av.abrir }}" style="display:block;width:100%;text-align:left;padding:10px 16px 10px 13px;border:none;border-bottom:1px solid #ECEEF0;border-left:3px solid {{ av.barra }};background:{{ av.fundo }};cursor:pointer;font-family:inherit" style-hover="background:#F5F7FA">
-          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-            <span style="font-family:'IBM Plex Mono';font-weight:600;font-size:13px;color:#1F2328">{{ av.numero }}</span>
-            <span style="padding:0 6px;font-size:11px;font-weight:600;border:1px solid {{ av.tipoBorder }};background:{{ av.tipoBg }};color:{{ av.tipoCor }};border-radius:2px">{{ av.tipo }}</span>
-            <sc-if value="{{ av.naoVisto }}"><span style="font-size:11px;font-weight:600;color:#8A5A06">Nova</span></sc-if>
-          </div>
-          <div style="font-size:13px;color:#16202B;margin-top:4px;line-height:1.45">{{ av.descricao }}</div>
-          <div style="font-size:11.5px;color:#7A828A;margin-top:3px">{{ av.detalhe }}</div>
-        </button>
+        <div style="display:flex;border-bottom:1px solid #ECEEF0;border-left:3px solid {{ av.barra }};background:{{ av.fundo }}">
+          <button onClick="{{ av.abrir }}" style="flex:1;display:block;text-align:left;padding:10px 10px 10px 13px;border:none;background:transparent;cursor:pointer;font-family:inherit" style-hover="background:#F5F7FA">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+              <span style="font-family:'IBM Plex Mono';font-weight:600;font-size:13px;color:#1F2328">{{ av.numero }}</span>
+              <span style="padding:0 6px;font-size:11px;font-weight:600;border:1px solid {{ av.tipoBorder }};background:{{ av.tipoBg }};color:{{ av.tipoCor }};border-radius:2px">{{ av.tipo }}</span>
+              <span style="font-size:11.5px;color:#7A828A">{{ av.quando }}</span>
+              <sc-if value="{{ av.naoVisto }}"><span style="font-size:11px;font-weight:600;color:#8A5A06">Nova</span></sc-if>
+            </div>
+            <div style="font-size:13px;color:#16202B;margin-top:4px;line-height:1.45">{{ av.descricao }}</div>
+            <div style="font-size:11.5px;color:#7A828A;margin-top:3px">{{ av.detalhe }}</div>
+          </button>
+          <button onClick="{{ av.silenciar }}" title="Silenciar avisos deste processo neste navegador" style="width:34px;flex-shrink:0;border:none;border-left:1px solid #ECEEF0;background:transparent;color:#7A828A;cursor:pointer;font-size:14px" style-hover="background:#F0F2F4;color:#B8322A">🔕</button>
+        </div>
       </sc-for>
     </div>
     <div style="padding:10px 16px;background:#FAFBFB;border-top:1px solid #DADDE1;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
@@ -1176,6 +1182,19 @@
           <sc-if value="{{ logVazio }}" hint-placeholder-val="{{ false }}"><div style="padding:48px;text-align:center;color:#7A828A;font-size:14px">Nenhuma atividade encontrada.</div></sc-if>
         </div>
       </div>
+      <sc-if value="{{ logTemPaginacao }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 16px;border-top:1px solid #ECEEF0;background:#FAFBFB">
+          <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#5B636B">
+            <span>Itens por página</span>
+            <select value="{{ logPorPagina }}" onChange="{{ setLogPorPagina }}" style="height:32px;padding:0 28px 0 9px;border:1px solid #C9CED3;background:#fff;border-radius:2px;font-size:13px;color:#2E353B"><option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="200">200</option></select>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
+            <button onClick="{{ logPaginaAnt }}" disabled="{{ logPrimeira }}" style="height:32px;padding:0 12px;background:#fff;color:#1F2328;border:1px solid #C9CED3;border-radius:2px;font-size:13px;cursor:pointer">Anterior</button>
+            <span style="min-width:112px;text-align:center;font-size:13px;color:#3D454D">Página {{ logPaginaAtual }} de {{ logTotalPaginas }}</span>
+            <button onClick="{{ logPaginaProx }}" disabled="{{ logUltima }}" style="height:32px;padding:0 12px;background:#fff;color:#1F2328;border:1px solid #C9CED3;border-radius:2px;font-size:13px;cursor:pointer">Próxima</button>
+          </div>
+        </div>
+      </sc-if>
     </div>
     </sc-if>
 
@@ -1257,7 +1276,7 @@ class Component extends DCLogic {
     selectedId:null, linkTexto:'', pendF:{q:'',servico:'',situacao:'',de:'',ate:''}, pendDraft:{q:'',servico:'',situacao:'',de:'',ate:''}, pendPag:1, pendPorPag:10, pendMenu:null,acompanhamentoAberto:false, pendAviso:'', pendSort:'', pendDir:'asc', pendColsSel:null, pendColsOpen:false, todosF:{q:'',servico:'',status:'',marc:'',prazo:'',dias:'',parado:'',ano:'',orgao:'',orgaoGrupo:'',mes:''}, todosSort:'recebido', todosDir:'desc', todosPag:1, todosPorPag:25, todosColsSel:null, todosColsOpen:false, todosFiltrosAbertos:false, voltarPara:'servico', obsNumeroReit:'', formDup:[], formDupOk:false, obsTitulo:'', obsCategoria:'comentario', obsTexto:'', obsDataEvento:'',obsDataSug:'', obsMensagemSei:'', obsAnexos:[], anexosCarregando:false, obsErro:false, obsErroTexto:'', comentarioEditando:null, storageErro:'', responsavelTexto:'', proximaAcaoTexto:'', proximaDataTexto:'', acompanhamentoSalvo:false, editKey:null, editValue:'',
     sortKey:'recebido', sortDir:'asc', vincTexto:'', vincNota:'', pagina:1, porPagina:25, filtros:{q:'',campo:'',setor:'',gabinete:'',obs:'',dias:'',etapa:'',unidade:'',reit:'',marc:'',ano:'',prazo:''}, oficioTexto:'', vw:(typeof window!=='undefined'?window.innerWidth:1400), menuOpen:false, colsOpen:false, colsSel:null,
     form:{servico:'PAEFI',encaminhamento:'',numero:'',recebido:'',orgao:'',usuario:'',link:'',demanda:'',setorReceber:'',dataEvento:'',memo:'',situacao:'',prazoDias:'',prazoData:'',marcacao:''},
-    servicos:[], processos:[], log:[], user:{nome:'',perfil:''}, confirmDel:false, logUser:'', logAcao:'', logQ:'',
+    servicos:[], processos:[], log:[], user:{nome:'',perfil:''}, confirmDel:false, logUser:'', logAcao:'', logQ:'', logPagina:1, logPorPagina:50,
     usuarios:[],usuarioForm:{nome:'',email:'',senha:''},usuariosErro:'',usuariosSucesso:'',usuariosCarregando:false,
     senhaAberta:false,senhaAtual:'',senhaNova:'',senhaConfirma:'',senhaErro:'',senhaOk:'',senhaCarregando:false,
   };
@@ -1310,7 +1329,7 @@ class Component extends DCLogic {
   // Insere um comentário novo sem sobrescrever comentários de outros usuários: o índice é calculado a partir do banco.
   async inserirComentario(pid,registro){
     for(let tentativa=0;;tentativa++){
-      const ult=await this.supa('/rest/v1/process_comments?select=source_index&process_id=eq.'+encodeURIComponent(pid)+'&order=source_index.desc&limit=1');
+      const ult=await this.supa('/rest/v1/process_comments?select=source_index&process_id=eq.'+encodeURIComponent(pid)+'&source_index=lt.900000&order=source_index.desc&limit=1');
       const idx=Math.max(Number.isInteger(registro.sourceIndex)?registro.sourceIndex:0,ult&&ult[0]?ult[0].source_index+1:0);
       try{
         const criado=await this.supa('/rest/v1/process_comments',{method:'POST',body:[this.comentarioDb({...registro,sourceIndex:idx},idx,pid)],prefer:'return=representation'});
@@ -1356,7 +1375,7 @@ class Component extends DCLogic {
   iniciarAvisos(){ let nav=false; try{ nav=localStorage.getItem('semcas_avisos_nav')==='1'&&'Notification' in window&&Notification.permission==='granted'; }catch(e){}
     this.setState({navAviso:nav}); this.carregarNovidades(true); clearInterval(this._novT); this._novT=setInterval(()=>this.carregarNovidades(false),60000); }
   async carregarNovidades(primeira){ if(!this.session) return;
-    try{ const [rows,vistas]=await Promise.all([this.supa('/rest/v1/monitor_novidades?select=*&order=criado_em.desc&limit=60'),this.supa('/rest/v1/monitor_novidades_vistas?select=visto_em')]);
+    try{ const [rows,vistas]=await Promise.all([this.supa('/rest/v1/monitor_novidades?select=*&order=criado_em.desc&limit=500'),this.supa('/rest/v1/monitor_novidades_vistas?select=visto_em')]);
       const visto=vistas&&vistas[0]?new Date(vistas[0].visto_em).getTime():0, antes=this._novIds||new Set();
       const chegaram=primeira?[]:(rows||[]).filter(r=>!antes.has(r.id)&&new Date(r.criado_em).getTime()>visto);
       this._novIds=new Set((rows||[]).map(r=>r.id)); this.setState({novidades:rows||[],novVisto:visto});
@@ -1367,6 +1386,10 @@ class Component extends DCLogic {
       n.onclick=()=>{ window.focus(); const p=this.state.processos.find(x=>x.id===lista[0].process_id); if(p) this.openProcesso(p); n.close(); }; }catch(e){} }
   abrirAvisos=()=>{ this.setState({avisosAberto:true,menuOpen:false}); this.carregarNovidades(false); };
   fecharAvisos=()=>this.setState({avisosAberto:false});
+  setAvisosBusca=e=>this.setState({avisosBusca:(e&&e.target?e.target.value:'')||''});
+  _avisosSilenciados(){ try{ return new Set(JSON.parse(localStorage.getItem('semcas_avisos_silencio')||'[]')); }catch(e){ return new Set(); } }
+  silenciarAviso(pid){ const s=this._avisosSilenciados(); s.add(pid); try{ localStorage.setItem('semcas_avisos_silencio',JSON.stringify([...s])); }catch(e){} this.forceUpdate&&this.forceUpdate(); this.setState({_sil:Date.now()}); }
+  tempoRelativo(t){ const d=Math.round((Date.now()-t)/1000); if(d<60) return 'agora há pouco'; if(d<3600) return 'há '+Math.round(d/60)+' min'; if(d<86400) return 'há '+Math.round(d/3600)+' h'; if(d<172800) return 'ontem'; if(d<604800) return 'há '+Math.round(d/86400)+' dias'; return this.fmtCurto(t); }
   marcarAvisosVistos=async()=>{ const uid=this.session&&this.session.user&&this.session.user.id; if(!uid) return; const ult=(this.state.novidades||[]).reduce((m,r)=>Math.max(m,new Date(r.criado_em).getTime()),0)||Date.now();
     this.setState({novVisto:ult}); try{ await this.supa('/rest/v1/monitor_novidades_vistas?on_conflict=user_id',{method:'POST',prefer:'return=minimal,resolution=merge-duplicates',body:{user_id:uid,visto_em:new Date(ult).toISOString()}}); }catch(e){} };
   alternarAvisoNavegador=async()=>{ if(!('Notification' in window)) return; if(this.state.navAviso){ try{localStorage.setItem('semcas_avisos_nav','0');}catch(e){} this.setState({navAviso:false}); return; }
@@ -1396,6 +1419,8 @@ class Component extends DCLogic {
       else if(v.status==='rodando') txt=v.mensagem||'Verificando no SEI…';
       else if(v.status==='concluido') { txt=v.mensagem||(v.novidades?(v.novidades+' novidade(s) encontrada(s). Veja em Acompanhamento SEI.'):'Verificado agora. Nenhuma novidade no SEI.'); cor='#1E8E4E'; }
       else { txt=v.mensagem||'Não foi possível verificar.'; cor='#A3281F'; } }
+    else { const link=String(p.link||'').trim(), temLinkSei=/md_pesq_processo_exibir/i.test(link);
+      if(!temLinkSei) { txt='Monitor ainda não localizou este processo no SEI. Cole o link da Pesquisa Pública em "Link no SEI" ou clique em Verificar agora.'; cor='#8A5A06'; } }
     return {temVerif:!!txt,verifTxt:txt,verifCor:cor,verifBtn:ocupado?'Verificando…':'Verificar agora',verificar:()=>this.pedirVerificacao([p.id])}; }
   async loadDbData(){
     const [svs,rows,comments,audits,usuariosDb]=await Promise.all([
@@ -1644,9 +1669,12 @@ class Component extends DCLogic {
   setUsuarioSenha=e=>this.setState(s=>({usuarioForm:{...s.usuarioForm,senha:e.target.value},usuariosErro:'',usuariosSucesso:''}));
   carregarUsuarios=async()=>{if(this.state.role!=='super'||!this.session)return;try{const perfis=await this.supa('/rest/v1/user_profiles?select=user_id,email,display_name,role,active&order=display_name.asc',{token:this.session.access_token});this.setState({usuarios:(perfis||[]).map(u=>({id:u.user_id,nome:u.display_name||this.nomeDoEmail(u.email),email:u.email,perfil:u.role==='superintendente'?'Superintendente':'Administrativo',bg:u.role==='superintendente'?'#E8F2FA':'#F3F5F7',cor:u.role==='superintendente'?'#0F5E91':'#3D454D',borda:u.role==='superintendente'?'#C4DDEC':'#DADDE1'}))});}catch(e){this.setState({usuariosErro:'Não foi possível atualizar a lista: '+e.message});}};
   cadastrarUsuario=async()=>{if(this.state.role!=='super'||!this.session)return;const f=this.state.usuarioForm,nome=f.nome.trim(),email=f.email.trim().toLowerCase(),password=f.senha;if(!nome||!/^\S+@\S+\.\S+$/.test(email)||password.length<8){this.setState({usuariosErro:'Informe nome, e-mail válido e senha com no mínimo 8 caracteres.',usuariosSucesso:''});return;}this.setState({usuariosCarregando:true,usuariosErro:'',usuariosSucesso:''});try{await this.supa('/rest/v1/rpc/cadastrar_administrativo',{method:'POST',body:{p_email:email,p_password:password,p_display_name:nome}});this.setState({usuarioForm:{nome:'',email:'',senha:''},usuariosCarregando:false,usuariosSucesso:'Usuário cadastrado com perfil Administrativo.'});await this.carregarUsuarios();}catch(e){const m=String(e.message||'');const texto=/já existe um usuário/i.test(m)?'Já existe um usuário com esse e-mail.':(/cadastrar_administrativo|PGRST202|schema cache/i.test(m)?'Falta ativar o cadastro no Supabase. Execute no SQL Editor a função cadastrar_administrativo e tente de novo.':m);this.setState({usuariosCarregando:false,usuariosErro:texto,usuariosSucesso:''});}};
-  setLogUser=e=>this.setState({logUser:e.target.value});
-  setLogAcao=e=>this.setState({logAcao:e.target.value});
-  setLogQ=e=>this.setState({logQ:e.target.value});
+  setLogUser=e=>this.setState({logUser:e.target.value,logPagina:1});
+  setLogAcao=e=>this.setState({logAcao:e.target.value,logPagina:1});
+  setLogQ=e=>this.setState({logQ:e.target.value,logPagina:1});
+  setLogPorPagina=e=>this.setState({logPorPagina:parseInt(e.target.value,10)||50,logPagina:1});
+  logPaginaAnt=()=>this.setState(st=>({logPagina:Math.max(1,(st.logPagina||1)-1)}));
+  logPaginaProx=()=>this.setState(st=>({logPagina:(st.logPagina||1)+1}));
   avancarEtapa=()=>this.mudarEtapa(1);
   voltarEtapa=()=>this.mudarEtapa(-1);
   mudarEtapa=(d)=>{ const p0=this.state.processos.find(p=>p.id===this.state.selectedId); if(!p0) return; const e=Math.max(0,Math.min(5,(p0.etapa||0)+d)); if(e===p0.etapa) return;if(e===5&&this.state.role!=='super'){this.setState({storageErro:'Somente a Superintendente pode concluir um processo.'});return;}
@@ -1915,7 +1943,8 @@ proc={...sel,dados,...this.verifInfo(sel),...this.autoriaProc(sel,ult,atividades
     const lq=this.norm(s.logQ);
     const logF=s.log.filter(l=>(!s.logUser||l.autor===s.logUser)&&(!s.logAcao||l.acao===s.logAcao)&&(!lq||this.norm(l.numero+' '+l.detalhe).includes(lq)));
     const vivos=new Set(procs.map(p=>p.id));
-    const logRows=logF.slice(0,300).map(l=>{ const c=this.ACAO_COR[l.acao]||['#EEF0F3','#2F3B46']; const ok=!!l.pid&&vivos.has(l.pid);
+    const logPorPag=s.logPorPagina||50, logTotPag=Math.max(1,Math.ceil(logF.length/logPorPag)), logPagAtual=Math.min(Math.max(1,s.logPagina||1),logTotPag), logIni=(logPagAtual-1)*logPorPag;
+    const logRows=logF.slice(logIni,logIni+logPorPag).map(l=>{ const c=this.ACAO_COR[l.acao]||['#EEF0F3','#2F3B46']; const ok=!!l.pid&&vivos.has(l.pid);
       return {...l,bg:c[0],cor:c[1],servicoLabel:l.servico?this.sv(l.servico).label:'—',linkavel:ok,naoLinkavel:!ok,abrir:()=>{const p=procs.find(x=>x.id===l.pid); if(p) this.openProcesso(p);}}; });
     const pendAll=procs.filter(p=>p.aba==='pendente'); const maxE=Math.max(1,...[0,1,2,3,4].map(i=>pendAll.filter(p=>(p.etapa||0)===i).length));
     const porEtapa=[0,1,2,3,4].map(i=>{const q=pendAll.filter(p=>(p.etapa||0)===i).length; return {n:String(i+1),label:this.ETAPAS[i],qtd:fmt(q),w:Math.round(q/maxE*100)+'%'};});
@@ -2097,18 +2126,24 @@ proc={...sel,dados,...this.verifInfo(sel),...this.autoriaProc(sel,ult,atividades
       usuariosVisible:s.screen==='usuarios',navUsuariosStyle,goUsuarios:this.goUsuarios,usuariosCount:String(s.usuarios.length),usuarios:s.usuarios,usuarioForm:s.usuarioForm,setUsuarioNome:this.setUsuarioNome,setUsuarioEmail:this.setUsuarioEmail,setUsuarioSenha:this.setUsuarioSenha,cadastrarUsuario:this.cadastrarUsuario,usuariosErro:s.usuariosErro,usuariosErroOn:!!s.usuariosErro,usuariosSucesso:s.usuariosSucesso,usuariosSucessoOn:!!s.usuariosSucesso,usuariosCarregando:s.usuariosCarregando,usuariosBtnTexto:s.usuariosCarregando?'Cadastrando…':'Cadastrar usuário',
       abrirSenha:this.abrirSenha,fecharSenha:this.fecharSenha,trocarSenha:this.trocarSenha,senhaVisible:s.senhaAberta,senhaAtual:s.senhaAtual,senhaNova:s.senhaNova,senhaConfirma:s.senhaConfirma,setSenhaAtual:this.setSenhaAtual,setSenhaNova:this.setSenhaNova,setSenhaConfirma:this.setSenhaConfirma,senhaErro:s.senhaErro,senhaErroOn:!!s.senhaErro,senhaOk:s.senhaOk,senhaOkOn:!!s.senhaOk,senhaCarregando:s.senhaCarregando,senhaBtnTexto:s.senhaCarregando?'Salvando…':'Salvar senha',
       logRows,logVazio:logRows.length===0,logInfo:fmt(logF.length)+' registro(s)',
+      logPorPagina:String(logPorPag),setLogPorPagina:this.setLogPorPagina,logPaginaAtual:String(logPagAtual),logTotalPaginas:String(logTotPag),logPrimeira:logPagAtual<=1,logUltima:logPagAtual>=logTotPag,logPaginaAnt:this.logPaginaAnt,logPaginaProx:this.logPaginaProx,logTemPaginacao:logF.length>logPorPag,
       logUsers:[...new Set(s.log.map(l=>l.autor))],logAcoes:[...new Set(s.log.map(l=>l.acao))],
       logUser:s.logUser,logAcao:s.logAcao,logQ:s.logQ,setLogUser:this.setLogUser,setLogAcao:this.setLogAcao,setLogQ:this.setLogQ,
-      ...(()=>{ const porId=new Map(procs.map(p=>[p.id,p])), visto=s.novVisto||0, lista=(s.novidades||[]).filter(r=>porId.has(r.process_id));
-        const naoVistos=lista.filter(r=>new Date(r.criado_em).getTime()>visto).length, perm=('Notification' in window)?Notification.permission:'indisponivel';
+      ...(()=>{ const porId=new Map(procs.map(p=>[p.id,p])), visto=s.novVisto||0, silenciados=this._avisosSilenciados(),
+          listaBruta=(s.novidades||[]).filter(r=>porId.has(r.process_id)&&!silenciados.has(r.process_id)),
+          q=this.norm(s.avisosBusca||''),
+          lista=q?listaBruta.filter(r=>this.norm([r.sei_number,r.descricao,r.unidade].join(' ')).includes(q)):listaBruta;
+        const naoVistos=listaBruta.filter(r=>new Date(r.criado_em).getTime()>visto).length, perm=('Notification' in window)?Notification.permission:'indisponivel';
         return {avisosAberto:!!s.avisosAberto,abrirAvisos:this.abrirAvisos,fecharAvisos:this.fecharAvisos,marcarAvisosVistos:this.marcarAvisosVistos,alternarAvisoNavegador:this.alternarAvisoNavegador,
+          avisosBusca:s.avisosBusca||'',setAvisosBusca:this.setAvisosBusca,
           temAvisos:naoVistos>0,avisosCount:naoVistos>99?'99+':String(naoVistos),avisosAria:naoVistos?('Avisos: '+naoVistos+' novidade(s) não vista(s)'):'Avisos',avisosBtnBg:naoVistos?'#1C4570':'transparent',
-          avisosResumo:naoVistos?(naoVistos+' novidade(s) ainda não vista(s)'):(lista.length?'Tudo visto. Últimas novidades encontradas pelo monitor.':'Documentos e andamentos novos encontrados pelo monitor.'),
-          avisosVazio:!lista.length,navAvisoPode:perm!=='indisponivel'&&perm!=='denied',navAvisoBloqueado:perm==='denied',navAvisoTxt:s.navAviso?'Desligar aviso no navegador':'Avisar também pelo navegador',
-          avisosLista:lista.slice(0,40).map(r=>{ const nv=new Date(r.criado_em).getTime()>visto, doc=r.categoria==='documento', p=porId.get(r.process_id);
+          avisosResumo:naoVistos?(naoVistos+' novidade(s) ainda não vista(s)'):(listaBruta.length?'Tudo visto. Últimas novidades encontradas pelo monitor.':'Documentos e andamentos novos encontrados pelo monitor.'),
+          avisosVazio:!listaBruta.length,avisosSemFiltro:listaBruta.length>0&&lista.length===0,navAvisoPode:perm!=='indisponivel'&&perm!=='denied',navAvisoBloqueado:perm==='denied',navAvisoTxt:s.navAviso?'Desligar aviso no navegador':'Avisar também pelo navegador',
+          avisosLista:lista.slice(0,500).map(r=>{ const t=new Date(r.criado_em).getTime(), nv=t>visto, doc=r.categoria==='documento', p=porId.get(r.process_id);
             return {numero:r.sei_number||this.nums(p).principal,tipo:doc?'Documento':'Andamento',tipoBg:doc?'#EEEAF8':'#E8F2FA',tipoCor:doc?'#59408C':'#0F5E91',tipoBorder:doc?'#D7CDEE':'#C4DDEC',
-              descricao:r.descricao||'(sem descrição)',detalhe:[r.unidade,r.data_sei?('no SEI em '+r.data_sei):'','encontrado em '+this.fmtCurto(new Date(r.criado_em).getTime())].filter(Boolean).join(' · '),
-              naoVisto:nv,barra:nv?'#C98A1B':'transparent',fundo:nv?'#FFFBF2':'#fff',abrir:()=>{ this.setState({avisosAberto:false}); this.openProcesso(p); }}; })}; })(),
+              descricao:r.descricao||'(sem descrição)',quando:this.tempoRelativo(t),detalhe:[r.unidade,r.data_sei?('no SEI em '+r.data_sei):''].filter(Boolean).join(' · '),
+              naoVisto:nv,barra:nv?'#C98A1B':'transparent',fundo:nv?'#FFFBF2':'#fff',abrir:()=>{ this.setState({avisosAberto:false,avisosBusca:''}); this.openProcesso(p); },
+              silenciar:e=>{ e.stopPropagation(); this.silenciarAviso(r.process_id); }}; })}; })(),
       confirmDel:s.confirmDel,pedirExcluir:this.pedirExcluir,acompanhamentoAberto:!!s.acompanhamentoAberto,abrirAcompanhamento:this.abrirAcompanhamento,fecharAcompanhamento:this.fecharAcompanhamento,pararClique:e=>e.stopPropagation(),cancelExcluir:this.cancelExcluir,confirmarExcluir:this.confirmarExcluir,
       loginVisible:s.screen==='login',appVisible:s.screen!=='login',recuperandoOn:!!s.recuperando,loginNormalOn:!s.recuperando,salvarSenhaRecuperada:this.salvarSenhaRecuperada,esqueciSenha:this.esqueciSenha,loginInfo:s.loginInfo||'',loginInfoOn:!!s.loginInfo,
       loginEmail:s.loginEmail,loginSenha:s.loginSenha,setLoginEmail:this.setLoginEmail,setLoginSenha:this.setLoginSenha,
