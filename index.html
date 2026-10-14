@@ -1270,7 +1270,7 @@ class Component extends DCLogic {
     return {...p,_e:1,etapa:p.etapa??et,unidade:p.unidade??(u?u[0]:''),reit:p.reit??nums.slice(1),oficio:p.oficio??(of?'Ofício nº '+of[1]:'')}; }
   state = {
     acompanhamentoAberto:false,
-    meusIds:[], novidades:[], novVisto:0, avisosAberto:false, navAviso:false, pedidos:{}, monitorOnline:null, monitorSinal:'', importarAberto:false, importarBusca:'', atualizando:false, meusAtualizadoEm:'',
+    meusIds:[], meusOcultos:[], novidades:[], novVisto:0, avisosAberto:false, navAviso:false, pedidos:{}, monitorOnline:null, monitorSinal:'', importarAberto:false, importarBusca:'', atualizando:false, meusAtualizadoEm:'',
     screen:'login', role:null,
     loginEmail:'spsmediasemcas@gmail.com', loginSenha:'', loginErro:'', loginCarregando:false, dbOnline:false,
     activeServico:'PAEFI', activeTab:'pendentes', comentarioBusca:'', comentarioOrdem:'recentes',
@@ -1448,7 +1448,7 @@ class Component extends DCLogic {
     const perfil=perfis&&perfis[0];if(!perfil||!perfil.active)throw new Error('Usuário sem perfil ativo no sistema.');
     const role=perfil.role==='superintendente'?'super':'administrativo',nome=perfil.display_name||this.nomeDoEmail(perfil.email);
     await new Promise(resolve=>this.setState({role,user:{nome,perfil:role==='super'?'Superintendente':'Administrativo'},screen:role==='super'?'painel':'pendencias',activeServico:'PAEFI',activeTab:'pendentes',pagina:1,filtros:{...this.FILTROS0},loginErro:'',loginCarregando:false},resolve));
-    this.setState({meusIds:this.lerMeus()}); this.checarMonitor();
+    this.setState({meusIds:this.lerMeus(),meusOcultos:this.lerOcultos()}); this.checarMonitor();
     setTimeout(()=>this.iniciarAvisos(),1500);
     await this.loadDbData();this.registrar('Acesso',null,'Entrou no sistema');
   }
@@ -1496,7 +1496,11 @@ class Component extends DCLogic {
     const evento={id:'l'+Date.now()+Math.random().toString(36).slice(2,6),timestamp:Date.now(),quando:this.agora(),autor:u.nome||'—',perfil:u.perfil||'',acao,pid:id,numero:p1.numero,servico:p1.servico,detalhe:detalhe||''},log=[evento,...s.log];
     // Cópia local é só conveniência: o banco é a fonte oficial, então falta de espaço no navegador não bloqueia a gravação.
     try{localStorage.setItem('semcas_spsemc_v2',JSON.stringify({recs:processos.filter(p=>touched.has(p.id)).map(p=>({...p,obs:(p.obs||[]).map(o=>({...o,anexos:[]}))})),deleted:[...this.deleted],log:log.slice(0,300)}));}catch(e){}
-    this.touched=touched;this.setState({processos,log,storageErro:''});const sync=this.syncProcessToDb(p1).then(()=>this.syncAuditToDb(evento));sync.catch(err=>this.setState({storageErro:'A alteração foi feita neste navegador, mas não foi sincronizada: '+err.message}));return sync; }
+    this.touched=touched;this.setState({processos,log,storageErro:''});const gravou=this.syncProcessToDb(p1),sync=gravou.then(()=>this.syncAuditToDb(evento));
+    // Se o banco recusar a gravação do processo, volta a ficha ao estado anterior (antes ela ficava "concluída" só nesta tela e desfazia na próxima carga).
+    gravou.then(()=>sync.catch(err=>this.setState({storageErro:'A alteração foi salva, mas o histórico não foi sincronizado: '+err.message})),
+      err=>this.setState(st=>({processos:st.processos.map(p=>p.id===id&&p===p1?p0:p),storageErro:'O banco não aceitou esta alteração e ela foi desfeita: '+err.message}),()=>this.persist()));
+    return sync; }
   linkSeguro(l){ l=String(l||'').trim(); return /^https:\/\/\S+$/i.test(l)?l:''; }
   onVisivel=()=>{ if(document.visibilityState==='visible'&&this.session&&this.state.screen!=='login'&&this.state.screen!=='novo'&&!this.state.editKey&&!this.state.comentarioEditando&&Date.now()-(this._ultimaCarga||0)>120000) this.loadDbData().catch(()=>{}); };
   stamp(){ return {autor:this.state.user.nome,data:this.agora()}; }
@@ -1587,15 +1591,22 @@ class Component extends DCLogic {
   goPainel=()=>this.setState({screen:'painel',menuOpen:false});
   // "Meus Processos": lista pessoal guardada neste navegador, por usuário.
   meusChave(){ return 'semcas_meus_v1_'+((this.session&&this.session.user&&this.session.user.id)||'anon'); }
+  // Processos cadastrados pela pessoa entram sozinhos (vem do banco, vale em qualquer computador); os que ela tirar da lista ficam guardados aqui.
+  meusOcultosChave(){ return 'semcas_meus_ocultos_v1_'+((this.session&&this.session.user&&this.session.user.id)||'anon'); }
+  lerOcultos(){ try{ const v=JSON.parse(localStorage.getItem(this.meusOcultosChave())||'[]'); return Array.isArray(v)?v.filter(x=>typeof x==='string'):[]; }catch(e){ return []; } }
+  salvarOcultos(ids){ try{ localStorage.setItem(this.meusOcultosChave(),JSON.stringify(ids)); }catch(e){} this.setState({meusOcultos:ids}); }
+  meusEfetivos(){ const s=this.state,uid=this.session&&this.session.user&&this.session.user.id,ocultos=new Set(s.meusOcultos||[]),ids=[...s.meusIds],vistos=new Set(ids);
+    if(uid) s.processos.forEach(p=>{ if(p.createdBy===uid&&!vistos.has(p.id)&&!ocultos.has(p.id)){ ids.push(p.id); vistos.add(p.id); } });
+    return ids; }
   lerMeus(){ try{ const v=JSON.parse(localStorage.getItem(this.meusChave())||'[]'); return Array.isArray(v)?v.filter(x=>typeof x==='string'):[]; }catch(e){ return []; } }
   salvarMeus(ids){ try{ localStorage.setItem(this.meusChave(),JSON.stringify(ids)); }catch(e){} this.setState({meusIds:ids}); }
-  goMeus=()=>{ this.setState({screen:'meus',menuOpen:false,meusIds:this.lerMeus()}); this.checarMonitor(); };
+  goMeus=()=>{ this.setState({screen:'meus',menuOpen:false,meusIds:this.lerMeus(),meusOcultos:this.lerOcultos()}); this.checarMonitor(); };
   importarProcesso=()=>this.setState({importarAberto:true,importarBusca:''});
   fecharImportar=()=>this.setState({importarAberto:false});
   setImportarBusca=e=>this.setState({importarBusca:e.target.value});
-  addMeus=(id)=>{ const ids=this.state.meusIds.length?this.state.meusIds:this.lerMeus(); if(!ids.includes(id)) this.salvarMeus([id,...ids]); };
-  removerMeus=(id)=>this.salvarMeus(this.state.meusIds.filter(x=>x!==id));
-  atualizarTodos=()=>this.pedirVerificacao(this.state.meusIds);
+  addMeus=(id)=>{ const ids=this.state.meusIds.length?this.state.meusIds:this.lerMeus(); if(!ids.includes(id)) this.salvarMeus([id,...ids]); const oc=this.lerOcultos(); if(oc.includes(id)) this.salvarOcultos(oc.filter(x=>x!==id)); };
+  removerMeus=(id)=>{ this.salvarMeus(this.state.meusIds.filter(x=>x!==id)); const oc=this.lerOcultos(); if(!oc.includes(id)) this.salvarOcultos([id,...oc]); };
+  atualizarTodos=()=>this.pedirVerificacao(this.meusEfetivos());
   goPendencias=()=>this.setState({screen:'pendencias',menuOpen:false,pendMenu:null});
   // Linha e valor de ordenação compartilhados por "Todos os Processos" e "Pendências".
   dadosLinha(p,ult){ const fmt=n=>n.toLocaleString('pt-BR'); const mk=this.MARC[p.marcacao||'']||this.MARC[''], sp=this.situacaoPrazo(p), d=this.dias(p), ua=ult.get(p.id), ds=this.diasSem(p,ult), ob=p.obs||[], last=ob[ob.length-1], resp=p.aba==='respondido', nn=this.nums(p);
@@ -2036,7 +2047,7 @@ proc={...sel,dados,...this.verifInfo(sel),...this.autoriaProc(sel,ult,atividades
     const telaAtiva=s.screen==='processo'?(['todos','pendencias','painel','meus'].includes(s.voltarPara)?s.voltarPara:'servico'):s.screen;
     const SVICO={CONVITES:'cal',DEMANDAS_EQUIV:'file',SPSEMC:'users',AEPETI:'fileT',PCDIF:'file',CENTROS_POPS:'users',MEDIDAS:'box',PAEFI:'fileT',SEAS:'users',CREAS:'users',ADJPS:'file',JURIDICO:'file'};
     const nAlerta=comPrazo.length+acoes.length;
-    const navSecoes=[{titulo:'Acompanhamento',itens:[navIt('Pendências',telaAtiva==='pendencias',this.goPendencias,'clock',nAlerta?fmt(nAlerta):'',true),navIt('Todos os Processos',telaAtiva==='todos',this.irTodos,'layers',fmt(procs.length)),navIt('Meus Processos',telaAtiva==='meus',this.goMeus,'user',fmt(s.meusIds.length))]}];
+    const navSecoes=[{titulo:'Acompanhamento',itens:[navIt('Pendências',telaAtiva==='pendencias',this.goPendencias,'clock',nAlerta?fmt(nAlerta):'',true),navIt('Todos os Processos',telaAtiva==='todos',this.irTodos,'layers',fmt(procs.length)),navIt('Meus Processos',telaAtiva==='meus',this.goMeus,'user',fmt(this.meusEfetivos().filter(id=>procs.some(p=>p.id===id)).length))]}];
     if(isSuper){ navSecoes.push({titulo:'Superintendência',itens:[navIt('Painel geral',telaAtiva==='painel',this.goPainel,'bank','')]});
       navSecoes.push({titulo:'Gestão',itens:[navIt('Registro de atividades',telaAtiva==='log',this.goLog,'user',fmt(s.log.length)),navIt('Usuários',telaAtiva==='usuarios',this.goUsuarios,'user',fmt(s.usuarios.length))]}); }
     const gNav=new Map(); s.servicos.forEach(sv=>{ const n=procs.filter(p=>p.servico===sv.key&&p.aba==='pendente').length; if(!gNav.has(sv.grupo)) gNav.set(sv.grupo,[]); gNav.get(sv.grupo).push(navIt(sv.label,telaAtiva==='servico'&&s.activeServico===sv.key,()=>this.goServico(sv.key),SVICO[sv.key]||'file',fmt(n))); });
@@ -2152,12 +2163,12 @@ proc={...sel,dados,...this.verifInfo(sel),...this.autoriaProc(sel,ult,atividades
       doLogin:this.doLogin,loginErro:s.loginErro||'',loginErroOn:!!s.loginErro,loginCarregando:s.loginCarregando,loginBtnTexto:s.loginCarregando?'Entrando…':'Entrar',
       isSuper:s.role==='super',userName,userRole:s.user.perfil,userInitials:userName.split(' ').filter(Boolean).map(w=>w[0]).slice(0,2).join(''),
       navGrupos:grupos,navPainelStyle,goPainel:this.goPainel,openNovo:this.openNovo,logout:this.logout,
-      painelVisible:s.screen==='painel',...(()=>{ const porId=new Map(procs.map(p=>[p.id,p])), ids=s.meusIds.filter(id=>porId.has(id));
+      painelVisible:s.screen==='painel',...(()=>{ const porId=new Map(procs.map(p=>[p.id,p])), ids=this.meusEfetivos().filter(id=>porId.has(id)),meusSet=new Set(ids);
         const contaMon=p=>(p.obs||[]).filter(o=>o.categoria==='monitor_sei'||o.tipo==='monitor_sei').length;
         const linha=p=>{ const r=p.aba==='respondido'; return {id:p.id,numero:this.nums(p).principal,servicoLabel:this.sv(p.servico).label,orgao:p.orgao||'Órgão não informado',status:r?'Respondido':'Pendente',stColor:r?'#1E8E4E':'#8A5A06',stBg:r?'#F1F8F4':'#FDF6EA',stBorder:r?'#CFE7D8':'#F0DDB8'}; };
         const meusLista=ids.map(id=>{ const p=porId.get(id), n=contaMon(p); return {...linha(p),...this.verifInfo(p),monitorTxt:n?(n+' registro(s) do monitor SEI'):'Sem registros do monitor SEI',abrir:()=>this.openProcesso(p),remover:()=>this.removerMeus(id)}; });
         const q=this.norm(s.importarBusca||'').trim(), cand=q?procs.filter(p=>this.norm([this.nums(p).principal,p.numero,this.sv(p.servico).label,p.orgao,p.usuario].join(' ')).includes(q)):[];
-        const importarLista=cand.slice(0,40).map(p=>{ const ja=s.meusIds.includes(p.id); return {...linha(p),podeAdd:!ja,jaAdd:ja,add:()=>this.addMeus(p.id)}; });
+        const importarLista=cand.slice(0,40).map(p=>{ const ja=meusSet.has(p.id); return {...linha(p),podeAdd:!ja,jaAdd:ja,add:()=>this.addMeus(p.id)}; });
         return {meusVisible:s.screen==='meus',meusVazio:!meusLista.length,meusLista,meusInfo:meusLista.length+' processo(s) na sua lista',monitorStatusTxt:s.monitorOnline===true?('Monitor SEI ligado · '+fmt(s.monitorQtd||0)+' processo(s) acompanhados · último sinal '+s.monitorSinal+(s.monitorAuto?(' · '+s.monitorAuto):'')):s.monitorOnline===false?('Monitor SEI sem sinal'+(s.monitorSinal?' desde '+s.monitorSinal:'')+' — os pedidos ficam na fila até o PC 1 voltar'):'Situação do monitor SEI desconhecida',monitorStatusCor:s.monitorOnline===true?'#1E8E4E':s.monitorOnline===false?'#8A5A06':'#7A828A',
           atualizarTxt:Object.values(s.pedidos||{}).some(v=>['enviando','pendente','rodando'].includes(v.status))?'Verificando…':'Verificar todos',importarAberto:!!s.importarAberto,importarBusca:s.importarBusca||'',importarLista,importarVazio:!importarLista.length,
           importarVazioTxt:q?'Nenhum processo encontrado.':'Digite para buscar entre os '+fmt(procs.length)+' processos.',importarRodape:cand.length>40?('Mostrando 40 de '+fmt(cand.length)+' resultados. Refine a busca.'):(fmt(cand.length)+' resultado(s)'),
