@@ -194,6 +194,7 @@
     </header>
 
     <div style="{{ contentPad }}">
+    <sc-if value="{{ novaVersao }}" hint-placeholder-val="{{ false }}"><div role="status" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:10px 16px;margin-bottom:16px;border:1px solid #B8D4F0;background:#EAF2FB;color:#12355B;font-size:13px"><span><strong>Há uma versão nova do sistema.</strong> Atualize para receber as correções.</span><button onClick="{{ atualizarVersao }}" style="height:32px;padding:0 14px;background:#12355B;color:#fff;border:1px solid #12355B;border-radius:2px;font-weight:600;font-size:13px;cursor:pointer">Atualizar agora</button></div></sc-if>
     <sc-if value="{{ storageErroOn }}"><div role="alert" style="padding:12px 16px;margin-bottom:16px;border:1px solid #E8C2BE;background:#FCEDEB;color:#8E1D16;font-size:13px">{{ storageErro }}</div></sc-if>
 
     <sc-if value="{{ meusVisible }}" hint-placeholder-val="{{ false }}">
@@ -211,7 +212,23 @@
           </div>
         </div>
         <sc-if value="{{ meusVazio }}" hint-placeholder-val="{{ true }}">
-          <div style="padding:28px 18px;font-size:13px;color:#7A828A">Nenhum processo importado. Use “Importar processo” para escolher os processos que você quer acompanhar.</div>
+          <div style="padding:28px 18px;font-size:13px;color:#7A828A">Nenhum processo ainda. Os processos que você cadastrar, comentar ou concluir aparecem aqui sozinhos. Use “Importar processo” para acompanhar outros.</div>
+        </sc-if>
+        <sc-if value="{{ meusTemLista }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-direction:column;gap:10px;padding:12px 18px;border-bottom:1px solid #DADDE1;background:#FAFBFC">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+            <span style="font-size:12px;font-weight:600;color:#5B636B;min-width:62px">Situação</span>
+            <sc-for list="{{ meusChipsStatus }}" as="ch"><button onClick="{{ ch.onClick }}" style="height:30px;padding:0 10px;border-radius:15px;font-size:12.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;background:{{ ch.bg }};color:{{ ch.cor }};border:1px solid {{ ch.borda }}">{{ ch.label }}<span style="padding:0 6px;border-radius:8px;font-size:11.5px;background:{{ ch.nBg }}">{{ ch.n }}</span></button></sc-for>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+            <span style="font-size:12px;font-weight:600;color:#5B636B;min-width:62px">Motivo</span>
+            <sc-for list="{{ meusChipsMotivo }}" as="ch"><button onClick="{{ ch.onClick }}" style="height:30px;padding:0 10px;border-radius:15px;font-size:12.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;background:{{ ch.bg }};color:{{ ch.cor }};border:1px solid {{ ch.borda }}">{{ ch.label }}<span style="padding:0 6px;border-radius:8px;font-size:11.5px;background:{{ ch.nBg }}">{{ ch.n }}</span></button></sc-for>
+          </div>
+          <input value="{{ meusBusca }}" onInput="{{ setMeusBusca }}" placeholder="Buscar na sua lista por nº SEI, serviço, órgão, pessoa ou demanda…" aria-label="Buscar em Meus Processos" style="width:100%;height:36px;padding:0 10px;border:1px solid #C9CED3;border-radius:2px;font-size:13.5px;background:#fff">
+        </div>
+        </sc-if>
+        <sc-if value="{{ meusFiltroVazio }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:22px 18px;font-size:13px;color:#7A828A">Nenhum processo da sua lista corresponde a esses filtros. <button onClick="{{ limparMeusFiltros }}" style="background:none;border:none;padding:0;color:#1F5F9E;text-decoration:underline;font-size:13px;cursor:pointer">Limpar filtros</button></div>
         </sc-if>
         <sc-for list="{{ meusLista }}" as="mp">
           <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:12px 18px;border-bottom:1px solid #ECEEF0;align-items:center">
@@ -222,13 +239,17 @@
                 <span title="Menu de origem" style="display:inline-block;padding:1px 8px;font-size:11.5px;font-weight:700;letter-spacing:.02em;border:1px solid #C4D3E6;background:#EAF1FA;color:#12355B;border-radius:2px">{{ mp.servicoLabel }}</span>
               </div>
               <div style="font-size:12.5px;color:#5B636B;margin-top:3px">{{ mp.orgao }}</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:3px">
+                <span title="Por que está na sua lista" style="display:inline-block;padding:1px 7px;font-size:11.5px;font-weight:600;border:1px solid #D7CDEE;background:#F3F0FA;color:#59408C;border-radius:2px">{{ mp.motivosTxt }}</span>
+                <sc-if value="{{ mp.temUltimo }}"><span style="font-size:12px;color:#7A828A">{{ mp.ultimoTxt }}</span></sc-if>
+              </div>
               <div style="font-size:12px;color:#7A828A;margin-top:2px">{{ mp.monitorTxt }}</div>
               <sc-if value="{{ mp.temVerif }}"><div role="status" style="font-size:12px;margin-top:3px;color:{{ mp.verifCor }}">{{ mp.verifTxt }}</div></sc-if>
             </div>
             <div style="display:flex;gap:8px">
               <button onClick="{{ mp.verificar }}" style="height:32px;padding:0 12px;background:#fff;color:#12355B;border:1px solid #C9CED3;border-radius:2px;font-size:12.5px;cursor:pointer" style-hover="background:#F5F7FA">{{ mp.verifBtn }}</button>
               <button onClick="{{ mp.abrir }}" style="height:32px;padding:0 12px;background:#fff;color:#1F5F9E;border:1px solid #B8D4F0;border-radius:2px;font-size:12.5px;cursor:pointer" style-hover="background:#F0F7FF">Abrir</button>
-              <button onClick="{{ mp.remover }}" style="height:32px;padding:0 12px;background:#fff;color:#A3281F;border:1px solid #E2B4AF;border-radius:2px;font-size:12.5px;cursor:pointer" style-hover="background:#FBF1F0">Remover</button>
+              <button onClick="{{ mp.remover }}" style="height:32px;padding:0 12px;background:#fff;color:#A3281F;border:1px solid #E2B4AF;border-radius:2px;font-size:12.5px;cursor:pointer" style-hover="background:#FBF1F0">Tirar da lista</button>
             </div>
           </div>
         </sc-for>
@@ -1270,7 +1291,7 @@ class Component extends DCLogic {
     return {...p,_e:1,etapa:p.etapa??et,unidade:p.unidade??(u?u[0]:''),reit:p.reit??nums.slice(1),oficio:p.oficio??(of?'Ofício nº '+of[1]:'')}; }
   state = {
     acompanhamentoAberto:false,
-    meusIds:[], meusOcultos:[], novidades:[], novVisto:0, avisosAberto:false, navAviso:false, pedidos:{}, monitorOnline:null, monitorSinal:'', importarAberto:false, importarBusca:'', atualizando:false, meusAtualizadoEm:'',
+    meusIds:[], meusOcultos:{}, meusStatus:'', meusMotivo:'', meusBusca:'', novidades:[], novVisto:0, avisosAberto:false, navAviso:false, pedidos:{}, monitorOnline:null, monitorSinal:'', importarAberto:false, importarBusca:'', atualizando:false, meusAtualizadoEm:'',
     screen:'login', role:null,
     loginEmail:'spsmediasemcas@gmail.com', loginSenha:'', loginErro:'', loginCarregando:false, dbOnline:false,
     activeServico:'PAEFI', activeTab:'pendentes', comentarioBusca:'', comentarioOrdem:'recentes',
@@ -1435,7 +1456,7 @@ class Component extends DCLogic {
     (comments||[]).forEach(c=>{const o=this.mapComentario(c);if(!porProcesso.has(c.process_id))porProcesso.set(c.process_id,[]);porProcesso.get(c.process_id).push(o);});
     const processos=(rows||[]).map(r=>{const base={...(r.raw_data||{})};const p={...base,id:r.id,servico:r.service_key,aba:r.status,numero:r.sei_number,recebido:r.received_date_text,memo:r.memo_sent_text,orgao:r.requester_agency,demanda:r.demand,usuario:r.referenced_person,situacao:r.situation,respSetor:r.sector_response_text,respGabinete:r.cabinet_response_text,conclusao:r.conclusion_text,link:r.sei_link,marcacao:r.marking,marcacaoOrigem:r.marking_origin,prazoDias:r.deadline_days,etapa:r.stage,unidade:r.unit_name,encaminhamento:r.forwarding,oficio:r.response_office,responsavelInterno:r.internal_responsible,proximaAcao:r.next_action,proximaData:r.next_action_date,reit:r.reiterations||[],hist:r.history||{},createdBy:r.created_by,updatedBy:r.updated_by,obs:porProcesso.get(r.id)||[]};delete p._e;return this.enrich(p);});
     const porId=new Map(processos.map(p=>[p.id,p]));
-    const log=(audits||[]).map(a=>{const p=porId.get(a.process_id);const d=new Date(a.event_at);return {id:a.id,timestamp:d.getTime(),quando:d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).replace(',',''),autor:a.author_name||'—',perfil:a.author_role||'',acao:a.action,pid:a.process_id||'',numero:p?p.numero:'—',servico:p?p.servico:'',detalhe:a.details||''};});
+    const log=(audits||[]).map(a=>{const p=porId.get(a.process_id);const d=new Date(a.event_at);return {id:a.id,timestamp:d.getTime(),quando:d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).replace(',',''),autor:a.author_name||'—',perfil:a.author_role||'',uid:a.author_user_id||null,acao:a.action,pid:a.process_id||'',numero:p?p.numero:'—',servico:p?p.servico:'',detalhe:a.details||''};});
     const servicos=(svs||[]).map(v=>({key:v.key,label:v.label,grupo:v.group_name,setorLabel:v.sector_label,cols:v.columns_config||{}}));
     this.touched=new Set();this.deleted=new Set();
     const usuarios=(usuariosDb||[]).map(u=>({id:u.user_id,nome:u.display_name||this.nomeDoEmail(u.email),email:u.email,perfil:u.role==='superintendente'?'Superintendente':'Administrativo',bg:u.role==='superintendente'?'#E8F2FA':'#F3F5F7',cor:u.role==='superintendente'?'#0F5E91':'#3D454D',borda:u.role==='superintendente'?'#C4DDEC':'#DADDE1'}));
@@ -1490,29 +1511,36 @@ class Component extends DCLogic {
     const salvo=this.mut(pid,p=>({...p,vincExtra:[...(p.vincExtra||[]),{numero,nota:'Reiteração em '+this.hojeTxt()+' por '+u.nome}],...(fechado?{}:{marcacao:'reiteracao',hist:{...(p.hist||{}),marcacao:{autor:u.nome,data}}}),obs:[...(p.obs||[]),registro]}),'Reiteração','Reiteração recebida: '+numero+(fechado?'':' · cor alterada para Reiteração'));
     if(salvo) salvo.then(()=>this.inserirComentario(pid,registro),()=>{}).catch(err=>this.setState({storageErro:'A reiteração ficou visível nesta tela, mas o comentário não foi sincronizado: '+err.message}));
     return !!salvo; }
-  registrar(acao,p,detalhe){ const u=this.state.user; const e={id:'l'+Date.now()+Math.random().toString(36).slice(2,6),timestamp:Date.now(),quando:this.agora(),autor:u.nome||'—',perfil:u.perfil||'',acao,pid:p?p.id:'',numero:p?p.numero:'—',servico:p?p.servico:'',detalhe:detalhe||''};
+  registrar(acao,p,detalhe){ const u=this.state.user; const e={id:'l'+Date.now()+Math.random().toString(36).slice(2,6),timestamp:Date.now(),quando:this.agora(),autor:u.nome||'—',perfil:u.perfil||'',uid:this.session?.user?.id||null,acao,pid:p?p.id:'',numero:p?p.numero:'—',servico:p?p.servico:'',detalhe:detalhe||''};
     this.setState(s=>({log:[e,...s.log]}),()=>this.persist());return this.syncAuditToDb(e).catch(err=>this.setState({storageErro:'A ação foi feita neste navegador, mas o histórico não foi sincronizado: '+err.message})); }
   mut(id,fn,acao,detalhe){ const s=this.state,p0=s.processos.find(p=>p.id===id); if(!p0) return false;if(!this.podeEditarProcesso(p0)){this.setState({storageErro:'Você pode alterar somente processos cadastrados por você.'});return false;} let p1={...fn(p0),updatedBy:this.session&&this.session.user?this.session.user.id:null};const touched=new Set([...this.touched,id]), processos=s.processos.map(p=>p.id===id?p1:p); const u=s.user;
-    const evento={id:'l'+Date.now()+Math.random().toString(36).slice(2,6),timestamp:Date.now(),quando:this.agora(),autor:u.nome||'—',perfil:u.perfil||'',acao,pid:id,numero:p1.numero,servico:p1.servico,detalhe:detalhe||''},log=[evento,...s.log];
+    const evento={id:'l'+Date.now()+Math.random().toString(36).slice(2,6),timestamp:Date.now(),quando:this.agora(),autor:u.nome||'—',perfil:u.perfil||'',uid:this.session?.user?.id||null,acao,pid:id,numero:p1.numero,servico:p1.servico,detalhe:detalhe||''},log=[evento,...s.log];
     // Cópia local é só conveniência: o banco é a fonte oficial, então falta de espaço no navegador não bloqueia a gravação.
     try{localStorage.setItem('semcas_spsemc_v2',JSON.stringify({recs:processos.filter(p=>touched.has(p.id)).map(p=>({...p,obs:(p.obs||[]).map(o=>({...o,anexos:[]}))})),deleted:[...this.deleted],log:log.slice(0,300)}));}catch(e){}
     this.touched=touched;this.setState({processos,log,storageErro:''});const gravou=this.syncProcessToDb(p1),sync=gravou.then(()=>this.syncAuditToDb(evento));
     // Se o banco recusar a gravação do processo, volta a ficha ao estado anterior (antes ela ficava "concluída" só nesta tela e desfazia na próxima carga).
     gravou.then(()=>sync.catch(err=>this.setState({storageErro:'A alteração foi salva, mas o histórico não foi sincronizado: '+err.message})),
-      err=>this.setState(st=>({processos:st.processos.map(p=>p.id===id&&p===p1?p0:p),storageErro:'O banco não aceitou esta alteração e ela foi desfeita: '+err.message}),()=>this.persist()));
+      err=>this.setState(st=>({processos:st.processos.map(p=>p.id===id&&p===p1?p0:p),log:st.log.filter(l=>l.id!==evento.id),storageErro:'O banco não aceitou esta alteração e ela foi desfeita: '+err.message}),()=>this.persist()));
     return sync; }
   linkSeguro(l){ l=String(l||'').trim(); return /^https:\/\/\S+$/i.test(l)?l:''; }
-  onVisivel=()=>{ if(document.visibilityState==='visible'&&this.session&&this.state.screen!=='login'&&this.state.screen!=='novo'&&!this.state.editKey&&!this.state.comentarioEditando&&Date.now()-(this._ultimaCarga||0)>120000) this.loadDbData().catch(()=>{}); };
+  // Versão nova do site: uma aba aberta há dias continuava com o programa antigo (ex.: a trava "Somente a Superintendente
+  // pode marcar como concluído", já removida). Compara a página publicada com a de quando a aba abriu e oferece atualizar.
+  hashTexto(t){ let h=0; for(let i=0;i<t.length;i++) h=(h*31+t.charCodeAt(i))|0; return h+':'+t.length; }
+  async checarVersao(){ if(!/^https?:$/.test(location.protocol)||this.state.novaVersao) return; try{ const r=await fetch(location.href.split('#')[0],{cache:'no-store'}); if(!r.ok) return;
+    const h=this.hashTexto(await r.text()); if(this._versaoBase==null){ this._versaoBase=h; return; } if(h!==this._versaoBase) this.setState({novaVersao:true}); }catch(e){} }
+  atualizarVersao=()=>location.reload();
+  onVisivel=()=>{ if(document.visibilityState==='visible') this.checarVersao(); if(document.visibilityState==='visible'&&this.session&&this.state.screen!=='login'&&this.state.screen!=='novo'&&!this.state.editKey&&!this.state.comentarioEditando&&Date.now()-(this._ultimaCarga||0)>120000) this.loadDbData().catch(()=>{}); };
   stamp(){ return {autor:this.state.user.nome,data:this.agora()}; }
   hojeUTC(){ const d=new Date(); return Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()); }
   MES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
   SETOR = {CREAS:'CREAS',ABORDAGEM:'Abordagem Social','CENTRO POP':'Centro POP',PCDIF:'PCDIF'};
 
   onResize=()=>this.setState({vw:window.innerWidth});
-  componentWillUnmount(){ window.removeEventListener('resize',this.onResize); document.removeEventListener('visibilitychange',this.onVisivel); }
+  componentWillUnmount(){ window.removeEventListener('resize',this.onResize); document.removeEventListener('visibilitychange',this.onVisivel); clearInterval(this._versaoTimer); }
   toggleMenu=()=>this.setState(s=>({menuOpen:!s.menuOpen}));
   async componentDidMount(){
     window.addEventListener('resize',this.onResize); document.addEventListener('visibilitychange',this.onVisivel);
+    this.checarVersao(); this._versaoTimer=setInterval(()=>this.checarVersao(),10*60000);
     try{
       const m=this.DADOS_BASE; let procs=m.PROCESSOS, log=[];
       try{ const o=JSON.parse(localStorage.getItem('semcas_spsemc_v2')||'null');
@@ -1589,24 +1617,40 @@ class Component extends DCLogic {
   setSenhaConfirma=e=>this.setState({senhaConfirma:e.target.value,senhaErro:'',senhaOk:''});
   trocarSenha=async()=>{if(!this.session)return;const atual=this.state.senhaAtual,nova=this.state.senhaNova,conf=this.state.senhaConfirma,email=(this.session.user&&this.session.user.email)||'';if(!atual||nova.length<8){this.setState({senhaErro:'Informe a senha atual e uma nova senha com no mínimo 8 caracteres.',senhaOk:''});return;}if(nova!==conf){this.setState({senhaErro:'A confirmação não confere com a nova senha.',senhaOk:''});return;}if(nova===atual){this.setState({senhaErro:'A nova senha precisa ser diferente da atual.',senhaOk:''});return;}this.setState({senhaCarregando:true,senhaErro:'',senhaOk:''});try{const sessao=await this.supa('/auth/v1/token?grant_type=password',{method:'POST',token:this.SUPA_KEY,body:{email,password:atual}});await this.supa('/auth/v1/user',{method:'PUT',token:sessao.access_token,body:{password:nova}});if(sessao&&sessao.access_token){this.session=sessao;localStorage.setItem('semcas_supabase_session',JSON.stringify(sessao));}this.setState({senhaCarregando:false,senhaAtual:'',senhaNova:'',senhaConfirma:'',senhaOk:'Senha alterada. Use a nova senha no próximo acesso.',senhaErro:''});}catch(e){this.setState({senhaCarregando:false,senhaOk:'',senhaErro:/invalid login credentials|invalid_credentials/i.test(e.message)?'A senha atual está incorreta.':e.message});}};
   goPainel=()=>this.setState({screen:'painel',menuOpen:false});
-  // "Meus Processos": lista pessoal guardada neste navegador, por usuário.
+  // "Meus Processos": o que a pessoa cadastrou, comentou ou concluiu entra sozinho. Vem do banco, então vale em qualquer computador,
+  // e quando duas pessoas mexem no mesmo processo ele aparece na lista das duas. "Importar processo" adiciona outros à mão (guardado neste navegador).
   meusChave(){ return 'semcas_meus_v1_'+((this.session&&this.session.user&&this.session.user.id)||'anon'); }
-  // Processos cadastrados pela pessoa entram sozinhos (vem do banco, vale em qualquer computador); os que ela tirar da lista ficam guardados aqui.
   meusOcultosChave(){ return 'semcas_meus_ocultos_v1_'+((this.session&&this.session.user&&this.session.user.id)||'anon'); }
-  lerOcultos(){ try{ const v=JSON.parse(localStorage.getItem(this.meusOcultosChave())||'[]'); return Array.isArray(v)?v.filter(x=>typeof x==='string'):[]; }catch(e){ return []; } }
-  salvarOcultos(ids){ try{ localStorage.setItem(this.meusOcultosChave(),JSON.stringify(ids)); }catch(e){} this.setState({meusOcultos:ids}); }
-  meusEfetivos(){ const s=this.state,uid=this.session&&this.session.user&&this.session.user.id,ocultos=new Set(s.meusOcultos||[]),ids=[...s.meusIds],vistos=new Set(ids);
-    if(uid) s.processos.forEach(p=>{ if(p.createdBy===uid&&!vistos.has(p.id)&&!ocultos.has(p.id)){ ids.push(p.id); vistos.add(p.id); } });
-    return ids; }
+  // Tirados da lista pela pessoa: id → momento em que tirou. Voltam sozinhos se ela mexer no processo de novo.
+  lerOcultos(){ try{ const v=JSON.parse(localStorage.getItem(this.meusOcultosChave())||'{}'); if(Array.isArray(v)){ const agora=Date.now(),o={}; v.forEach(x=>{ if(typeof x==='string') o[x]=agora; }); return o; } return v&&typeof v==='object'?v:{}; }catch(e){ return {}; } }
+  salvarOcultos(o){ try{ localStorage.setItem(this.meusOcultosChave(),JSON.stringify(o)); }catch(e){} this.setState({meusOcultos:o}); }
+  MEUS_MOTIVOS = {cadastrei:'Cadastrei',comentei:'Comentei',conclui:'Concluí',manual:'Importei'};
+  // id → {motivos, ultimo: momento da última ação da pessoa no processo}
+  meusMapa(){ const s=this.state,uid=this.session&&this.session.user&&this.session.user.id,mapa=new Map(); if(!uid) return mapa;
+    const add=(id,m)=>{ if(!id) return; if(!mapa.has(id)) mapa.set(id,{motivos:new Set(),ultimo:0}); mapa.get(id).motivos.add(m); };
+    const nome=s.user&&s.user.nome, concl='Marcação: '+this.MARC.concluido.l, meusLog=s.log.filter(l=>l.pid&&l.uid===uid);
+    s.meusIds.forEach(id=>add(id,'manual'));
+    s.processos.forEach(p=>{ if(p.createdBy===uid) add(p.id,'cadastrei');
+      if((p.obs||[]).some(o=>o.authorUserId===uid&&o.categoria!=='monitor_sei'&&o.tipo!=='monitor_sei')) add(p.id,'comentei');
+      const hm=(p.hist||{}).marcacao; if(p.marcacao==='concluido'&&hm&&nome&&hm.autor===nome) add(p.id,'conclui'); });
+    meusLog.forEach(l=>{ if(l.acao==='Cadastro') add(l.pid,'cadastrei'); else if(l.acao==='Resposta'||String(l.detalhe||'').startsWith(concl)) add(l.pid,'conclui'); else if(l.acao==='Comentário'||l.acao==='Reiteração') add(l.pid,'comentei'); });
+    meusLog.forEach(l=>{ const e=mapa.get(l.pid); if(e&&(l.timestamp||0)>e.ultimo) e.ultimo=l.timestamp||0; });
+    const oc=s.meusOcultos||{}; Object.keys(oc).forEach(id=>{ const e=mapa.get(id); if(e&&!e.motivos.has('manual')&&e.ultimo<=oc[id]) mapa.delete(id); });
+    return mapa; }
+  // Ids da lista, da ação mais recente da pessoa para a mais antiga
+  meusEfetivos(mapa){ const existe=new Set(this.state.processos.map(p=>p.id)); return [...(mapa||this.meusMapa())].filter(([id])=>existe.has(id)).sort((a,b)=>b[1].ultimo-a[1].ultimo).map(([id])=>id); }
+  setMeusBusca=e=>this.setState({meusBusca:e.target.value});
+  limparMeusFiltros=()=>this.setState({meusStatus:'',meusMotivo:'',meusBusca:''});
   lerMeus(){ try{ const v=JSON.parse(localStorage.getItem(this.meusChave())||'[]'); return Array.isArray(v)?v.filter(x=>typeof x==='string'):[]; }catch(e){ return []; } }
   salvarMeus(ids){ try{ localStorage.setItem(this.meusChave(),JSON.stringify(ids)); }catch(e){} this.setState({meusIds:ids}); }
   goMeus=()=>{ this.setState({screen:'meus',menuOpen:false,meusIds:this.lerMeus(),meusOcultos:this.lerOcultos()}); this.checarMonitor(); };
   importarProcesso=()=>this.setState({importarAberto:true,importarBusca:''});
   fecharImportar=()=>this.setState({importarAberto:false});
   setImportarBusca=e=>this.setState({importarBusca:e.target.value});
-  addMeus=(id)=>{ const ids=this.state.meusIds.length?this.state.meusIds:this.lerMeus(); if(!ids.includes(id)) this.salvarMeus([id,...ids]); const oc=this.lerOcultos(); if(oc.includes(id)) this.salvarOcultos(oc.filter(x=>x!==id)); };
-  removerMeus=(id)=>{ this.salvarMeus(this.state.meusIds.filter(x=>x!==id)); const oc=this.lerOcultos(); if(!oc.includes(id)) this.salvarOcultos([id,...oc]); };
-  atualizarTodos=()=>this.pedirVerificacao(this.meusEfetivos());
+  addMeus=(id)=>{ const ids=this.state.meusIds.length?this.state.meusIds:this.lerMeus(); if(!ids.includes(id)) this.salvarMeus([id,...ids]); const oc=this.lerOcultos(); if(id in oc){ delete oc[id]; this.salvarOcultos(oc); } };
+  removerMeus=(id)=>{ this.salvarMeus(this.state.meusIds.filter(x=>x!==id)); this.salvarOcultos({...this.lerOcultos(),[id]:Date.now()}); };
+  // "Verificar todos" age sobre o que está na tela (respeita os filtros)
+  atualizarTodos=()=>this.pedirVerificacao(this._meusVisiveis||this.meusEfetivos());
   goPendencias=()=>this.setState({screen:'pendencias',menuOpen:false,pendMenu:null});
   // Linha e valor de ordenação compartilhados por "Todos os Processos" e "Pendências".
   dadosLinha(p,ult){ const fmt=n=>n.toLocaleString('pt-BR'); const mk=this.MARC[p.marcacao||'']||this.MARC[''], sp=this.situacaoPrazo(p), d=this.dias(p), ua=ult.get(p.id), ds=this.diasSem(p,ult), ob=p.obs||[], last=ob[ob.length-1], resp=p.aba==='respondido', nn=this.nums(p);
@@ -1700,8 +1744,11 @@ class Component extends DCLogic {
   salvarOficio=()=>{ let v=this.state.oficioTexto.trim(); if(!v) return; if(/^\d/.test(v)) v='Ofício nº '+v; this.mut(this.state.selectedId,p=>({...p,oficio:v}),'Edição','Ofício de resposta: '+v); this.setState({oficioTexto:''}); };
   limparOficio=()=>{ const p=this.state.processos.find(x=>x.id===this.state.selectedId); this.setState({oficioTexto:p?p.oficio:''}); this.mut(this.state.selectedId,p=>({...p,oficio:''}),'Edição','Ofício de resposta removido para correção'); };
   setMarcacao=(k)=>this.setMarcacaoDe(this.state.selectedId,k);
+  // Classificar como "Concluído" conclui de verdade: também move para Respondidos (antes só mudava a cor e o processo
+  // continuava em Pendências e nos alertas de prazo, parecendo que não tinha concluído).
   setMarcacaoDe=(id,k)=>{ const p0=this.state.processos.find(p=>p.id===id); if(!p0||(p0.marcacao||'')===k) return;const st=this.stamp();
-    this.mut(p0.id,p=>({...p,marcacao:k,hist:{...(p.hist||{}),marcacao:st}}),'Edição','Marcação: '+this.MARC[k].l); };
+    const conclui=k==='concluido'&&p0.aba!=='respondido';
+    this.mut(p0.id,p=>({...p,marcacao:k,...(conclui?{aba:'respondido'}:{}),hist:{...(p.hist||{}),marcacao:st}}),conclui?'Resposta':'Edição','Marcação: '+this.MARC[k].l+(conclui?' · processo movido para Respondidos':'')); };
   toggleMarc=(k)=>this.setState(s=>({filtros:{...s.filtros,marc:s.filtros.marc===k?'':k},pagina:1}));
   COLS = [['recebido','Recebido / Memo'],['orgao','Órgão solicitante'],['demanda','Demanda'],['usuario','Pessoa/família referenciada'],['situacao','Situação'],['setor','Resposta do setor'],['gabinete','Resposta do Gabinete'],['obs','Comentário mais recente'],['ultima','Última atualização'],['parado','Sem atualização há'],['dias','Dias em aberto']];
   COLS_PADRAO = ['recebido','orgao','demanda','situacao','dias'];
@@ -1783,19 +1830,24 @@ class Component extends DCLogic {
   salvarAcompanhamento=()=>{ const responsavelInterno=this.state.responsavelTexto.trim(), proximaAcao=this.state.proximaAcaoTexto.trim(), proximaData=this.state.proximaDataTexto; const st=this.stamp();
     this.mut(this.state.selectedId,p=>({...p,responsavelInterno,proximaAcao,proximaData,hist:{...(p.hist||{}),acompanhamento:st}}),'Edição','Acompanhamento atualizado'); this.setState({acompanhamentoSalvo:true}); };
   excluirComentario=async(pid,sourceIndex,id)=>{const p=this.state.processos.find(x=>x.id===pid),o=(p?.obs||[]).find(x=>x.sourceIndex===sourceIndex);if(!p||!o)return;const uid=this.session?.user?.id;if(this.state.role!=='super'&&o.authorUserId!==uid){this.setState({storageErro:'Você pode excluir somente comentários feitos por você.'});return;}const antes=p.obs;const depois=antes.filter(x=>x.sourceIndex!==sourceIndex);this.setState(s=>({processos:s.processos.map(x=>x.id===pid?{...x,obs:depois}:x)}));try{const filtro=id?('id=eq.'+encodeURIComponent(id)):('process_id=eq.'+encodeURIComponent(pid)+'&source_index=eq.'+encodeURIComponent(sourceIndex));await this.supa('/rest/v1/process_comments?'+filtro,{method:'DELETE',prefer:'return=minimal'});this.registrar('Exclusão',p,'Comentário excluído: '+(o.titulo||o.categoria||'comentário'));this.desfazerCampoDoComentario(pid,o,depois);}catch(e){this.setState(s=>({processos:s.processos.map(x=>x.id===pid?{...x,obs:antes}:x),storageErro:'Não foi possível excluir o comentário: '+e.message}));}};
-  startEdit=(k,v)=>this.setState({editKey:k,editValue:v||'',editErro:''});
+  startEdit=(k,v)=>this.setState({editKey:k,editValue:v||'',editErro:'',editDupOk:null});
   setEditValue=e=>this.setState({editValue:['recebido','prazoData'].includes(this.state.editKey)?this.mascaraData(e.target.value):e.target.value,editErro:''});
   valorCampo(p,k){ return String((k==='setorReceber'?this.setorReceberDe(p):(p||{})[k])||''); }
   cancelEdit=()=>this.setState({editKey:null});
   salvarEdit=()=>{ const k=this.state.editKey, v=this.state.editValue.trim(); const antes=this.valorCampo(this.state.processos.find(p=>p.id===this.state.selectedId),k);
     const erro=k==='recebido'&&!this.dataValida(v)?'Informe uma data válida no formato dd/mm/aaaa.':k==='numero'&&!v?'Informe o número do processo SEI.':k==='servico'&&!this.state.servicos.some(x=>x.key===v)?'Selecione um serviço.':k==='link'&&v&&!this.linkSeguro(v)?'O link deve começar com https://':k==='prazoData'&&v&&!this.dataValida(v)?'Informe a data-limite no formato dd/mm/aaaa.':'';
-    if(erro){this.setState({editErro:erro});return;} this.setState({editKey:null,editErro:''}); if(v===antes) return;
+    if(erro){this.setState({editErro:erro});return;}
+    // Correção do nº: avisa se o número principal já é de outro processo (o cadastro já avisava; a correção não). Salvar de novo confirma.
+    if(k==='numero'&&v!==antes&&this.state.editDupOk!==v){ const k1=this.chavesSEI(v)[0], dup=k1?this.state.processos.filter(p=>p.id!==this.state.selectedId&&this.chavesSEI(p.numero)[0]===k1):[];
+      if(dup.length){ this.setState({editErro:'Este nº já é de outro processo ('+dup.map(p=>this.sv(p.servico).label+(p.aba==='respondido'?', respondido':'')).join('; ')+'). Confira e clique em Salvar de novo para gravar mesmo assim.',editDupOk:v}); return; } }
+    this.setState({editKey:null,editErro:''}); if(v===antes) return;
     const st=this.stamp(), nome=x=>k==='servico'?this.sv(x).label:x;
     const extra=k==='numero'?{reit:(v.replace(/\s/g,'').match(/\d{5}\.?\d{6}\/\d{4}/g)||[]).slice(1)}:k==='encaminhamento'&&this.UNID.some(x=>x[0]===v)?{unidade:v}:{};
     const ok=this.mut(this.state.selectedId,p=>({...p,[k]:v,...extra,hist:{...(p.hist||{}),[k]:st}}),'Edição',(this.CAMPO[k]||k)+': de '+(nome(antes)||'(não registrado)')+' para '+(nome(v)||'(apagado)'));
     if(ok&&k==='servico') this.setState({activeServico:v}); };
-  toggleAba=()=>{ const p0=this.state.processos.find(p=>p.id===this.state.selectedId); const r=!!p0&&p0.aba==='respondido';
-    this.mut(this.state.selectedId,p=>({...p,aba:r?'pendente':'respondido'}),r?'Reabertura':'Resposta',r?'Processo reaberto como pendente':'Processo movido para Respondidos'); };
+  // Reabrir tira a marcação "Concluído" (senão o processo volta a Pendentes ainda pintado de concluído)
+  toggleAba=()=>{ const p0=this.state.processos.find(p=>p.id===this.state.selectedId); const r=!!p0&&p0.aba==='respondido', tiraConcl=r&&p0.marcacao==='concluido';
+    this.mut(this.state.selectedId,p=>({...p,aba:r?'pendente':'respondido',...(tiraConcl?{marcacao:'',hist:{...(p.hist||{}),marcacao:this.stamp()}}:{})}),r?'Reabertura':'Resposta',r?('Processo reaberto como pendente'+(tiraConcl?' · marcação Concluído retirada':'')):'Processo movido para Respondidos'); };
   openNovo=()=>this.setState({menuOpen:false,screen:'novo',formErro:'',formDup:[],formDupOk:false,form:{servico:this.state.activeServico||'PAEFI',encaminhamento:'',numero:'',recebido:'',orgao:'',usuario:'',link:'',demanda:'',setorReceber:'',dataEvento:'',memo:'',situacao:'',prazoDias:'',prazoData:'',marcacao:''}});
   cancelNovo=()=>this.setState({screen:this.state.role==='super'?'painel':'pendencias',formDup:[],formDupOk:false});
   uf=(k)=>e=>{ const v=['recebido','memo','prazoData'].includes(k)?this.mascaraData(e.target.value):e.target.value; this.setState(s=>({form:{...s.form,[k]:v},formErro:'',...(k==='numero'?{formDup:[],formDupOk:false}:{})})); };
@@ -2163,13 +2215,25 @@ proc={...sel,dados,...this.verifInfo(sel),...this.autoriaProc(sel,ult,atividades
       doLogin:this.doLogin,loginErro:s.loginErro||'',loginErroOn:!!s.loginErro,loginCarregando:s.loginCarregando,loginBtnTexto:s.loginCarregando?'Entrando…':'Entrar',
       isSuper:s.role==='super',userName,userRole:s.user.perfil,userInitials:userName.split(' ').filter(Boolean).map(w=>w[0]).slice(0,2).join(''),
       navGrupos:grupos,navPainelStyle,goPainel:this.goPainel,openNovo:this.openNovo,logout:this.logout,
-      painelVisible:s.screen==='painel',...(()=>{ const porId=new Map(procs.map(p=>[p.id,p])), ids=this.meusEfetivos().filter(id=>porId.has(id)),meusSet=new Set(ids);
+      painelVisible:s.screen==='painel',...(()=>{ const porId=new Map(procs.map(p=>[p.id,p])), mapa=this.meusMapa(), ids=this.meusEfetivos(mapa).filter(id=>porId.has(id)),meusSet=new Set(ids);
+        // Filtros: situação (concluído = movido para Respondidos ou com a marcação Concluído), motivo e busca
+        const fechado=p=>p.aba==='respondido'||p.marcacao==='concluido', qm=this.norm(s.meusBusca||'').trim();
+        const passa=(id,st,mot)=>{ const p=porId.get(id),e=mapa.get(id); if(st==='pendente'&&fechado(p)) return false; if(st==='concluido'&&!fechado(p)) return false;
+          if(mot&&!(e&&e.motivos.has(mot))) return false; return !qm||this.norm([this.nums(p).principal,p.numero,this.sv(p.servico).label,p.orgao,p.usuario,p.demanda].join(' ')).includes(qm); };
+        const filtrados=ids.filter(id=>passa(id,s.meusStatus,s.meusMotivo)); this._meusVisiveis=filtrados;
+        const chip=(ativo,label,n,onClick)=>({label,n:fmt(n),onClick,bg:ativo?'#12355B':'#fff',cor:ativo?'#fff':'#12355B',borda:ativo?'#12355B':'#C9CED3',nBg:ativo?'rgba(255,255,255,.18)':'#EEF2F7'});
+        const meusChipsStatus=[['','Todos'],['pendente','Pendentes'],['concluido','Concluídos']].map(([k,l])=>chip(s.meusStatus===k,l,ids.filter(id=>passa(id,k,s.meusMotivo)).length,()=>this.setState({meusStatus:k})));
+        const meusChipsMotivo=[['','Qualquer motivo'],...Object.entries(this.MEUS_MOTIVOS)].map(([k,l])=>chip(s.meusMotivo===k,l,ids.filter(id=>passa(id,s.meusStatus,k)).length,()=>this.setState({meusMotivo:k})));
         const contaMon=p=>(p.obs||[]).filter(o=>o.categoria==='monitor_sei'||o.tipo==='monitor_sei').length;
-        const linha=p=>{ const r=p.aba==='respondido'; return {id:p.id,numero:this.nums(p).principal,servicoLabel:this.sv(p.servico).label,orgao:p.orgao||'Órgão não informado',status:r?'Respondido':'Pendente',stColor:r?'#1E8E4E':'#8A5A06',stBg:r?'#F1F8F4':'#FDF6EA',stBorder:r?'#CFE7D8':'#F0DDB8'}; };
-        const meusLista=ids.map(id=>{ const p=porId.get(id), n=contaMon(p); return {...linha(p),...this.verifInfo(p),monitorTxt:n?(n+' registro(s) do monitor SEI'):'Sem registros do monitor SEI',abrir:()=>this.openProcesso(p),remover:()=>this.removerMeus(id)}; });
+        const linha=p=>{ const r=p.aba==='respondido'||p.marcacao==='concluido'; return {id:p.id,numero:this.nums(p).principal,servicoLabel:this.sv(p.servico).label,orgao:p.orgao||'Órgão não informado',status:p.marcacao==='concluido'?'Concluído':r?'Respondido':'Pendente',stColor:r?'#1E8E4E':'#8A5A06',stBg:r?'#F1F8F4':'#FDF6EA',stBorder:r?'#CFE7D8':'#F0DDB8'}; };
+        const meusLista=filtrados.map(id=>{ const p=porId.get(id), n=contaMon(p), e=mapa.get(id)||{motivos:new Set(),ultimo:0};
+          return {...linha(p),...this.verifInfo(p),monitorTxt:n?(n+' registro(s) do monitor SEI'):'Sem registros do monitor SEI',
+            motivosTxt:[...e.motivos].map(m=>this.MEUS_MOTIVOS[m]).join(' · '),temUltimo:!!e.ultimo,ultimoTxt:e.ultimo?('Sua última ação: '+this.fmtCurto(e.ultimo)):'',
+            abrir:()=>this.openProcesso(p),remover:()=>this.removerMeus(id)}; });
         const q=this.norm(s.importarBusca||'').trim(), cand=q?procs.filter(p=>this.norm([this.nums(p).principal,p.numero,this.sv(p.servico).label,p.orgao,p.usuario].join(' ')).includes(q)):[];
         const importarLista=cand.slice(0,40).map(p=>{ const ja=meusSet.has(p.id); return {...linha(p),podeAdd:!ja,jaAdd:ja,add:()=>this.addMeus(p.id)}; });
-        return {meusVisible:s.screen==='meus',meusVazio:!meusLista.length,meusLista,meusInfo:meusLista.length+' processo(s) na sua lista',monitorStatusTxt:s.monitorOnline===true?('Monitor SEI ligado · '+fmt(s.monitorQtd||0)+' processo(s) acompanhados · último sinal '+s.monitorSinal+(s.monitorAuto?(' · '+s.monitorAuto):'')):s.monitorOnline===false?('Monitor SEI sem sinal'+(s.monitorSinal?' desde '+s.monitorSinal:'')+' — os pedidos ficam na fila até o PC 1 voltar'):'Situação do monitor SEI desconhecida',monitorStatusCor:s.monitorOnline===true?'#1E8E4E':s.monitorOnline===false?'#8A5A06':'#7A828A',
+        return {meusVisible:s.screen==='meus',meusVazio:!ids.length,meusTemLista:!!ids.length,meusFiltroVazio:!!ids.length&&!filtrados.length,meusLista,meusChipsStatus,meusChipsMotivo,meusBusca:s.meusBusca||'',setMeusBusca:this.setMeusBusca,limparMeusFiltros:this.limparMeusFiltros,
+          meusInfo:filtrados.length===ids.length?(fmt(ids.length)+' processo(s) na sua lista'):('Mostrando '+fmt(filtrados.length)+' de '+fmt(ids.length)+' processo(s) da sua lista'),monitorStatusTxt:s.monitorOnline===true?('Monitor SEI ligado · '+fmt(s.monitorQtd||0)+' processo(s) acompanhados · último sinal '+s.monitorSinal+(s.monitorAuto?(' · '+s.monitorAuto):'')):s.monitorOnline===false?('Monitor SEI sem sinal'+(s.monitorSinal?' desde '+s.monitorSinal:'')+' — os pedidos ficam na fila até o PC 1 voltar'):'Situação do monitor SEI desconhecida',monitorStatusCor:s.monitorOnline===true?'#1E8E4E':s.monitorOnline===false?'#8A5A06':'#7A828A',
           atualizarTxt:Object.values(s.pedidos||{}).some(v=>['enviando','pendente','rodando'].includes(v.status))?'Verificando…':'Verificar todos',importarAberto:!!s.importarAberto,importarBusca:s.importarBusca||'',importarLista,importarVazio:!importarLista.length,
           importarVazioTxt:q?'Nenhum processo encontrado.':'Digite para buscar entre os '+fmt(procs.length)+' processos.',importarRodape:cand.length>40?('Mostrando 40 de '+fmt(cand.length)+' resultados. Refine a busca.'):(fmt(cand.length)+' resultado(s)'),
           importarProcesso:this.importarProcesso,fecharImportar:this.fecharImportar,setImportarBusca:this.setImportarBusca,atualizarTodos:this.atualizarTodos}; })(),servicoVisible:s.screen==='servico',processoVisible:s.screen==='processo',novoVisible:s.screen==='novo',novoBtnOn:!['novo','log','usuarios'].includes(s.screen),
@@ -2195,7 +2259,7 @@ proc={...sel,dados,...this.verifInfo(sel),...this.autoriaProc(sel,ult,atividades
       proc,backToServico:this.backToServico,editValue:s.editValue,editErro:s.editErro||'',editErroOn:!!s.editErro,setEditValue:this.setEditValue,salvarEdit:this.salvarEdit,cancelEdit:this.cancelEdit,
       responsavelTexto:s.responsavelTexto,proximaAcaoTexto:s.proximaAcaoTexto,proximaDataTexto:s.proximaDataTexto,acompanhamentoSalvoOn:s.acompanhamentoSalvo,setResponsavelTexto:this.setResponsavelTexto,setProximaAcaoTexto:this.setProximaAcaoTexto,setProximaDataTexto:this.setProximaDataTexto,salvarAcompanhamento:this.salvarAcompanhamento,
       comentarioBusca:s.comentarioBusca,comentarioOrdem:s.comentarioOrdem,setComentarioBusca:this.setComentarioBusca,setComentarioOrdem:this.setComentarioOrdem,obsTitulo:s.obsTitulo,obsCategoria:s.obsCategoria,obsCategoriaBorda:s.obsCategoria?'#C9CED3':'#C98A1B',obsTexto:s.obsTexto,obsErroOn:s.obsErro,obsErroTexto:s.obsErroTexto,setObsTitulo:this.setObsTitulo,setObsCategoria:this.setObsCategoria,setObsTexto:this.setObsTexto,addObs:this.addObs,toggleAba:this.toggleAba,comentarioEditandoOn:!!s.comentarioEditando,comentarioBtnTexto:s.comentarioEditando?'Salvar edição':'Registrar atualização ou comentário',cancelarEdicaoComentario:this.cancelarEdicaoComentario,
-      categoriasAtualizacao:proc&&proc.podeEditar?this.categoriasProcesso(sel):this.categoriasProcesso(sel).filter(c=>c.k==='comentario'),obsDataEvento:s.obsDataEvento,exigeDataEvento:['memo','respSetor','respGabinete','conclusao'].includes(s.obsCategoria),dataEventoLabel:(this.CATEGORIAS_REGISTRO.find(c=>c.k===s.obsCategoria)||{}).label||'Data',setObsDataEvento:this.setObsDataEvento,obsMensagemSei:s.obsMensagemSei,setObsMensagemSei:this.setObsMensagemSei,selecionarAnexo:this.selecionarAnexo,anexosCarregando:s.anexosCarregando,anexosRascunho:s.obsAnexos.map((a,i)=>({...a,remover:()=>this.removerAnexo(i)})),storageErroOn:!!s.storageErro,storageErro:s.storageErro,
+      categoriasAtualizacao:proc&&proc.podeEditar?this.categoriasProcesso(sel):this.categoriasProcesso(sel).filter(c=>c.k==='comentario'),obsDataEvento:s.obsDataEvento,exigeDataEvento:['memo','respSetor','respGabinete','conclusao'].includes(s.obsCategoria),dataEventoLabel:(this.CATEGORIAS_REGISTRO.find(c=>c.k===s.obsCategoria)||{}).label||'Data',setObsDataEvento:this.setObsDataEvento,obsMensagemSei:s.obsMensagemSei,setObsMensagemSei:this.setObsMensagemSei,selecionarAnexo:this.selecionarAnexo,anexosCarregando:s.anexosCarregando,anexosRascunho:s.obsAnexos.map((a,i)=>({...a,remover:()=>this.removerAnexo(i)})),storageErroOn:!!s.storageErro,novaVersao:!!s.novaVersao,atualizarVersao:this.atualizarVersao,storageErro:s.storageErro,
       linkTexto:s.linkTexto,setLink:this.setLink,salvarLink:this.salvarLink,
       form:s.form,formErro:s.formErro||'',formErroOn:!!s.formErro,cancelNovo:this.cancelNovo,salvarNovo:this.salvarNovo,
       servicoOptions:s.servicos.map(sv=>({key:sv.key,label:sv.label})),
