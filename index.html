@@ -306,6 +306,24 @@
     <sc-if value="{{ painelVisible }}" hint-placeholder-val="{{ false }}">
     <div style="max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:20px">
 
+      <section id="gerador-relatorio" style="background:#fff;border:1px solid #C9D4DF;border-left:4px solid #12355B;border-radius:4px;box-shadow:0 1px 3px rgba(16,24,40,.06)">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap;padding:18px 20px 14px;border-bottom:1px solid #E1E5EA">
+          <div style="max-width:680px">
+            <div style="font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#1F5F9E">Documento institucional</div>
+            <h2 style="font-size:18px;font-weight:600;margin:4px 0 0;color:#172331">Relatório gerencial de processos</h2>
+            <div style="font-size:13px;line-height:1.5;color:#5B636B;margin-top:5px">Gera um documento A4 com os números existentes no sistema: entradas por mês, órgãos mais solicitantes, situação e relação de processos pendentes.</div>
+          </div>
+          <div style="width:58px;height:66px;overflow:hidden;position:relative;flex:0 0 auto" aria-hidden="true"><img src="./assets/logo_saoluis.png" alt="" style="position:absolute;height:66px;width:auto;left:-70px;top:0"></div>
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;padding:15px 20px 18px">
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:600;color:#3D454D">Data inicial<input type="date" value="{{ relDe }}" onInput="{{ setRelDe }}" style="height:38px;width:170px;padding:0 10px;border:1px solid #BFC7CF;border-radius:3px;background:#fff;color:#1F2328;font-size:13.5px"></label>
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:600;color:#3D454D">Data final<input type="date" value="{{ relAte }}" onInput="{{ setRelAte }}" style="height:38px;width:170px;padding:0 10px;border:1px solid #BFC7CF;border-radius:3px;background:#fff;color:#1F2328;font-size:13.5px"></label>
+          <button onClick="{{ gerarRelatorio }}" style="height:38px;padding:0 18px;background:#12355B;color:#fff;border:1px solid #12355B;border-radius:3px;font-weight:600;font-size:13.5px;cursor:pointer;display:inline-flex;align-items:center;gap:8px" style-hover="background:#0C2948"><span style="font-size:16px">▣</span> Gerar PDF A4</button>
+          <div style="font-size:12px;color:#6B737B;line-height:1.45;flex:1 1 260px">O documento será aberto para conferência. Depois, use <strong>Salvar como PDF / imprimir</strong> e mantenha o papel A4.</div>
+          <sc-if value="{{ relErroOn }}" hint-placeholder-val="{{ false }}"><div style="width:100%;padding:9px 11px;background:#FFF4E5;border:1px solid #E7C889;border-radius:3px;color:#7A4B00;font-size:12.5px">{{ relErro }}</div></sc-if>
+        </div>
+      </section>
+
       <div style="display:flex;flex-wrap:wrap;gap:14px">
         <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="5">
           <div onClick="{{ k.abrir }}" title="{{ k.dica }}" role="button" style="background:#fff;border:1px solid #DDE2E8;border-radius:6px;box-shadow:0 1px 2px rgba(16,24,40,.04);flex:1 1 auto;display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer" style-hover="border-color:#9DB3CB;box-shadow:0 3px 10px rgba(16,24,40,.10)">
@@ -1308,6 +1326,7 @@ class Component extends DCLogic {
     acompanhamentoAberto:false,
     meusIds:[], meusOcultos:{}, meusStatus:'', meusMotivo:'', meusServico:'', meusBusca:'', meusSort:'ultimo', meusDir:'desc', novidades:[], novVisto:0, avisosAberto:false, navAviso:false, pedidos:{}, monitorOnline:null, monitorSinal:'', importarAberto:false, importarBusca:'', atualizando:false, meusAtualizadoEm:'',
     screen:'login', role:null,
+    relDe:'', relAte:'', relErro:'',
     loginEmail:'spsmediasemcas@gmail.com', loginSenha:'', loginErro:'', loginCarregando:false, dbOnline:false,
     activeServico:'PAEFI', activeTab:'pendentes', comentarioBusca:'', comentarioOrdem:'recentes',
     selectedId:null, linkTexto:'', pendF:{q:'',servico:'',situacao:'',de:'',ate:''}, pendDraft:{q:'',servico:'',situacao:'',de:'',ate:''}, pendPag:1, pendPorPag:10, pendMenu:null,acompanhamentoAberto:false, pendAviso:'', pendSort:'', pendDir:'asc', pendColsSel:null, pendColsOpen:false, todosF:{q:'',servico:'',status:'',marc:'',prazo:'',dias:'',parado:'',ano:'',orgao:'',orgaoGrupo:'',mes:''}, todosSort:'recebido', todosDir:'desc', todosPag:1, todosPorPag:25, todosColsSel:null, todosColsOpen:false, todosFiltrosAbertos:false, voltarPara:'servico', obsNumeroReit:'', formDup:[], formDupOk:false, obsTitulo:'', obsCategoria:'comentario', obsTexto:'', obsDataEvento:'',obsDataSug:'', obsMensagemSei:'', obsAnexos:[], anexosCarregando:false, obsErro:false, obsErroTexto:'', comentarioEditando:null, storageErro:'', responsavelTexto:'', proximaAcaoTexto:'', proximaDataTexto:'', acompanhamentoSalvo:false, editKey:null, editValue:'',
@@ -1483,12 +1502,12 @@ class Component extends DCLogic {
     const perfis=await this.supa('/rest/v1/user_profiles?select=user_id,email,display_name,role,active&user_id=eq.'+encodeURIComponent(sessao.user.id));
     const perfil=perfis&&perfis[0];if(!perfil||!perfil.active)throw new Error('Usuário sem perfil ativo no sistema.');
     const role=perfil.role==='superintendente'?'super':'administrativo',nome=perfil.display_name||this.nomeDoEmail(perfil.email);
-    await new Promise(resolve=>this.setState({role,user:{nome,perfil:role==='super'?'Superintendente':'Administrativo'},screen:role==='super'?'painel':'pendencias',activeServico:'PAEFI',activeTab:'pendentes',pagina:1,filtros:{...this.FILTROS0},loginErro:'',loginCarregando:false},resolve));
+    await new Promise(resolve=>this.setState({role,user:{nome,perfil:role==='super'?'Superintendente':'Administrativo'},screen:'painel',activeServico:'PAEFI',activeTab:'pendentes',pagina:1,filtros:{...this.FILTROS0},loginErro:'',loginCarregando:false},resolve));
     this.setState({meusIds:this.lerMeus(),meusOcultos:this.lerOcultos()}); this.checarMonitor();
     const ri=this._rotaInicial; this._rotaInicial=''; const rotaOk=!ri||this.aplicarRota(ri);
     setTimeout(()=>this.iniciarAvisos(),1500);
     await this.loadDbData();this.registrar('Acesso',null,'Entrou no sistema');
-    if(!rotaOk&&this.state.screen===(role==='super'?'painel':'pendencias')) this.aplicarRota(ri);
+    if(!rotaOk&&this.state.screen==='painel') this.aplicarRota(ri);
   }
   persist(){ try{ const s=this.state; localStorage.setItem('semcas_spsemc_v2',JSON.stringify({recs:s.processos.filter(p=>this.touched.has(p.id)),deleted:[...this.deleted],log:s.log})); }catch(e){} }
   podeExcluirProcesso(p){return !!p&&!!this.session&&(this.state.role==='super'||(this.state.role==='administrativo'&&!!p.createdBy&&p.createdBy===this.session.user.id));}
@@ -1657,6 +1676,91 @@ class Component extends DCLogic {
   onVoltarNavegador=()=>{ if(!this.state.role) return; this._rota=location.hash;
     if(!this.aplicarRota(location.hash)){ this._rotaRep=true; this._rota=null; this.sincRota(); } };
   goPainel=()=>this.setState({screen:'painel',menuOpen:false});
+  setRelDe=e=>this.setState({relDe:e.target.value,relErro:''});
+  setRelAte=e=>this.setState({relAte:e.target.value,relErro:''});
+  relIsoTs(v){ const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(v||'')); return m?Date.UTC(+m[1],+m[2]-1,+m[3]):null; }
+  relData(v){ const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(v||'')); return m?m[3]+'/'+m[2]+'/'+m[1]:'—'; }
+  relEsc(v){ return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  gerarRelatorio=()=>{
+    const s=this.state,de=s.relDe,ate=s.relAte,ini=this.relIsoTs(de),fim=this.relIsoTs(ate);
+    if(ini==null||fim==null){ this.setState({relErro:'Informe a data inicial e a data final do relatório.'}); return; }
+    if(ini>fim){ this.setState({relErro:'A data inicial não pode ser posterior à data final.'}); return; }
+    const janela=window.open('','_blank');
+    const e=v=>this.relEsc(v),fmt=n=>new Intl.NumberFormat('pt-BR').format(n),pct=(n,t)=>t?Math.round(n/t*100):0;
+    const base=s.processos.filter(p=>{ const t=this.ts(p.recebido); return t!=null&&t>=ini&&t<=fim; });
+    const pend=base.filter(p=>p.aba==='pendente'),resp=base.filter(p=>p.aba!=='pendente');
+    const meses=[]; let cursor=new Date(Date.UTC(new Date(ini).getUTCFullYear(),new Date(ini).getUTCMonth(),1)); const limite=new Date(Date.UTC(new Date(fim).getUTCFullYear(),new Date(fim).getUTCMonth(),1));
+    while(cursor<=limite){ const y=cursor.getUTCFullYear(),m=cursor.getUTCMonth(),lista=base.filter(p=>{const t=this.ts(p.recebido);const d=new Date(t);return d.getUTCFullYear()===y&&d.getUTCMonth()===m;}); meses.push({ch:y+'-'+String(m+1).padStart(2,'0'),curto:['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'][m]+'/'+String(y).slice(2),label:new Intl.DateTimeFormat('pt-BR',{month:'long',year:'numeric',timeZone:'UTC'}).format(cursor),total:lista.length,pend:lista.filter(p=>p.aba==='pendente').length,resp:lista.filter(p=>p.aba!=='pendente').length}); cursor=new Date(Date.UTC(y,m+1,1)); }
+    const om=new Map(); base.forEach(p=>{ const nome=this.orgaoConsolidado(p.orgao); if(!nome||nome==='—')return; const k=this.norm(nome),a=om.get(k); if(a)a.qtd++;else om.set(k,{nome,qtd:1}); });
+    const orgaos=[...om.values()].sort((a,b)=>b.qtd-a.qtd||a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'})).slice(0,10);
+    const pe=pend.map(p=>this.enrich(p)),dPend=pend.map(p=>this.dias(p)).filter(d=>d!=null);
+    const mediaDias=dPend.length?Math.round(dPend.reduce((a,b)=>a+b,0)/dPend.length):null,maxDias=dPend.length?Math.max(...dPend):null,mais30=dPend.filter(d=>d>30).length,comReit=pe.filter(p=>(p.reit||[]).length>0).length;
+    const conta=(arr,fn)=>{ const m=new Map(); arr.forEach(p=>{ const k=fn(p); m.set(k,(m.get(k)||0)+1); }); return [...m].map(([l,v])=>({l,v})).sort((a,b)=>b.v-a.v||a.l.localeCompare(b.l,'pt-BR',{sensitivity:'base'})); };
+    const fimLista=(arr,rot)=>[...arr.filter(x=>x.l!==rot),...arr.filter(x=>x.l===rot)];
+    const faixas=[['Até 15 dias',0,15],['16 a 30 dias',16,30],['31 a 60 dias',31,60],['61 a 90 dias',61,90],['91 a 180 dias',91,180],['Mais de 180 dias',181,Infinity]].map(([l,a,b])=>({l,v:dPend.filter(d=>d>=a&&d<=b).length}));
+    if(pend.length>dPend.length) faixas.push({l:'Sem data válida',v:pend.length-dPend.length});
+    const etapasPend=this.ETAPAS.map((l,i)=>({l,v:pe.filter(p=>(p.etapa||0)===i).length})).filter((x,i)=>i<5||x.v);
+    const servPend=conta(pend,p=>this.sv(p.servico).label||'Não informado');
+    const unidPend=fimLista(conta(pe,p=>p.unidade||'Não identificada'),'Não identificada');
+    const orgPend=conta(pend.filter(p=>{ const n=this.orgaoConsolidado(p.orgao); return n&&n!=='—'; }),p=>this.orgaoConsolidado(p.orgao)).slice(0,8);
+    const hoje=this.hojeTxt(),hora=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); let logo=new URL('./assets/logo_saoluis.png',location.href).href;
+    try{ const li=document.querySelector('#gerador-relatorio img'); if(li&&li.complete&&li.naturalWidth){ const cv=document.createElement('canvas'); cv.width=li.naturalWidth;cv.height=li.naturalHeight;cv.getContext('2d').drawImage(li,0,0);logo=cv.toDataURL('image/png'); } }catch(err){}
+    const C1='#1F4E79',C2='#C97A1E',corta=(t,n)=>{ t=String(t); return t.length>n?t.slice(0,n-1).trimEnd()+'…':t; };
+    const hbar=(itens,total)=>{ if(!itens.length) return '<p class="vazio">Sem registros.</p>'; const W=680,rh=20,lw=245,bw=W-lw-95,max=Math.max(1,...itens.map(x=>x.v)),H=itens.length*rh+2;
+      return '<svg class="graf" viewBox="0 0 '+W+' '+H+'" width="100%">'+itens.map((x,i)=>{ const y=i*rh,w=x.v?Math.max(2,x.v/max*bw):0; return '<text x="'+(lw-7)+'" y="'+(y+14)+'" text-anchor="end" class="lb">'+e(corta(x.l,42))+'</text><rect x="'+lw+'" y="'+(y+4)+'" width="'+w.toFixed(1)+'" height="12" fill="'+C1+'"/><text x="'+(lw+w+5).toFixed(1)+'" y="'+(y+14)+'" class="vl">'+fmt(x.v)+(total?'<tspan class="pc"> ('+pct(x.v,total)+'%)</tspan>':'')+'</text>'; }).join('')+'<line x1="'+lw+'" y1="0" x2="'+lw+'" y2="'+H+'" stroke="#7d8996"/></svg>'; };
+    const vbar=()=>{ const n=meses.length,W=680,rot=n>12,H=rot?250:230,pl=34,pr=6,pt=16,pb=rot?42:24,ch=H-pt-pb,mx=Math.max(0,...meses.map(m=>m.total)); let st=1;
+      if(mx>4){ const raw=mx/4,mg=Math.pow(10,Math.floor(Math.log10(raw))),nr=raw/mg; st=(nr<=1?1:nr<=2?2:nr<=5?5:10)*mg; }
+      const top=Math.max(st,Math.ceil(mx/st)*st),sy=v=>pt+ch-v/top*ch,slot=(W-pl-pr)/Math.max(1,n),bw=Math.min(40,slot*.62); let g='';
+      for(let v=0;v<=top;v+=st) g+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+sy(v).toFixed(1)+'" y2="'+sy(v).toFixed(1)+'" stroke="'+(v?'#e3e7eb':'#7d8996')+'"/><text x="'+(pl-5)+'" y="'+(sy(v)+3.5).toFixed(1)+'" text-anchor="end" class="ax">'+fmt(v)+'</text>';
+      const b=meses.map((m,i)=>{ const cx=pl+slot*i+slot/2,x=(cx-bw/2).toFixed(1),yR=sy(m.resp),yT=sy(m.total);
+        return '<rect x="'+x+'" y="'+yR.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+(sy(0)-yR).toFixed(1)+'" fill="'+C1+'"/><rect x="'+x+'" y="'+yT.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+(yR-yT).toFixed(1)+'" fill="'+C2+'"/>'+(m.total?'<text x="'+cx.toFixed(1)+'" y="'+(yT-4).toFixed(1)+'" text-anchor="middle" class="vl">'+fmt(m.total)+'</text>':'')
+          +(rot?'<text transform="translate('+(cx+3).toFixed(1)+' '+(H-pb+12)+') rotate(-45)" text-anchor="end" class="ax">'+m.curto+'</text>':'<text x="'+cx.toFixed(1)+'" y="'+(H-pb+15)+'" text-anchor="middle" class="ax">'+m.curto+'</text>'); }).join('');
+      return '<svg class="graf" viewBox="0 0 '+W+' '+H+'" width="100%">'+g+b+'</svg>'; };
+    const pilha=(()=>{ const t=base.length,W=330,wr=t?resp.length/t*W:0; return '<svg class="graf" viewBox="0 0 '+W+' 50" width="100%">'+(t?'<rect x="0" y="4" width="'+wr.toFixed(1)+'" height="22" fill="'+C1+'"/><rect x="'+wr.toFixed(1)+'" y="4" width="'+(W-wr).toFixed(1)+'" height="22" fill="'+C2+'"/>':'<rect x="0" y="4" width="'+W+'" height="22" fill="#e3e7eb"/>')+'<text x="0" y="44" class="vl">Respondidos '+pct(resp.length,t)+'%</text><text x="'+W+'" y="44" text-anchor="end" class="vl">Pendentes '+pct(pend.length,t)+'%</text></svg>'; })();
+    const leg='<div class="leg"><i style="background:'+C1+'"></i>Respondidos<i style="background:'+C2+'"></i>Pendentes</div>',fonte='<div class="fonte">Fonte: Sistema de Acompanhamento de Processos – SEMCAS, dados de '+e(hoje)+'.</div>';
+    let nG=0,nT=0; const fig=(tit,corpo,extra)=>'<figure><figcaption>Gráfico '+(++nG)+' – '+tit+'</figcaption>'+corpo+(extra||'')+fonte+'</figure>',tab=(tit,corpo)=>'<figure><figcaption>Tabela '+(++nT)+' – '+tit+'</figcaption>'+corpo+fonte+'</figure>';
+    const dd=v=>v==null?'—':fmt(v)+(v===1?' dia':' dias');
+    const resumo='<div class="resumo">'+tab('Quadro geral do período','<table><tbody><tr><td>Processos recebidos no período</td><td class="num">'+fmt(base.length)+'</td></tr><tr><td>Respondidos</td><td class="num">'+fmt(resp.length)+'</td></tr><tr><td>Pendentes</td><td class="num">'+fmt(pend.length)+'</td></tr><tr><td>Percentual respondido</td><td class="num">'+pct(resp.length,base.length)+'%</td></tr><tr><td>Órgãos solicitantes distintos</td><td class="num">'+fmt(om.size)+'</td></tr></tbody></table>')+fig('Situação atual das entradas',pilha)+'</div>';
+    const mesRows=meses.map(m=>'<tr><td>'+e(m.label.charAt(0).toUpperCase()+m.label.slice(1))+'</td><td class="num">'+fmt(m.total)+'</td><td class="num">'+fmt(m.resp)+'</td><td class="num">'+fmt(m.pend)+'</td></tr>').join('')+'<tr class="tot"><td>Total</td><td class="num">'+fmt(base.length)+'</td><td class="num">'+fmt(resp.length)+'</td><td class="num">'+fmt(pend.length)+'</td></tr>';
+    const secMes='<section><h2>2. Entradas por mês</h2>'+fig('Processos recebidos por mês',vbar(),leg)+tab('Processos recebidos por mês','<table><thead><tr><th>Mês</th><th class="num">Recebidos</th><th class="num">Respondidos</th><th class="num">Pendentes</th></tr></thead><tbody>'+mesRows+'</tbody></table>')+'</section>',secOrg='<section><h2>3. Órgãos solicitantes</h2>'+fig('Órgãos com mais processos no período',hbar(orgaos.map(o=>({l:o.nome,v:o.qtd})),base.length))+'</section>';
+    const secPend=pend.length?tab('Indicadores dos processos pendentes','<table class="ind"><thead><tr><th>Pendentes</th><th>Há mais de 30 dias</th><th>Tempo médio em aberto</th><th>Mais antigo</th><th>Com reiteração registrada</th></tr></thead><tbody><tr><td>'+fmt(pend.length)+'</td><td>'+fmt(mais30)+'</td><td>'+dd(mediaDias)+'</td><td>'+dd(maxDias)+'</td><td>'+fmt(comReit)+'</td></tr></tbody></table>')
+      +fig('Pendentes por tempo em aberto',hbar(faixas,pend.length))+fig('Pendentes por etapa',hbar(etapasPend,pend.length))
+      +(servPend.length>1?fig('Pendentes por serviço',hbar(servPend,pend.length)):'')+fig('Pendentes por unidade responsável',hbar(unidPend,pend.length))+(orgPend.length?fig('Órgãos com mais processos pendentes',hbar(orgPend,pend.length)):'')
+      :'<p class="vazio">Não há processos pendentes entre as entradas do período.</p>';
+    const html='<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>Relatório de processos - '+e(this.relData(de))+' a '+e(this.relData(ate))+'</title><style>'+[
+      '@page{size:A4 portrait;margin:14mm 14mm 16mm}','*{box-sizing:border-box}','html,body{margin:0;padding:0;background:#fff;color:#1b1f24;font-family:Arial,Helvetica,sans-serif;font-size:9.5pt;line-height:1.4}','body{print-color-adjust:exact;-webkit-print-color-adjust:exact}','.acoes{display:none}',
+      'header{display:grid;grid-template-columns:24mm 1fr 24mm;align-items:center;border-bottom:1px solid #1b1f24;padding:0 0 3mm;margin-bottom:6mm}','.brasao{width:21mm;height:25mm;overflow:hidden;position:relative}','.brasao img{height:25mm;width:auto;position:absolute;left:-26.5mm;top:0}',
+      '.cab{text-align:center;font-size:8.6pt;line-height:1.45}','.cab b{display:block;font-size:9.4pt;text-transform:uppercase}','.docmeta{text-align:right;color:#4a525b;font-size:7.6pt}',
+      'h1{text-align:center;font-size:12.5pt;text-transform:uppercase;margin:0 0 1mm}','.periodo{text-align:center;font-size:9.5pt;margin-bottom:6mm}',
+      'section{margin:0 0 5mm}','h2{font-size:10.5pt;margin:0 0 2.5mm;padding-bottom:1mm;border-bottom:.6pt solid #9aa3ad}',
+      'figure{margin:0 0 5mm;break-inside:avoid}','figcaption{font-size:8.6pt;font-weight:bold;margin-bottom:1.5mm}','.fonte{font-size:7.4pt;color:#4a525b;margin-top:1mm}',
+      'svg.graf{display:block;font-family:Arial,Helvetica,sans-serif}','.lb{font-size:10.5px;fill:#1b1f24}','.vl{font-size:10.5px;font-weight:bold;fill:#1b1f24}','.pc{font-weight:normal;fill:#4a525b}','.ax{font-size:9.5px;fill:#4a525b}',
+      '.leg{font-size:7.8pt;margin-top:1mm;display:flex;gap:2mm;align-items:center}','.leg i{display:inline-block;width:3mm;height:3mm;margin-left:2mm}','.leg i:first-child{margin-left:0}',
+      '.resumo{display:grid;grid-template-columns:1.15fr 1fr;gap:8mm;align-items:start}',
+      'table{width:100%;border-collapse:collapse;font-size:8.6pt}','thead{display:table-header-group}','th{background:#e9edf1;text-align:left;font-weight:bold;border:.6pt solid #9aa3ad;padding:1.4mm 2mm}','td{border:.6pt solid #b7bec6;padding:1.3mm 2mm}','tr{break-inside:avoid}','.num{text-align:right;white-space:nowrap;width:24mm}','.tot td{font-weight:bold;background:#f3f5f7}',
+      '.ind th,.ind td{text-align:center}','.ind td{font-size:12pt;font-weight:bold;padding:2.2mm}','.vazio{color:#4a525b;padding:2mm 0;margin:0}',
+      '.obs{font-size:7.8pt;color:#3a4148;margin-top:2mm}','.obs p{margin:0 0 .8mm}',
+      '.assinatura{display:grid;grid-template-columns:1fr 1fr;gap:18mm;margin-top:16mm;break-inside:avoid}','.linha{border-top:.6pt solid #1b1f24;text-align:center;padding-top:1.5mm;font-size:8.4pt}','.linha b{display:block;font-size:9pt}','.linha span{display:block;color:#1b1f24;font-size:8pt;margin-top:.4mm}',
+      'footer{border-top:.6pt solid #9aa3ad;padding-top:1.5mm;margin-top:8mm;color:#4a525b;font-size:7pt;display:flex;justify-content:space-between;break-inside:avoid}',
+      '@media screen{html{background:#e9ecef}.acoes{display:flex;position:sticky;top:0;z-index:10;justify-content:flex-end;align-items:center;gap:12px;background:#1b1f24;color:#fff;padding:10px 14px;margin:-14mm -14mm 9mm;font-size:12px}.acoes button{border:1px solid #fff;background:#fff;color:#1b1f24;border-radius:3px;height:34px;padding:0 14px;font-weight:700;cursor:pointer}body{max-width:210mm;margin:8mm auto;padding:14mm 14mm 16mm;box-shadow:0 1px 10px rgba(0,0,0,.18)}}'
+    ].join('')+'</style></head><body><div class="acoes"><span>Confira os dados antes de salvar.</span><button type="button" onclick="window.print()">Salvar como PDF / imprimir</button></div>'
+      +'<header><div class="brasao"><img src="'+e(logo)+'" alt="Brasão de São Luís"></div><div class="cab"><b>Prefeitura de São Luís</b>Secretaria Municipal da Criança e Assistência Social – SEMCAS<br>Superintendência de PSE de Média Complexidade</div><div class="docmeta">Emitido em<br>'+e(hoje)+' às '+e(hora)+'</div></header>'
+      +'<main><h1>Relatório de processos</h1><div class="periodo">Período: '+e(this.relData(de))+' a '+e(this.relData(ate))+'</div>'
+      +'<section><h2>1. Resumo</h2>'+resumo+'</section>'
+      +secMes+secOrg
+      +'<section><h2>4. Processos pendentes</h2>'+secPend+'</section>'
+      +'<div class="obs"><p><b>Observações</b></p><p>Considerados os processos com data de recebimento entre '+e(this.relData(de))+' e '+e(this.relData(ate))+'. A situação (pendente ou respondido) é a registrada no sistema na data de emissão.</p><p>Tempo em aberto contado da data de recebimento até a data de emissão. Percentuais arredondados.</p></div>'
+      +'<div class="assinatura"><div class="linha"><b>'+e(String(s.user.nome||'').toUpperCase())+'</b><span>Responsável pela elaboração</span></div><div class="linha"><b>DANIELE FERNANDES COELHO</b><span>Superintendente de PSE de Média Complexidade</span><span>Matrícula nº 63356</span></div></div></main>'
+      +'<footer><span>SEMCAS – Superintendência de PSE de Média Complexidade</span><span>Emitido em '+e(hoje)+' às '+e(hora)+'</span></footer></body></html>';
+    if(janela){ janela.document.open(); janela.document.write(html); janela.document.close(); }
+    else{ const ov=document.createElement('div'); ov.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(15,20,25,.6);display:flex;flex-direction:column';
+      const bar=document.createElement('div'); bar.style.cssText='display:flex;justify-content:flex-end;gap:10px;padding:8px 12px;background:#1b1f24';
+      const bt=(t,fn,cor)=>{ const b=document.createElement('button'); b.type='button'; b.textContent=t; b.onclick=fn; b.style.cssText='height:34px;padding:0 14px;border-radius:3px;font-weight:700;font-size:13px;cursor:pointer;border:1px solid #fff;background:'+cor+';color:'+(cor==='#fff'?'#1b1f24':'#fff'); return b; };
+      const fr=document.createElement('iframe'); fr.title='Relatório de processos'; fr.style.cssText='flex:1;border:0;background:#e9ecef;width:100%'; fr.srcdoc=html;
+      bar.append(bt('Salvar como PDF / imprimir',()=>{ try{ fr.contentWindow.focus(); fr.contentWindow.print(); }catch(err){} },'#fff'),bt('Fechar',()=>ov.remove(),'transparent'));
+      ov.append(bar,fr); document.body.appendChild(ov); }
+    this.setState({relErro:''});
+  };
   // "Meus Processos": o que a pessoa cadastrou, comentou ou concluiu entra sozinho. Vem do banco, então vale em qualquer computador,
   // e quando duas pessoas mexem no mesmo processo ele aparece na lista das duas. "Importar processo" adiciona outros à mão (guardado neste navegador).
   meusChave(){ return 'semcas_meus_v1_'+((this.session&&this.session.user&&this.session.user.id)||'anon'); }
@@ -1892,7 +1996,7 @@ class Component extends DCLogic {
   toggleAba=()=>{ const p0=this.state.processos.find(p=>p.id===this.state.selectedId); const r=!!p0&&p0.aba==='respondido', tiraConcl=r&&p0.marcacao==='concluido';
     this.mut(this.state.selectedId,p=>({...p,aba:r?'pendente':'respondido',...(tiraConcl?{marcacao:'',hist:{...(p.hist||{}),marcacao:this.stamp()}}:{})}),r?'Reabertura':'Resposta',r?('Processo reaberto como pendente'+(tiraConcl?' · marcação Concluído retirada':'')):'Processo movido para Respondidos'); };
   openNovo=()=>this.setState({menuOpen:false,screen:'novo',formErro:'',formDup:[],formDupOk:false,form:{servico:this.state.activeServico||'PAEFI',encaminhamento:'',numero:'',recebido:'',orgao:'',usuario:'',link:'',demanda:'',setorReceber:'',dataEvento:'',memo:'',situacao:'',prazoDias:'',prazoData:'',marcacao:''}});
-  cancelNovo=()=>this.setState({screen:this.state.role==='super'?'painel':'pendencias',formDup:[],formDupOk:false});
+  cancelNovo=()=>this.setState({screen:'painel',formDup:[],formDupOk:false});
   uf=(k)=>e=>{ const v=['recebido','memo','prazoData'].includes(k)?this.mascaraData(e.target.value):e.target.value; this.setState(s=>({form:{...s.form,[k]:v},formErro:'',...(k==='numero'?{formDup:[],formDupOk:false}:{})})); };
   situacaoSugerida(f){ return f.encaminhamento?'Aguardando relatório do '+f.encaminhamento:(f.memo?'Encaminhado ao serviço em '+f.memo:'Recebido na Média Complexidade'); }
   cadastrarMesmoAssim=()=>this.setState({formDupOk:true},()=>this.salvarNovo());
@@ -2142,8 +2246,8 @@ proc={...sel,dados,...this.verifInfo(sel),...this.autoriaProc(sel,ult,atividades
     const telaAtiva=s.screen==='processo'?(['todos','pendencias','painel','meus'].includes(s.voltarPara)?s.voltarPara:'servico'):s.screen;
     const SVICO={CONVITES:'cal',DEMANDAS_EQUIV:'file',SPSEMC:'users',AEPETI:'fileT',PCDIF:'file',CENTROS_POPS:'users',MEDIDAS:'box',PAEFI:'fileT',SEAS:'users',CREAS:'users',ADJPS:'file',JURIDICO:'file'};
     const nAlerta=comPrazo.length+acoes.length;
-    const navSecoes=[{titulo:'Acompanhamento',itens:[navIt('Pendências',telaAtiva==='pendencias',this.goPendencias,'clock',nAlerta?fmt(nAlerta):'',true),navIt('Todos os Processos',telaAtiva==='todos',this.irTodos,'layers',fmt(procs.length)),navIt('Meus Processos',telaAtiva==='meus',this.goMeus,'user',fmt(this.meusEfetivos().filter(id=>procs.some(p=>p.id===id)).length))]}];
-    if(isSuper){ navSecoes.push({titulo:'Superintendência',itens:[navIt('Painel geral',telaAtiva==='painel',this.goPainel,'bank','')]});
+    const navSecoes=[{titulo:'Visão geral',itens:[navIt('Painel geral',telaAtiva==='painel',this.goPainel,'bank','')]},{titulo:'Acompanhamento',itens:[navIt('Pendências',telaAtiva==='pendencias',this.goPendencias,'clock',nAlerta?fmt(nAlerta):'',true),navIt('Todos os Processos',telaAtiva==='todos',this.irTodos,'layers',fmt(procs.length)),navIt('Meus Processos',telaAtiva==='meus',this.goMeus,'user',fmt(this.meusEfetivos().filter(id=>procs.some(p=>p.id===id)).length))]}];
+    if(isSuper){
       navSecoes.push({titulo:'Gestão',itens:[navIt('Registro de atividades',telaAtiva==='log',this.goLog,'user',fmt(s.log.length)),navIt('Usuários',telaAtiva==='usuarios',this.goUsuarios,'user',fmt(s.usuarios.length))]}); }
     const gNav=new Map(); s.servicos.forEach(sv=>{ const n=procs.filter(p=>p.servico===sv.key&&p.aba==='pendente').length; if(!gNav.has(sv.grupo)) gNav.set(sv.grupo,[]); gNav.get(sv.grupo).push(navIt(sv.label,telaAtiva==='servico'&&s.activeServico===sv.key,()=>this.goServico(sv.key),SVICO[sv.key]||'file',fmt(n))); });
     [...gNav].sort((a,b)=>String(a[0]).localeCompare(String(b[0]),'pt-BR')).forEach(([g,its])=>navSecoes.push({titulo:g||'Serviços',itens:its.sort((a,b)=>a.label.localeCompare(b.label,'pt-BR'))}));
@@ -2258,7 +2362,7 @@ proc={...sel,dados,...this.verifInfo(sel),...this.autoriaProc(sel,ult,atividades
       doLogin:this.doLogin,loginErro:s.loginErro||'',loginErroOn:!!s.loginErro,loginCarregando:s.loginCarregando,loginBtnTexto:s.loginCarregando?'Entrando…':'Entrar',
       isSuper:s.role==='super',userName,userRole:s.user.perfil,userInitials:userName.split(' ').filter(Boolean).map(w=>w[0]).slice(0,2).join(''),
       navGrupos:grupos,navPainelStyle,goPainel:this.goPainel,openNovo:this.openNovo,logout:this.logout,
-      painelVisible:s.screen==='painel',...(()=>{ const porId=new Map(procs.map(p=>[p.id,p])), mapa=this.meusMapa(), ids=this.meusEfetivos(mapa).filter(id=>porId.has(id)),meusSet=new Set(ids);
+      painelVisible:s.screen==='painel',relDe:s.relDe,relAte:s.relAte,setRelDe:this.setRelDe,setRelAte:this.setRelAte,gerarRelatorio:this.gerarRelatorio,relErro:s.relErro||'',relErroOn:!!s.relErro,...(()=>{ const porId=new Map(procs.map(p=>[p.id,p])), mapa=this.meusMapa(), ids=this.meusEfetivos(mapa).filter(id=>porId.has(id)),meusSet=new Set(ids);
         // Filtros: situação (concluído = movido para Respondidos ou com a marcação Concluído), serviço (menu), motivo e busca
         const fechado=p=>p.aba==='respondido'||p.marcacao==='concluido', qm=this.norm(s.meusBusca||'').trim();
         const passa=(id,o={})=>{ const st=o.status??s.meusStatus, mot=o.motivo??s.meusMotivo, svc=o.servico??s.meusServico, p=porId.get(id), e=mapa.get(id);
@@ -2296,7 +2400,7 @@ proc={...sel,dados,...this.verifInfo(sel),...this.autoriaProc(sel,ult,atividades
           atualizarTxt:Object.values(s.pedidos||{}).some(v=>['enviando','pendente','rodando'].includes(v.status))?'Verificando…':'Verificar todos',importarAberto:!!s.importarAberto,importarBusca:s.importarBusca||'',importarLista,importarVazio:!importarLista.length,
           importarVazioTxt:q?'Nenhum processo encontrado.':'Digite para buscar entre os '+fmt(procs.length)+' processos.',importarRodape:cand.length>40?('Mostrando 40 de '+fmt(cand.length)+' resultados. Refine a busca.'):(fmt(cand.length)+' resultado(s)'),
           importarProcesso:this.importarProcesso,fecharImportar:this.fecharImportar,setImportarBusca:this.setImportarBusca,atualizarTodos:this.atualizarTodos}; })(),servicoVisible:s.screen==='servico',processoVisible:s.screen==='processo',novoVisible:s.screen==='novo',novoBtnOn:!['novo','log','usuarios'].includes(s.screen),
-      crumb:s.screen==='todos'||s.screen==='meus'?'Acompanhamento':s.screen==='pendencias'?'Acompanhamento > Pendências':s.screen==='usuarios'?'Gestão / Usuários':s.screen==='log'?'Gestão / Registro de atividades':s.screen==='painel'?'Superintendência':(s.screen==='novo'?'Cadastro':(s.screen==='processo'?('Serviços / '+cur.label):'Serviços')),
+      crumb:s.screen==='todos'||s.screen==='meus'?'Acompanhamento':s.screen==='pendencias'?'Acompanhamento > Pendências':s.screen==='usuarios'?'Gestão / Usuários':s.screen==='log'?'Gestão / Registro de atividades':s.screen==='painel'?'Visão geral':(s.screen==='novo'?'Cadastro':(s.screen==='processo'?('Serviços / '+cur.label):'Serviços')),
       pageTitle:s.screen==='todos'?'Todos os Processos':s.screen==='meus'?'Meus Processos':s.screen==='pendencias'?'Pendências':s.screen==='usuarios'?'Usuários':s.screen==='log'?'Registro de atividades':s.screen==='painel'?'Painel geral':(s.screen==='novo'?'Novo processo':(s.screen==='processo'?'Detalhe do processo':cur.label)),
       hoje:s.screen==='pendencias'?this.agora():new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'short',year:'numeric'}).format(new Date()).replace('.',''),
       kpiTotal:fmt(total),kpiPend:fmt(total-resp),kpiResp:fmt(resp),kpiVelhos:fmt(velhos),kpiSemResponsavel:fmt(semResponsavel),kpiTaxa:(total?Math.round(resp/total*100):0)+'%',
