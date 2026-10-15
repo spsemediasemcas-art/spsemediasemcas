@@ -1827,8 +1827,8 @@ class Component extends DCLogic {
       :'<p class="vazio">Não há processos pendentes entre as entradas do período.</p>';
     const html='<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>Relatório de processos - '+e(this.relData(de))+' a '+e(this.relData(ate))+'</title><style>'+[
       '@page{size:A4 portrait;margin:14mm 14mm 16mm}','*{box-sizing:border-box}','html,body{margin:0;padding:0;background:#fff;color:#1b1f24;font-family:Arial,Helvetica,sans-serif;font-size:9.5pt;line-height:1.4}','body{print-color-adjust:exact;-webkit-print-color-adjust:exact}','.acoes{display:none}',
-      'header{display:grid;grid-template-columns:24mm 1fr 24mm;align-items:center;border-bottom:1px solid #1b1f24;padding:0 0 3mm;margin-bottom:6mm}','.brasao{width:21mm;height:25mm;overflow:hidden;position:relative}','.brasao img{height:25mm;width:auto;position:absolute;left:-26.5mm;top:0}',
-      '.cab{text-align:center;font-size:8.6pt;line-height:1.45}','.cab b{display:block;font-size:9.4pt;text-transform:uppercase}','.docmeta{text-align:right;color:#4a525b;font-size:7.6pt}',
+      'header{position:relative;display:flex;flex-direction:column;align-items:center;border-bottom:1px solid #1b1f24;padding:0 0 3mm;margin-bottom:6mm}','.brasao{width:21mm;height:25mm;overflow:hidden;position:relative;margin:0 auto 2mm}','.brasao img{height:25mm;width:auto;position:absolute;left:-26.5mm;top:0}',
+      '.cab{text-align:center;font-size:8.6pt;line-height:1.45}','.cab b{display:block;font-size:9.4pt;text-transform:uppercase}','.docmeta{position:absolute;top:0;right:0;text-align:right;color:#4a525b;font-size:7.6pt}',
       'h1{text-align:center;font-size:12.5pt;text-transform:uppercase;margin:0 0 1mm}','.periodo{text-align:center;font-size:9.5pt;margin-bottom:6mm}',
       'section{margin:0 0 5mm}','h2{font-size:10.5pt;margin:0 0 2.5mm;padding-bottom:1mm;border-bottom:.6pt solid #9aa3ad}',
       'figure{margin:0 0 5mm;break-inside:avoid}','figcaption{font-size:8.6pt;font-weight:bold;margin-bottom:1.5mm}','.fonte{font-size:7.4pt;color:#4a525b;margin-top:1mm}',
@@ -1838,7 +1838,7 @@ class Component extends DCLogic {
       'table{width:100%;border-collapse:collapse;font-size:8.6pt}','thead{display:table-header-group}','th{background:#e9edf1;text-align:left;font-weight:bold;border:.6pt solid #9aa3ad;padding:1.4mm 2mm}','td{border:.6pt solid #b7bec6;padding:1.3mm 2mm}','tr{break-inside:avoid}','.num{text-align:right;white-space:nowrap;width:24mm}','.tot td{font-weight:bold;background:#f3f5f7}',
       '.ind th,.ind td{text-align:center}','.ind td{font-size:12pt;font-weight:bold;padding:2.2mm}','.vazio{color:#4a525b;padding:2mm 0;margin:0}',
       '.obs{font-size:7.8pt;color:#3a4148;margin-top:2mm}','.obs p{margin:0 0 .8mm}',
-      '.assinatura{display:grid;grid-template-columns:1fr 1fr;gap:18mm;margin-top:16mm;break-inside:avoid}','.linha{border-top:.6pt solid #1b1f24;text-align:center;padding-top:1.5mm;font-size:8.4pt}','.linha b{display:block;font-size:9pt}','.linha span{display:block;color:#1b1f24;font-size:8pt;margin-top:.4mm}',
+      '.assinatura{display:flex;justify-content:center;margin-top:18mm;break-inside:avoid}','.assinatura .linha{width:95mm}','.linha{border-top:.6pt solid #1b1f24;text-align:center;padding-top:1.5mm;font-size:8.4pt}','.linha b{display:block;font-size:9pt}','.linha span{display:block;color:#1b1f24;font-size:8pt;margin-top:.4mm}',
       'footer{border-top:.6pt solid #9aa3ad;padding-top:1.5mm;margin-top:8mm;color:#4a525b;font-size:7pt;display:flex;justify-content:space-between;break-inside:avoid}',
       '@media screen{html{background:#e9ecef}.acoes{display:flex;position:sticky;top:0;z-index:10;justify-content:flex-end;align-items:center;gap:12px;background:#1b1f24;color:#fff;padding:10px 14px;margin:-14mm -14mm 9mm;font-size:12px}.acoes button{border:1px solid #fff;background:#fff;color:#1b1f24;border-radius:3px;height:34px;padding:0 14px;font-weight:700;cursor:pointer}body{max-width:210mm;margin:8mm auto;padding:14mm 14mm 16mm;box-shadow:0 1px 10px rgba(0,0,0,.18)}}'
     ].join('')+'</style></head><body><div class="acoes"><span>Confira os dados antes de salvar.</span><button type="button" onclick="window.print()">Salvar como PDF / imprimir</button></div>'
@@ -1848,7 +1848,7 @@ class Component extends DCLogic {
       +secMes+secOrg
       +'<section><h2>4. Processos pendentes</h2>'+secPend+'</section>'
       +'<div class="obs"><p><b>Observações</b></p><p>Considerados os processos com data de recebimento entre '+e(this.relData(de))+' e '+e(this.relData(ate))+'. A situação (pendente ou respondido) é a registrada no sistema na data de emissão.</p><p>Tempo em aberto contado da data de recebimento até a data de emissão. Percentuais arredondados.</p></div>'
-      +'<div class="assinatura"><div class="linha"><b>'+e(String(s.user.nome||'').toUpperCase())+'</b><span>Responsável pela elaboração</span></div><div class="linha"><b>DANIELE FERNANDES COELHO</b><span>Superintendente de PSE de Média Complexidade</span><span>Matrícula nº 63356</span></div></div></main>'
+      +'<div class="assinatura"><div class="linha"><b>DANIELE FERNANDES COELHO</b><span>Superintendente de PSE de Média Complexidade</span><span>Matrícula nº 63356</span></div></div></main>'
       +'<footer><span>SEMCAS – Superintendência de PSE de Média Complexidade</span><span>Emitido em '+e(hoje)+' às '+e(hora)+'</span></footer></body></html>';
     if(janela){ janela.document.open(); janela.document.write(html); janela.document.close(); }
     else{ const ov=document.createElement('div'); ov.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(15,20,25,.6);display:flex;flex-direction:column';
