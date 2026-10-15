@@ -1452,8 +1452,10 @@ class Component extends DCLogic {
     return this._renovando;
   }
   async supaTodos(path){
-    const todos=[],tam=1000;
-    for(let offset=0;;offset+=tam){ const pag=await this.supa(path+'&limit='+tam+'&offset='+offset)||[]; todos.push(...pag); if(pag.length<tam) return todos; }
+    const tam=1000, todos=[...(await this.supa(path+'&limit='+tam+'&offset=0')||[])]; if(todos.length<tam) return todos;
+    // Depois da 1ª página, busca as seguintes de 4 em 4 ao mesmo tempo (antes era uma por vez).
+    for(let offset=tam;;offset+=4*tam){ const pags=await Promise.all([0,1,2,3].map(i=>this.supa(path+'&limit='+tam+'&offset='+(offset+i*tam)).then(r=>r||[])));
+      pags.forEach(pg=>todos.push(...pg)); if(pags.some(pg=>pg.length<tam)) return todos; }
   }
   async supa(path,{method='GET',body=null,token=null,prefer='',retry=true}={}){
     if(!token&&this.session&&this.session.refresh_token&&this.session.expires_at&&this.session.expires_at*1000-Date.now()<60000) await this.renovarSessao();
@@ -1466,10 +1468,12 @@ class Component extends DCLogic {
     return data;
   }
   comentarioDb(c,i,pid){
-    return {process_id:pid,source_index:c.sourceIndex??i,title:c.titulo||(c.data==='importado'?'Observação importada':'Comentário anterior'),category:c.categoria||(c.data==='importado'?'Planilha':'Comentário'),comment_type:c.tipo||(c.data==='importado'?'importado':'comentario'),body:c.texto||'',sei_message:c.mensagemSei||'',attachments:c.anexos||[],event_date_text:c.dataEvento||'',author_name:c.autor||'',author_role:c.perfil||(c.data==='importado'?'Planilha':''),display_date:c.data||'',author_user_id:c.authorUserId||(c.data==='importado'?null:(this.session&&this.session.user?this.session.user.id:null))};
+    const row={process_id:pid,source_index:c.sourceIndex??i,title:c.titulo||(c.data==='importado'?'Observação importada':'Comentário anterior'),category:c.categoria||(c.data==='importado'?'Planilha':'Comentário'),comment_type:c.tipo||(c.data==='importado'?'importado':'comentario'),body:c.texto||'',sei_message:c.mensagemSei||'',attachments:c.anexos||[],event_date_text:c.dataEvento||'',author_name:c.autor||'',author_role:c.perfil||(c.data==='importado'?'Planilha':''),display_date:c.data||'',author_user_id:c.authorUserId||(c.data==='importado'?null:(this.session&&this.session.user?this.session.user.id:null))};
+    if(c.anexosPend) delete row.attachments;   // imagens ainda não baixadas: não sobrescreve as do banco
+    return row;
   }
   processoDb(p){
-    const raw={...p};delete raw._e;
+    const raw={...p};delete raw._e;delete raw.obs;   // comentários (com imagens) já ficam em process_comments
     return {id:p.id,service_key:p.servico,status:p.aba==='respondido'?'respondido':'pendente',sei_number:p.numero||'',received_date_text:p.recebido||'',memo_sent_text:p.memo||'',requester_agency:p.orgao||'',demand:p.demanda||'',referenced_person:p.usuario||'',situation:p.situacao||'',sector_response_text:p.respSetor||'',cabinet_response_text:p.respGabinete||'',conclusion_text:p.conclusao||'',sei_link:p.link||'',marking:p.marcacao||'',marking_origin:p.marcacaoOrigem||'',deadline_days:String(p.prazoDias||''),stage:Number(p.etapa||0),unit_name:p.unidade||'',forwarding:p.encaminhamento||'',response_office:p.oficio||'',internal_responsible:p.responsavelInterno||'',next_action:p.proximaAcao||'',next_action_date:p.proximaData||'',reiterations:p.reit||[],history:p.hist||{},raw_data:raw,created_by:p.createdBy||null,updated_by:p.updatedBy||null};
   }
   // Processo novo: INSERT. Existente: PATCH sem created_by, para não esbarrar na regra de inserção do banco
@@ -1500,7 +1504,7 @@ class Component extends DCLogic {
     const pid=e.acao==='Exclusão'?null:(e.pid||null);
     await this.supa('/rest/v1/process_audit_log',{method:'POST',body:[{process_id:pid,action:e.acao,details:e.detalhe||'',author_name:e.autor||'',author_role:e.perfil||'',author_user_id:this.session.user.id}],prefer:'return=minimal'});
   }
-  mapComentario(c){ return {id:c.id,sourceIndex:c.source_index,authorUserId:c.author_user_id,titulo:c.title,categoria:c.category,tipo:c.comment_type,texto:c.body,mensagemSei:c.sei_message,anexos:c.attachments||[],dataEvento:c.event_date_text,autor:c.author_name,perfil:c.author_role,data:c.display_date,editadoPor:c.edited_by_name||'',editadoEm:c.edited_at_text||''}; }
+  mapComentario(c){ return {id:c.id,sourceIndex:c.source_index,authorUserId:c.author_user_id,titulo:c.title,categoria:c.category,tipo:c.comment_type,texto:c.body,mensagemSei:c.sei_message,anexos:c.attachments||[],anexosPend:c.attachments===undefined&&!!c.tem_anexo,dataEvento:c.event_date_text,autor:c.author_name,perfil:c.author_role,data:c.display_date,editadoPor:c.edited_by_name||'',editadoEm:c.edited_at_text||''}; }
   // ---- "Verificar agora": pedido gravado no Supabase, executado pelo monitor SEI (PC 1)
   async checarMonitor(){ try{ const r=await this.supa('/rest/v1/monitor_status?select=ultimo_sinal,processos_monitorados,ultima_rodada&order=ultimo_sinal.desc&limit=1'); const t=r&&r[0]?new Date(r[0].ultimo_sinal).getTime():0;
       this.setState({monitorOnline:!!t&&Date.now()-t<180000,monitorSinal:t?this.fmtCurto(t):'',monitorQtd:r&&r[0]?r[0].processos_monitorados:0,monitorAuto:r&&r[0]?(r[0].ultima_rodada||''):''}); }catch(e){ this.setState({monitorOnline:null,monitorSinal:''}); } }
@@ -1582,12 +1586,14 @@ class Component extends DCLogic {
     const [svs,rows,comments,audits,usuariosDb]=await Promise.all([
       this.supa('/rest/v1/services?select=*&order=group_name,key'),
       this.supaTodos('/rest/v1/processes?select=*&order=id'),
-      this.supaTodos('/rest/v1/process_comments?select=*&order=process_id,source_index,id'),
+      // Sem as imagens (base64): elas vêm depois, em segundo plano (carregarAnexos).
+      this.supaTodos('/rest/v1/process_comments?select='+this.COLS_COMENTARIO+',tem_anexo:attachments->0->>nome&order=process_id,source_index,id'),
       this.supaTodos('/rest/v1/process_audit_log?select=*&event_at=gte.'+encodeURIComponent(new Date(Date.now()-180*86400000).toISOString())+'&order=event_at.desc,id').catch(()=>[]),
       this.state.role==='super'?this.supa('/rest/v1/user_profiles?select=user_id,email,display_name,role,active&order=display_name'):Promise.resolve([])
     ]);
-    const porProcesso=new Map();
-    (comments||[]).forEach(c=>{const o=this.mapComentario(c);if(!porProcesso.has(c.process_id))porProcesso.set(c.process_id,[]);porProcesso.get(c.process_id).push(o);});
+    const porProcesso=new Map(), jaBaixados=new Map(), pendentes=[];
+    (this.state.processos||[]).forEach(p=>(p.obs||[]).forEach(o=>{ if(o.id!=null&&!o.anexosPend) jaBaixados.set(o.id+'|'+(o.editadoEm||''),o.anexos||[]); }));
+    (comments||[]).forEach(c=>{let o=this.mapComentario(c); if(o.anexosPend){ const k=jaBaixados.get(o.id+'|'+(o.editadoEm||'')); if(k) o={...o,anexos:k,anexosPend:false}; else pendentes.push(o.id); }if(!porProcesso.has(c.process_id))porProcesso.set(c.process_id,[]);porProcesso.get(c.process_id).push(o);});
     const processos=(rows||[]).map(r=>{const base={...(r.raw_data||{})};const p={...base,id:r.id,servico:r.service_key,aba:r.status,numero:r.sei_number,recebido:r.received_date_text,memo:r.memo_sent_text,orgao:r.requester_agency,demanda:r.demand,usuario:r.referenced_person,situacao:r.situation,respSetor:r.sector_response_text,respGabinete:r.cabinet_response_text,conclusao:r.conclusion_text,link:r.sei_link,marcacao:r.marking,marcacaoOrigem:r.marking_origin,prazoDias:r.deadline_days,etapa:r.stage,unidade:r.unit_name,encaminhamento:r.forwarding,oficio:r.response_office,responsavelInterno:r.internal_responsible,proximaAcao:r.next_action,proximaData:r.next_action_date,reit:r.reiterations||[],hist:r.history||{},createdBy:r.created_by,updatedBy:r.updated_by,obs:porProcesso.get(r.id)||[]};delete p._e;return this.enrich(p);});
     const porId=new Map(processos.map(p=>[p.id,p]));
     const log=(audits||[]).map(a=>{const p=porId.get(a.process_id);const d=new Date(a.event_at);return {id:a.id,timestamp:d.getTime(),quando:d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).replace(',',''),autor:a.author_name||'—',perfil:a.author_role||'',uid:a.author_user_id||null,acao:a.action,pid:a.process_id||'',numero:p?p.numero:'—',servico:p?p.servico:'',detalhe:a.details||''};});
@@ -1596,7 +1602,14 @@ class Component extends DCLogic {
     const usuarios=(usuariosDb||[]).map(u=>({id:u.user_id,nome:u.display_name||this.nomeDoEmail(u.email),email:u.email,perfil:u.role==='superintendente'?'Superintendente':'Administrativo',bg:u.role==='superintendente'?'#E8F2FA':'#F3F5F7',cor:u.role==='superintendente'?'#0F5E91':'#3D454D',borda:u.role==='superintendente'?'#C4DDEC':'#DADDE1'}));
     this._ultimaCarga=Date.now();
     this.setState({servicos,processos,log,usuarios,dbOnline:true,storageErro:''});
+    if(pendentes.length) this.carregarAnexos(pendentes);
   }
+  COLS_COMENTARIO='id,process_id,source_index,author_user_id,title,category,comment_type,body,sei_message,event_date_text,author_name,author_role,display_date,edited_by_name,edited_at_text';
+  async carregarAnexos(ids){
+    for(let i=0;i<ids.length;i+=40){ const lote=ids.slice(i,i+40);
+      try{ const rows=await this.supa('/rest/v1/process_comments?select=id,attachments&id=in.('+lote.join(',')+')'), m=new Map((rows||[]).map(r=>[r.id,r.attachments||[]]));
+        this.setState(st=>({processos:st.processos.map(p=>(p.obs||[]).some(o=>o.anexosPend&&m.has(o.id))?{...p,obs:p.obs.map(o=>o.anexosPend&&m.has(o.id)?{...o,anexos:m.get(o.id),anexosPend:false}:o)}:p)}));
+      }catch(e){} } }
   async entrarComSessao(sessao){
     this.session=sessao;
     const perfis=await this.supa('/rest/v1/user_profiles?select=user_id,email,display_name,role,active&user_id=eq.'+encodeURIComponent(sessao.user.id));
@@ -2063,7 +2076,7 @@ class Component extends DCLogic {
   removerAnexo=i=>this.setState(s=>({obsAnexos:s.obsAnexos.filter((_,j)=>i!==j)}));
   setObsTexto=e=>this.setState({obsTexto:e.target.value,obsErro:false});
   setObsNumeroReit=e=>this.setState({obsNumeroReit:e.target.value,obsErro:false});
-  iniciarEdicaoComentario=(pid,sourceIndex)=>{const p=this.state.processos.find(x=>x.id===pid),o=(p?.obs||[]).find(x=>x.sourceIndex===sourceIndex),uid=this.session?.user?.id;if(!o||(o.tipo||'comentario')!=='comentario'||(this.state.role!=='super'&&o.authorUserId!==uid))return;this.setState({comentarioEditando:{pid,sourceIndex,id:o.id},obsTitulo:o.titulo||'',obsCategoria:'comentario',obsTexto:o.texto||'',obsDataEvento:'',obsDataSug:'',obsMensagemSei:o.mensagemSei||'',obsAnexos:(o.anexos||[]).map(a=>({...a})),obsErro:false,comentarioBusca:''});};
+  iniciarEdicaoComentario=(pid,sourceIndex)=>{const p=this.state.processos.find(x=>x.id===pid),o=(p?.obs||[]).find(x=>x.sourceIndex===sourceIndex),uid=this.session?.user?.id;if(!o||(o.tipo||'comentario')!=='comentario'||(this.state.role!=='super'&&o.authorUserId!==uid))return;if(o.anexosPend){this.recarregarComentarios([pid]).then(()=>this.iniciarEdicaoComentario(pid,sourceIndex),()=>{});return;}this.setState({comentarioEditando:{pid,sourceIndex,id:o.id},obsTitulo:o.titulo||'',obsCategoria:'comentario',obsTexto:o.texto||'',obsDataEvento:'',obsDataSug:'',obsMensagemSei:o.mensagemSei||'',obsAnexos:(o.anexos||[]).map(a=>({...a})),obsErro:false,comentarioBusca:''});};
   cancelarEdicaoComentario=()=>this.setState({comentarioEditando:null,obsTitulo:'',obsCategoria:'comentario',obsTexto:'',obsDataEvento:'',obsDataSug:'',obsMensagemSei:'',obsAnexos:[],obsErro:false});
   addObs=()=>{ const s=this.state, titulo=s.obsTitulo.trim(), t=s.obsTexto.trim(), mensagemSei=s.obsMensagemSei.trim();if(s.anexosCarregando)return;const p0=s.processos.find(p=>p.id===s.selectedId),cat=this.categoriasProcesso(p0).find(c=>c.k===s.obsCategoria);if(!cat){this.setState({obsErro:true,obsErroTexto:'Escolha a categoria do comentário.'});return;}
     if(cat.k==='reiteracao'&&!s.comentarioEditando){ if(!s.obsNumeroReit.trim()){this.setState({obsErro:true,obsErroTexto:'Informe o Nº SEI da reiteração.'});return;}
