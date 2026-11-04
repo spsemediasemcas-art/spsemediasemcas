@@ -567,7 +567,7 @@
           <div><label style="display:block;font-size:12.5px;font-weight:600;color:#3D454D;margin-bottom:5px">Sem atualização</label><select value="{{ todosF.parado }}" onChange="{{ tf.parado }}" style="{{ tSel.parado }}"><option value="">Todos</option><option value="15">Há mais de 15 dias</option><option value="30">Há mais de 30 dias</option><option value="60">Há mais de 60 dias</option></select></div>
           <div><label style="display:block;font-size:12.5px;font-weight:600;color:#3D454D;margin-bottom:5px">Ano do processo</label><select value="{{ todosF.ano }}" onChange="{{ tf.ano }}" style="{{ tSel.ano }}"><option value="">Todos</option><sc-for list="{{ todosAnoOpts }}" as="a" hint-placeholder-count="2"><option value="{{ a }}">{{ a }}</option></sc-for></select></div>
           <div><label style="display:block;font-size:12.5px;font-weight:600;color:#3D454D;margin-bottom:5px">Mês de recebimento</label><select value="{{ todosF.mes }}" onChange="{{ tf.mes }}" style="{{ tSel.mes }}"><option value="">Todos</option><sc-for list="{{ todosMesOpts }}" as="m" hint-placeholder-count="6"><option value="{{ m.v }}">{{ m.l }}</option></sc-for></select></div>
-          <div><label style="display:block;font-size:12.5px;font-weight:600;color:#3D454D;margin-bottom:5px">Órgão solicitante</label><input value="{{ todosF.orgao }}" onInput="{{ tf.orgao }}" placeholder="Ex.: Promotoria, Defensoria" style="{{ tSel.orgao }}"></div>
+          <div style="grid-column:1/-1"><label style="display:block;font-size:12.5px;font-weight:600;color:#3D454D;margin-bottom:5px">Órgão solicitante</label><select value="{{ todosF.orgaoGrupo }}" onChange="{{ tf.orgaoGrupo }}" style="{{ tSel.orgaoGrupo }}"><option value="">Todos os órgãos</option><sc-for list="{{ todosOrgaoOpts }}" as="o" hint-placeholder-count="8"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select></div>
         </div>
         </sc-if>
         <sc-if value="{{ todosTemFiltro }}" hint-placeholder-val="{{ false }}">
@@ -576,6 +576,23 @@
             <sc-for list="{{ todosChips }}" as="c" hint-placeholder-count="2"><button onClick="{{ c.remover }}" title="Remover este filtro" style="display:inline-flex;align-items:center;gap:7px;height:28px;padding:0 10px;border:1px solid #BFD0E2;background:#EEF4FA;color:#12355B;border-radius:14px;font-size:12.5px;cursor:pointer" style-hover="background:#E0EBF6">{{ c.label }}<span style="font-size:15px;line-height:1">×</span></button></sc-for>
           </div>
         </sc-if>
+      </section>
+
+      <section style="background:#fff;border:1px solid #DDE2E8;border-radius:6px;box-shadow:0 1px 2px rgba(16,24,40,.04)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:16px 18px 12px;flex-wrap:wrap"><div><h2 style="font-size:15.5px;font-weight:600;margin:0;color:#1F2328">Órgãos solicitantes</h2><div style="font-size:12.5px;color:#6B737B;margin-top:3px">{{ todosOrgaoQtd }} órgãos com processo registrado. Clique para filtrar a lista abaixo.</div></div></div>
+        <sc-if value="{{ todosOrgaoListaOn }}" hint-placeholder-val="{{ true }}">
+          <div style="padding:0 18px 16px;max-height:340px;overflow-y:auto">
+            <div style="border:1px solid #E1E5EA;border-radius:4px;overflow:hidden">
+              <sc-for list="{{ todosOrgaoLista }}" as="o" hint-placeholder-count="8">
+                <button onClick="{{ o.abrir }}" title="Ver processos deste órgão" style="{{ o.estilo }}" style-hover="background:#F7F9FB">
+                  <span style="min-width:0;text-align:left;line-height:1.35">{{ o.nome }}</span>
+                  <span style="margin-left:auto;flex-shrink:0;font-weight:600;color:#12355B">{{ o.qtdTxt }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ todosOrgaoListaVazia }}" hint-placeholder-val="{{ false }}"><div style="padding:0 18px 18px;font-size:13px;color:#7A828A">Nenhum órgão informado nos processos. Preencha o campo Órgão solicitante na ficha de cada processo.</div></sc-if>
       </section>
 
       <section style="background:#fff;border:1px solid #DDE2E8;border-radius:6px;box-shadow:0 1px 2px rgba(16,24,40,.04)">
@@ -2342,12 +2359,18 @@ proc={...sel,dados,...this.verifInfo(sel),...this.autoriaProc(sel,ult,atividades
     const TLBL={q:v=>'Busca: “'+v+'”',servico:v=>'Serviço: '+this.sv(v).label,status:v=>v==='pendente'?'Pendentes':'Respondidos',marc:v=>'Cor: '+(v==='_'?'Sem marcação':(this.MARC[v]||{l:v}).l),prazo:v=>({venc:'Prazo vencido','7':'Prazo vence em até 7 dias',com:'Com prazo informado'})[v]||v,dias:v=>({a:'Até 15 dias em aberto',b:'16 a 30 dias em aberto',c:'Mais de 30 dias em aberto'})[v]||v,parado:v=>'Sem atualização há mais de '+v+' dias',ano:v=>'Ano: '+v,orgao:v=>'Órgão contém: '+v,orgaoGrupo:v=>'Órgão: '+v,mes:v=>{ const [y,m]=v.split('-'); return 'Recebidos em '+MESN[+m-1]+'/'+y; }};
     const todosChips=Object.keys(this.TODOS0).filter(k=>TF[k]).map(k=>({label:TLBL[k](TF[k]),remover:()=>this.setState(s2=>({todosF:{...s2.todosF,[k]:''},todosPag:1}))}));
     const todosMesOpts=[...new Set(procs.map(mesDe).filter(Boolean))].sort().reverse().map(v=>{ const [y,m]=v.split('-'); return {v,l:MESN[+m-1]+'/'+y}; });
+    const orgaosTodosMap=new Map();
+    procs.forEach(p=>{ const nome=this.orgaoConsolidado(p.orgao); if(!nome||nome==='—') return; const k=this.norm(nome); const atual=orgaosTodosMap.get(k); if(atual) atual.qtd++; else orgaosTodosMap.set(k,{nome,qtd:1}); });
+    const todosOrgaoLista=[...orgaosTodosMap.values()].sort((a,b)=>b.qtd-a.qtd||a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'})).map(o=>{ const on=this.norm(TF.orgaoGrupo)===this.norm(o.nome);
+      return {nome:o.nome,qtdTxt:fmt(o.qtd),abrir:()=>this.setState(s2=>({todosF:{...s2.todosF,orgaoGrupo:on?'':o.nome,orgao:''},todosPag:1})),
+        estilo:'width:100%;display:flex;align-items:center;gap:12px;padding:10px 12px;background:'+(on?'#EEF4FA':'#fff')+';border:none;border-bottom:1px solid #E6E9ED;cursor:pointer;font-size:13.5px;color:#1F2328;font-weight:'+(on?'600':'400')}; });
+    const todosOrgaoOpts=todosOrgaoLista.map(o=>({v:o.nome,l:o.nome+' ('+o.qtdTxt+')'}));
     const tt=s.screen==='todos', navTodosStyle='width:100%;display:flex;align-items:center;gap:8px;height:32px;padding:0 10px 0 12px;margin-bottom:1px;border:none;border-radius:0;cursor:pointer;font-size:13.5px;text-align:left;font-weight:'+(tt?'600':'500')+';background:'+(tt?'#E6ECF3':'transparent')+';box-shadow:'+(tt?'inset 2px 0 0 #12355B':'none')+';color:'+(tt?'#12355B':'#2E353B');
     const todosVals={todosVisible:tt,navTodosStyle,irTodos:this.irTodos,todosCountNav:fmt(procs.length),todosF:TF,tv,tSel:Object.fromEntries(Object.keys(this.TODOS0).map(k=>[k,tSelStyle(!!TF[k])])),tf:Object.fromEntries(Object.keys(this.TODOS0).map(k=>[k,this.tf(k)])),
       tsH:Object.fromEntries(['numero',...this.TCOLS.map(c=>c[0])].map(k=>[k,()=>this.todosSortBy(k)])),tArr:Object.fromEntries(['numero',...this.TCOLS.map(c=>c[0])].map(k=>[k,tsk===k?(tdir>0?'▲':'▼'):''])),
       todosLinhas,todosVazio:!todosLinhas.length,todosGrid:tW.join(' '),todosMinW,todosTableOn:s.vw>=760,todosCardsOn:s.vw<760,
       todosTemFiltro:todosChips.length>0,todosChips,limparTodos:this.limparTodos,todosFiltrosVisiveis:!narrow||s.todosFiltrosAbertos,toggleTodosFiltros:this.toggleTodosFiltros,todosFiltrosBtn:(s.todosFiltrosAbertos?'Ocultar filtros':'Mostrar filtros')+(todosChips.length?' ('+todosChips.length+')':''),
-      marcFiltroOpts:this.MARC_ORD.map(k=>({v:k||'_',l:this.MARC[k].l})),todosAnoOpts:[...new Set(procs.map(p=>this.anoProc(p)).filter(Boolean))].sort().reverse(),todosMesOpts,
+      marcFiltroOpts:this.MARC_ORD.map(k=>({v:k||'_',l:this.MARC[k].l})),todosAnoOpts:[...new Set(procs.map(p=>this.anoProc(p)).filter(Boolean))].sort().reverse(),todosMesOpts,todosOrgaoOpts,todosOrgaoLista,todosOrgaoListaOn:todosOrgaoLista.length>0,todosOrgaoListaVazia:!todosOrgaoLista.length,todosOrgaoQtd:fmt(todosOrgaoLista.length),
       todosTotalTxt:fmt(tord.length)+(tord.length===1?' processo':' processos'),todosFaixaTxt:tord.length?('· exibindo '+fmt(tini+1)+'–'+fmt(tini+tshown.length)):'',
       todosSort:tsk,setTodosSort:this.setTodosSort,toggleTodosDir:this.toggleTodosDir,todosDirLabel:tdir>0?'↑ Crescente':'↓ Decrescente',
       todosSortOpts:[['recebido','Data de recebimento'],['dias','Dias em aberto'],['prazo','Prazo'],['ultima','Última atualização'],['parado','Sem atualização há'],['numero','Nº do processo'],['servico','Serviço'],['orgao','Órgão solicitante'],['status','Status'],['marcacao','Cor']].map(([k,l])=>({k,l})),
